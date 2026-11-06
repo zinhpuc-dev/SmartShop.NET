@@ -1,0 +1,333 @@
+-- HE THONG QUAN LY BAN HANG CUA HANG DIEN TU
+-- MySQL 8.0+ | 19 bang | 10 dong moi bang
+-- Hai bang ngon ngu da duoc loai bo.
+CREATE DATABASE IF NOT EXISTS quan_ly_cua_hang_dien_tu CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE quan_ly_cua_hang_dien_tu;
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `HOA_DON_KHUYEN_MAI`;
+
+DROP TABLE IF EXISTS `KHUYEN_MAI_KHACH_HANG`;
+
+DROP TABLE IF EXISTS `CHI_TIET_KHUYEN_MAI`;
+
+DROP TABLE IF EXISTS `VOUCHER`;
+
+DROP TABLE IF EXISTS `HOA_DON`;
+
+DROP TABLE IF EXISTS `CHI_TIET_DON_HANG`;
+
+DROP TABLE IF EXISTS `CHI_TIET_PHIEU_NHAP`;
+
+DROP TABLE IF EXISTS `CHI_TIET_GIO_HANG`;
+
+DROP TABLE IF EXISTS `TON_KHO`;
+
+DROP TABLE IF EXISTS `DON_HANG`;
+
+DROP TABLE IF EXISTS `PHIEU_NHAP`;
+
+DROP TABLE IF EXISTS `GIO_HANG`;
+
+DROP TABLE IF EXISTS `KHUYEN_MAI`;
+
+DROP TABLE IF EXISTS `SAN_PHAM`;
+
+DROP TABLE IF EXISTS `LOAI_SAN_PHAM`;
+
+DROP TABLE IF EXISTS `KHO`;
+
+DROP TABLE IF EXISTS `KHACH_HANG`;
+
+DROP TABLE IF EXISTS `NHA_CUNG_CAP`;
+
+DROP TABLE IF EXISTS `NHAN_VIEN`;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE `LOAI_SAN_PHAM` (MaLoai CHAR(6) PRIMARY KEY, TrangThai BIT NOT NULL DEFAULT b'1' ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `KHO` (MaKho CHAR(6) PRIMARY KEY, TenKho NVARCHAR(150) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `KHACH_HANG` (MaKH CHAR(8) PRIMARY KEY, HoTen NVARCHAR(150) NOT NULL, SDT VARCHAR(20) NOT NULL, DiaChi NVARCHAR(300) NOT NULL, Email VARCHAR(255) UNIQUE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `NHAN_VIEN` (MaNV CHAR(8) PRIMARY KEY, TenNV NVARCHAR(150) NOT NULL, ChucVu NVARCHAR(100) NOT NULL, SDT VARCHAR(20), Email VARCHAR(255) UNIQUE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `NHA_CUNG_CAP` (MaNCC CHAR(6) PRIMARY KEY, TenNCC NVARCHAR(200) NOT NULL, DiaChi NVARCHAR(300), Email VARCHAR(255), SDT VARCHAR(20)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `SAN_PHAM` (MaSP CHAR(8) PRIMARY KEY, MaLoai CHAR(6) NOT NULL, TenSP NVARCHAR(200) NOT NULL, MoTa TEXT, DonViTinh NVARCHAR(30) NOT NULL, GiaNiemYet DECIMAL(18,2) NOT NULL, GiaBan DECIMAL(18,2) NOT NULL, TrangThai BIT NOT NULL DEFAULT b'1', FOREIGN KEY (MaLoai) REFERENCES LOAI_SAN_PHAM(MaLoai)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `GIO_HANG` (MaGioHang CHAR(8) PRIMARY KEY, MaKH CHAR(8) NOT NULL UNIQUE, NgayTao DATETIME NOT NULL, NgayCapNhat DATETIME, FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `CHI_TIET_GIO_HANG` (MaGioHang CHAR(8) NOT NULL, MaSP CHAR(8) NOT NULL, SoLuong INT NOT NULL, PRIMARY KEY (MaGioHang,MaSP), FOREIGN KEY (MaGioHang) REFERENCES GIO_HANG(MaGioHang), FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `TON_KHO` (MaKho CHAR(6) NOT NULL, MaSP CHAR(8) NOT NULL, SoLuongTon INT NOT NULL, PRIMARY KEY (MaKho,MaSP), FOREIGN KEY (MaKho) REFERENCES KHO(MaKho), FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `DON_HANG` (MaDH CHAR(8) PRIMARY KEY, MaKH CHAR(8) NOT NULL, NgayLap DATETIME NOT NULL, TrangThai VARCHAR(40) NOT NULL, DiaChiGiaoHang NVARCHAR(300) NOT NULL, TongTien DECIMAL(18,2) NOT NULL, FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `CHI_TIET_DON_HANG` (MaDH CHAR(8) NOT NULL, MaSP CHAR(8) NOT NULL, SoLuongDat INT NOT NULL, DonGia DECIMAL(18,2) NOT NULL, TyLeGiamGia DECIMAL(5,2) NOT NULL DEFAULT 0, DonGiaThucTe DECIMAL(18,2) NOT NULL, ThanhTien DECIMAL(18,2) NOT NULL, PRIMARY KEY (MaDH,MaSP), FOREIGN KEY (MaDH) REFERENCES DON_HANG(MaDH), FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `PHIEU_NHAP` (MaPN CHAR(8) PRIMARY KEY, MaNCC CHAR(6) NOT NULL, MaKho CHAR(6) NOT NULL, NgayNhap DATETIME NOT NULL, FOREIGN KEY (MaNCC) REFERENCES NHA_CUNG_CAP(MaNCC), FOREIGN KEY (MaKho) REFERENCES KHO(MaKho)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `CHI_TIET_PHIEU_NHAP` (MaPN CHAR(8) NOT NULL, MaSP CHAR(8) NOT NULL, SoLuongNhap INT NOT NULL, DonGiaNhap DECIMAL(18,2) NOT NULL, ThanhTien DECIMAL(18,2) NOT NULL, PRIMARY KEY (MaPN,MaSP), FOREIGN KEY (MaPN) REFERENCES PHIEU_NHAP(MaPN), FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `KHUYEN_MAI` (MaKM CHAR(8) PRIMARY KEY, TenKM NVARCHAR(200) NOT NULL, MoTa NVARCHAR(500), LoaiKhuyenMai VARCHAR(20) NOT NULL, HinhThucGiam VARCHAR(20) NOT NULL, GiaTriGiam DECIMAL(18,2) NOT NULL, GiaTriDonToiThieu DECIMAL(18,2) NOT NULL DEFAULT 0, NgayBatDau DATETIME NOT NULL, NgayKetThuc DATETIME NOT NULL, TrangThai BIT NOT NULL DEFAULT b'1' ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `CHI_TIET_KHUYEN_MAI` (MaKM CHAR(8) NOT NULL, MaSP CHAR(8) NOT NULL, PhanTramGiam DECIMAL(5,2) NOT NULL, SoTienGiam DECIMAL(18,2) NOT NULL DEFAULT 0, PRIMARY KEY (MaKM,MaSP), FOREIGN KEY (MaKM) REFERENCES KHUYEN_MAI(MaKM), FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `KHUYEN_MAI_KHACH_HANG` (MaKM CHAR(8) NOT NULL, MaKH CHAR(8) NOT NULL, SoLanSuDung INT NOT NULL DEFAULT 0, SoLanDaSuDung INT NOT NULL DEFAULT 0, TrangThai BIT NOT NULL DEFAULT b'1', PRIMARY KEY (MaKM,MaKH), FOREIGN KEY (MaKM) REFERENCES KHUYEN_MAI(MaKM), FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `VOUCHER` (MaVoucher CHAR(8) PRIMARY KEY, MaKM CHAR(8) NOT NULL, MaCode VARCHAR(50) NOT NULL UNIQUE, PhanTramGiam DECIMAL(5,2) NOT NULL DEFAULT 0, SoTienGiam DECIMAL(18,2) NOT NULL DEFAULT 0, GiaTriDonToiThieu DECIMAL(18,2) NOT NULL DEFAULT 0, SoLuong INT NOT NULL, SoLuongDaSuDung INT NOT NULL DEFAULT 0, NgayBatDau DATETIME NOT NULL, NgayKetThuc DATETIME NOT NULL, TrangThai BIT NOT NULL DEFAULT b'1', FOREIGN KEY (MaKM) REFERENCES KHUYEN_MAI(MaKM)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `HOA_DON` (MaHoaDon CHAR(8) PRIMARY KEY, MaDH CHAR(8) NOT NULL UNIQUE, MaNV CHAR(8) NOT NULL, NgayLapHoaDon DATETIME NOT NULL, TongSoTienThanhToan DECIMAL(18,2) NOT NULL, PhuongThucThanhToan NVARCHAR(50) NOT NULL, TrangThai VARCHAR(40) NOT NULL, FOREIGN KEY (MaDH) REFERENCES DON_HANG(MaDH), FOREIGN KEY (MaNV) REFERENCES NHAN_VIEN(MaNV)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `HOA_DON_KHUYEN_MAI` (MaHoaDon CHAR(8) NOT NULL, MaKM CHAR(8) NOT NULL, MaVoucher CHAR(8) NULL, SoTienGiam DECIMAL(18,2) NOT NULL, PRIMARY KEY (MaHoaDon,MaKM), FOREIGN KEY (MaHoaDon) REFERENCES HOA_DON(MaHoaDon), FOREIGN KEY (MaKM) REFERENCES KHUYEN_MAI(MaKM), FOREIGN KEY (MaVoucher) REFERENCES VOUCHER(MaVoucher)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `LOAI_SAN_PHAM` (`MaLoai`, `TrangThai`) VALUES
+('L00001', 1),
+('L00002', 1),
+('L00003', 1),
+('L00004', 1),
+('L00005', 1),
+('L00006', 1),
+('L00007', 1),
+('L00008', 1),
+('L00009', 1),
+('L00010', 1);
+
+INSERT INTO `KHO` (`MaKho`, `TenKho`) VALUES
+('K00001', 'Kho điện tử khu vực 1'),
+('K00002', 'Kho điện tử khu vực 2'),
+('K00003', 'Kho điện tử khu vực 3'),
+('K00004', 'Kho điện tử khu vực 4'),
+('K00005', 'Kho điện tử khu vực 5'),
+('K00006', 'Kho điện tử khu vực 6'),
+('K00007', 'Kho điện tử khu vực 7'),
+('K00008', 'Kho điện tử khu vực 8'),
+('K00009', 'Kho điện tử khu vực 9'),
+('K00010', 'Kho điện tử khu vực 10');
+
+INSERT INTO `KHACH_HANG` (`MaKH`, `HoTen`, `SDT`, `DiaChi`, `Email`) VALUES
+('KH000001', 'Nguyễn Văn An', '0900000001', '12 Đường Số 1, TP. Hồ Chí Minh', 'khach1@example.com'),
+('KH000002', 'Trần Thị Bình', '0900000002', '24 Đường Số 2, TP. Hồ Chí Minh', 'khach2@example.com'),
+('KH000003', 'Lê Minh Châu', '0900000003', '36 Đường Số 3, TP. Hồ Chí Minh', 'khach3@example.com'),
+('KH000004', 'Phạm Quốc Dũng', '0900000004', '48 Đường Số 4, TP. Hồ Chí Minh', 'khach4@example.com'),
+('KH000005', 'Hoàng Thu Hà', '0900000005', '60 Đường Số 5, TP. Hồ Chí Minh', 'khach5@example.com'),
+('KH000006', 'Võ Đức Huy', '0900000006', '72 Đường Số 6, TP. Hồ Chí Minh', 'khach6@example.com'),
+('KH000007', 'Đặng Ngọc Lan', '0900000007', '84 Đường Số 7, TP. Hồ Chí Minh', 'khach7@example.com'),
+('KH000008', 'Bùi Anh Minh', '0900000008', '96 Đường Số 8, TP. Hồ Chí Minh', 'khach8@example.com'),
+('KH000009', 'Đỗ Thanh Nga', '0900000009', '108 Đường Số 9, TP. Hồ Chí Minh', 'khach9@example.com'),
+('KH000010', 'Phan Gia Phúc', '0900000010', '120 Đường Số 10, TP. Hồ Chí Minh', 'khach10@example.com');
+
+INSERT INTO `NHAN_VIEN` (`MaNV`, `TenNV`, `ChucVu`, `SDT`, `Email`) VALUES
+('NV000001', 'Nhân viên Nguyễn Văn An', 'Quản lý', '0800000001', 'nhanvien1@example.com'),
+('NV000002', 'Nhân viên Trần Thị Bình', 'Bán hàng', '0800000002', 'nhanvien2@example.com'),
+('NV000003', 'Nhân viên Lê Minh Châu', 'Bán hàng', '0800000003', 'nhanvien3@example.com'),
+('NV000004', 'Nhân viên Phạm Quốc Dũng', 'Bán hàng', '0800000004', 'nhanvien4@example.com'),
+('NV000005', 'Nhân viên Hoàng Thu Hà', 'Bán hàng', '0800000005', 'nhanvien5@example.com'),
+('NV000006', 'Nhân viên Võ Đức Huy', 'Bán hàng', '0800000006', 'nhanvien6@example.com'),
+('NV000007', 'Nhân viên Đặng Ngọc Lan', 'Bán hàng', '0800000007', 'nhanvien7@example.com'),
+('NV000008', 'Nhân viên Bùi Anh Minh', 'Bán hàng', '0800000008', 'nhanvien8@example.com'),
+('NV000009', 'Nhân viên Đỗ Thanh Nga', 'Bán hàng', '0800000009', 'nhanvien9@example.com'),
+('NV000010', 'Nhân viên Phan Gia Phúc', 'Bán hàng', '0800000010', 'nhanvien10@example.com');
+
+INSERT INTO `NHA_CUNG_CAP` (`MaNCC`, `TenNCC`, `DiaChi`, `Email`, `SDT`) VALUES
+('N00001', 'Công ty Phân phối Công nghệ A', '15 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc1@example.com', '0700000001'),
+('N00002', 'Nhà phân phối Thiết bị B', '30 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc2@example.com', '0700000002'),
+('N00003', 'Công ty Điện tử C', '45 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc3@example.com', '0700000003'),
+('N00004', 'Nhà cung cấp Laptop D', '60 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc4@example.com', '0700000004'),
+('N00005', 'Công ty Phụ kiện E', '75 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc5@example.com', '0700000005'),
+('N00006', 'Nhà phân phối Mobile F', '90 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc6@example.com', '0700000006'),
+('N00007', 'Công ty Thiết bị G', '105 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc7@example.com', '0700000007'),
+('N00008', 'Nhà cung cấp Công nghệ H', '120 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc8@example.com', '0700000008'),
+('N00009', 'Công ty Tin học I', '135 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc9@example.com', '0700000009'),
+('N00010', 'Nhà phân phối Điện máy J', '150 Nguyễn Trãi, TP. Hồ Chí Minh', 'ncc10@example.com', '0700000010');
+
+INSERT INTO `SAN_PHAM` (`MaSP`, `MaLoai`, `TenSP`, `MoTa`, `DonViTinh`, `GiaNiemYet`, `GiaBan`, `TrangThai`) VALUES
+('SP000001', 'L00001', 'iPhone 15 128GB', 'Sản phẩm điện tử chính hãng: iPhone 15 128GB', 'Cái', 19490000, 18990000, 1),
+('SP000002', 'L00002', 'Samsung Galaxy S24', 'Sản phẩm điện tử chính hãng: Samsung Galaxy S24', 'Cái', 18490000, 17990000, 1),
+('SP000003', 'L00003', 'MacBook Air M2', 'Sản phẩm điện tử chính hãng: MacBook Air M2', 'Cái', 24490000, 23990000, 1),
+('SP000004', 'L00004', 'Dell Inspiron 15', 'Sản phẩm điện tử chính hãng: Dell Inspiron 15', 'Cái', 16490000, 15990000, 1),
+('SP000005', 'L00005', 'iPad Air M2', 'Sản phẩm điện tử chính hãng: iPad Air M2', 'Cái', 17490000, 16990000, 1),
+('SP000006', 'L00006', 'Tai nghe Sony WH-1000XM5', 'Sản phẩm điện tử chính hãng: Tai nghe Sony WH-1000XM5', 'Cái', 8490000, 7990000, 1),
+('SP000007', 'L00007', 'Chuột Logitech MX Master 3S', 'Sản phẩm điện tử chính hãng: Chuột Logitech MX Master 3S', 'Cái', 2990000, 2490000, 1),
+('SP000008', 'L00008', 'Bàn phím Keychron K8', 'Sản phẩm điện tử chính hãng: Bàn phím Keychron K8', 'Cái', 2690000, 2190000, 1),
+('SP000009', 'L00009', 'Màn hình LG 27 inch', 'Sản phẩm điện tử chính hãng: Màn hình LG 27 inch', 'Cái', 5790000, 5290000, 1),
+('SP000010', 'L00010', 'Ổ cứng Samsung SSD 1TB', 'Sản phẩm điện tử chính hãng: Ổ cứng Samsung SSD 1TB', 'Cái', 2690000, 2190000, 1);
+
+INSERT INTO `GIO_HANG` (`MaGioHang`, `MaKH`, `NgayTao`, `NgayCapNhat`) VALUES
+('GH000001', 'KH000001', '2026-10-01 09:00:00', '2026-10-01 10:00:00'),
+('GH000002', 'KH000002', '2026-10-02 09:00:00', '2026-10-02 10:00:00'),
+('GH000003', 'KH000003', '2026-10-03 09:00:00', '2026-10-03 10:00:00'),
+('GH000004', 'KH000004', '2026-10-04 09:00:00', '2026-10-04 10:00:00'),
+('GH000005', 'KH000005', '2026-10-05 09:00:00', '2026-10-05 10:00:00'),
+('GH000006', 'KH000006', '2026-10-06 09:00:00', '2026-10-06 10:00:00'),
+('GH000007', 'KH000007', '2026-10-07 09:00:00', '2026-10-07 10:00:00'),
+('GH000008', 'KH000008', '2026-10-08 09:00:00', '2026-10-08 10:00:00'),
+('GH000009', 'KH000009', '2026-10-09 09:00:00', '2026-10-09 10:00:00'),
+('GH000010', 'KH000010', '2026-10-10 09:00:00', '2026-10-10 10:00:00');
+
+INSERT INTO `CHI_TIET_GIO_HANG` (`MaGioHang`, `MaSP`, `SoLuong`) VALUES
+('GH000001', 'SP000001', 2),
+('GH000002', 'SP000002', 3),
+('GH000003', 'SP000003', 1),
+('GH000004', 'SP000004', 2),
+('GH000005', 'SP000005', 3),
+('GH000006', 'SP000006', 1),
+('GH000007', 'SP000007', 2),
+('GH000008', 'SP000008', 3),
+('GH000009', 'SP000009', 1),
+('GH000010', 'SP000010', 2);
+
+INSERT INTO `TON_KHO` (`MaKho`, `MaSP`, `SoLuongTon`) VALUES
+('K00001', 'SP000001', 17),
+('K00002', 'SP000002', 24),
+('K00003', 'SP000003', 31),
+('K00004', 'SP000004', 38),
+('K00005', 'SP000005', 45),
+('K00006', 'SP000006', 52),
+('K00007', 'SP000007', 59),
+('K00008', 'SP000008', 66),
+('K00009', 'SP000009', 73),
+('K00010', 'SP000010', 80);
+
+INSERT INTO `DON_HANG` (`MaDH`, `MaKH`, `NgayLap`, `TrangThai`, `DiaChiGiaoHang`, `TongTien`) VALUES
+('DH000001', 'KH000001', '2026-10-01 11:00:00', 'Đã giao', '12 Đường Số 1, TP. Hồ Chí Minh', 18990000),
+('DH000002', 'KH000002', '2026-10-02 11:00:00', 'Đã giao', '24 Đường Số 2, TP. Hồ Chí Minh', 17990000),
+('DH000003', 'KH000003', '2026-10-03 11:00:00', 'Đã giao', '36 Đường Số 3, TP. Hồ Chí Minh', 23990000),
+('DH000004', 'KH000004', '2026-10-04 11:00:00', 'Đã giao', '48 Đường Số 4, TP. Hồ Chí Minh', 15990000),
+('DH000005', 'KH000005', '2026-10-05 11:00:00', 'Đã giao', '60 Đường Số 5, TP. Hồ Chí Minh', 16990000),
+('DH000006', 'KH000006', '2026-10-06 11:00:00', 'Đã giao', '72 Đường Số 6, TP. Hồ Chí Minh', 7990000),
+('DH000007', 'KH000007', '2026-10-07 11:00:00', 'Đã giao', '84 Đường Số 7, TP. Hồ Chí Minh', 2490000),
+('DH000008', 'KH000008', '2026-10-08 11:00:00', 'Đang xử lý', '96 Đường Số 8, TP. Hồ Chí Minh', 2190000),
+('DH000009', 'KH000009', '2026-10-09 11:00:00', 'Đang xử lý', '108 Đường Số 9, TP. Hồ Chí Minh', 5290000),
+('DH000010', 'KH000010', '2026-10-10 11:00:00', 'Đang xử lý', '120 Đường Số 10, TP. Hồ Chí Minh', 2190000);
+
+INSERT INTO `CHI_TIET_DON_HANG` (`MaDH`, `MaSP`, `SoLuongDat`, `DonGia`, `TyLeGiamGia`, `DonGiaThucTe`, `ThanhTien`) VALUES
+('DH000001', 'SP000001', 1, 18990000, 0, 18990000, 18990000),
+('DH000002', 'SP000002', 1, 17990000, 0, 17990000, 17990000),
+('DH000003', 'SP000003', 1, 23990000, 0, 23990000, 23990000),
+('DH000004', 'SP000004', 1, 15990000, 0, 15990000, 15990000),
+('DH000005', 'SP000005', 1, 16990000, 0, 16990000, 16990000),
+('DH000006', 'SP000006', 1, 7990000, 0, 7990000, 7990000),
+('DH000007', 'SP000007', 1, 2490000, 0, 2490000, 2490000),
+('DH000008', 'SP000008', 1, 2190000, 0, 2190000, 2190000),
+('DH000009', 'SP000009', 1, 5290000, 0, 5290000, 5290000),
+('DH000010', 'SP000010', 1, 2190000, 0, 2190000, 2190000);
+
+INSERT INTO `PHIEU_NHAP` (`MaPN`, `MaNCC`, `MaKho`, `NgayNhap`) VALUES
+('PN000001', 'N00001', 'K00001', '2026-09-01 08:30:00'),
+('PN000002', 'N00002', 'K00002', '2026-09-02 08:30:00'),
+('PN000003', 'N00003', 'K00003', '2026-09-03 08:30:00'),
+('PN000004', 'N00004', 'K00004', '2026-09-04 08:30:00'),
+('PN000005', 'N00005', 'K00005', '2026-09-05 08:30:00'),
+('PN000006', 'N00006', 'K00006', '2026-09-06 08:30:00'),
+('PN000007', 'N00007', 'K00007', '2026-09-07 08:30:00'),
+('PN000008', 'N00008', 'K00008', '2026-09-08 08:30:00'),
+('PN000009', 'N00009', 'K00009', '2026-09-09 08:30:00'),
+('PN000010', 'N00010', 'K00010', '2026-09-10 08:30:00');
+
+INSERT INTO `CHI_TIET_PHIEU_NHAP` (`MaPN`, `MaSP`, `SoLuongNhap`, `DonGiaNhap`, `ThanhTien`) VALUES
+('PN000001', 'SP000001', 10, 17490000, 174900000),
+('PN000002', 'SP000002', 10, 16490000, 164900000),
+('PN000003', 'SP000003', 10, 22490000, 224900000),
+('PN000004', 'SP000004', 10, 14490000, 144900000),
+('PN000005', 'SP000005', 10, 15490000, 154900000),
+('PN000006', 'SP000006', 10, 6490000, 64900000),
+('PN000007', 'SP000007', 10, 990000, 9900000),
+('PN000008', 'SP000008', 10, 690000, 6900000),
+('PN000009', 'SP000009', 10, 3790000, 37900000),
+('PN000010', 'SP000010', 10, 690000, 6900000);
+
+INSERT INTO `KHUYEN_MAI` (`MaKM`, `TenKM`, `MoTa`, `LoaiKhuyenMai`, `HinhThucGiam`, `GiaTriGiam`, `GiaTriDonToiThieu`, `NgayBatDau`, `NgayKetThuc`, `TrangThai`) VALUES
+('KM000001', 'Ưu đãi điện tử 1', 'Chương trình ưu đãi sản phẩm điện tử đợt 1', 'SanPham', 'PhanTram', 1, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000002', 'Ưu đãi điện tử 2', 'Chương trình ưu đãi sản phẩm điện tử đợt 2', 'SanPham', 'PhanTram', 2, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000003', 'Ưu đãi điện tử 3', 'Chương trình ưu đãi sản phẩm điện tử đợt 3', 'SanPham', 'PhanTram', 3, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000004', 'Ưu đãi điện tử 4', 'Chương trình ưu đãi sản phẩm điện tử đợt 4', 'SanPham', 'PhanTram', 4, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000005', 'Ưu đãi điện tử 5', 'Chương trình ưu đãi sản phẩm điện tử đợt 5', 'SanPham', 'PhanTram', 5, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000006', 'Ưu đãi điện tử 6', 'Chương trình ưu đãi sản phẩm điện tử đợt 6', 'SanPham', 'PhanTram', 6, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000007', 'Ưu đãi điện tử 7', 'Chương trình ưu đãi sản phẩm điện tử đợt 7', 'SanPham', 'PhanTram', 7, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000008', 'Ưu đãi điện tử 8', 'Chương trình ưu đãi sản phẩm điện tử đợt 8', 'SanPham', 'PhanTram', 8, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000009', 'Ưu đãi điện tử 9', 'Chương trình ưu đãi sản phẩm điện tử đợt 9', 'SanPham', 'PhanTram', 9, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('KM000010', 'Ưu đãi điện tử 10', 'Chương trình ưu đãi sản phẩm điện tử đợt 10', 'SanPham', 'PhanTram', 10, 1000000, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1);
+
+INSERT INTO `CHI_TIET_KHUYEN_MAI` (`MaKM`, `MaSP`, `PhanTramGiam`, `SoTienGiam`) VALUES
+('KM000001', 'SP000001', 1, 0),
+('KM000002', 'SP000002', 2, 0),
+('KM000003', 'SP000003', 3, 0),
+('KM000004', 'SP000004', 4, 0),
+('KM000005', 'SP000005', 5, 0),
+('KM000006', 'SP000006', 6, 0),
+('KM000007', 'SP000007', 7, 0),
+('KM000008', 'SP000008', 8, 0),
+('KM000009', 'SP000009', 9, 0),
+('KM000010', 'SP000010', 10, 0);
+
+INSERT INTO `KHUYEN_MAI_KHACH_HANG` (`MaKM`, `MaKH`, `SoLanSuDung`, `SoLanDaSuDung`, `TrangThai`) VALUES
+('KM000001', 'KH000001', 3, 0, 1),
+('KM000002', 'KH000002', 3, 0, 1),
+('KM000003', 'KH000003', 3, 0, 1),
+('KM000004', 'KH000004', 3, 0, 1),
+('KM000005', 'KH000005', 3, 0, 1),
+('KM000006', 'KH000006', 3, 0, 1),
+('KM000007', 'KH000007', 3, 0, 1),
+('KM000008', 'KH000008', 3, 0, 1),
+('KM000009', 'KH000009', 3, 0, 1),
+('KM000010', 'KH000010', 3, 0, 1);
+
+INSERT INTO `VOUCHER` (`MaVoucher`, `MaKM`, `MaCode`, `PhanTramGiam`, `SoTienGiam`, `GiaTriDonToiThieu`, `SoLuong`, `SoLuongDaSuDung`, `NgayBatDau`, `NgayKetThuc`, `TrangThai`) VALUES
+('VC000001', 'KM000001', 'DIENTU01', 1, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000002', 'KM000002', 'DIENTU02', 2, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000003', 'KM000003', 'DIENTU03', 3, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000004', 'KM000004', 'DIENTU04', 4, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000005', 'KM000005', 'DIENTU05', 5, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000006', 'KM000006', 'DIENTU06', 6, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000007', 'KM000007', 'DIENTU07', 7, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000008', 'KM000008', 'DIENTU08', 8, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000009', 'KM000009', 'DIENTU09', 9, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1),
+('VC000010', 'KM000010', 'DIENTU10', 10, 0, 1000000, 100, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 1);
+
+INSERT INTO `HOA_DON` (`MaHoaDon`, `MaDH`, `MaNV`, `NgayLapHoaDon`, `TongSoTienThanhToan`, `PhuongThucThanhToan`, `TrangThai`) VALUES
+('HD000001', 'DH000001', 'NV000001', '2026-10-01 12:00:00', 18990000, 'Tiền mặt', 'Đã thanh toán'),
+('HD000002', 'DH000002', 'NV000002', '2026-10-02 12:00:00', 17990000, 'Chuyển khoản', 'Đã thanh toán'),
+('HD000003', 'DH000003', 'NV000003', '2026-10-03 12:00:00', 23990000, 'Tiền mặt', 'Đã thanh toán'),
+('HD000004', 'DH000004', 'NV000004', '2026-10-04 12:00:00', 15990000, 'Chuyển khoản', 'Đã thanh toán'),
+('HD000005', 'DH000005', 'NV000005', '2026-10-05 12:00:00', 16990000, 'Tiền mặt', 'Đã thanh toán'),
+('HD000006', 'DH000006', 'NV000006', '2026-10-06 12:00:00', 7990000, 'Chuyển khoản', 'Đã thanh toán'),
+('HD000007', 'DH000007', 'NV000007', '2026-10-07 12:00:00', 2490000, 'Tiền mặt', 'Đã thanh toán'),
+('HD000008', 'DH000008', 'NV000008', '2026-10-08 12:00:00', 2190000, 'Chuyển khoản', 'Đã thanh toán'),
+('HD000009', 'DH000009', 'NV000009', '2026-10-09 12:00:00', 5290000, 'Tiền mặt', 'Đã thanh toán'),
+('HD000010', 'DH000010', 'NV000010', '2026-10-10 12:00:00', 2190000, 'Chuyển khoản', 'Đã thanh toán');
+
+INSERT INTO `HOA_DON_KHUYEN_MAI` (`MaHoaDon`, `MaKM`, `MaVoucher`, `SoTienGiam`) VALUES
+('HD000001', 'KM000001', 'VC000001', 0),
+('HD000002', 'KM000002', 'VC000002', 0),
+('HD000003', 'KM000003', 'VC000003', 0),
+('HD000004', 'KM000004', 'VC000004', 0),
+('HD000005', 'KM000005', 'VC000005', 0),
+('HD000006', 'KM000006', 'VC000006', 0),
+('HD000007', 'KM000007', 'VC000007', 0),
+('HD000008', 'KM000008', 'VC000008', 0),
+('HD000009', 'KM000009', 'VC000009', 0),
+('HD000010', 'KM000010', 'VC000010', 0);
+
+-- KIEM TRA SO LUONG BAN GHI (moi bang phai co 10 dong)
+SELECT 'LOAI_SAN_PHAM' AS TenBang, COUNT(*) AS SoDong FROM LOAI_SAN_PHAM
+UNION ALL SELECT 'KHO',COUNT(*) FROM KHO
+UNION ALL SELECT 'KHACH_HANG',COUNT(*) FROM KHACH_HANG
+UNION ALL SELECT 'NHAN_VIEN',COUNT(*) FROM NHAN_VIEN
+UNION ALL SELECT 'NHA_CUNG_CAP',COUNT(*) FROM NHA_CUNG_CAP
+UNION ALL SELECT 'SAN_PHAM',COUNT(*) FROM SAN_PHAM
+UNION ALL SELECT 'GIO_HANG',COUNT(*) FROM GIO_HANG
+UNION ALL SELECT 'CHI_TIET_GIO_HANG',COUNT(*) FROM CHI_TIET_GIO_HANG
+UNION ALL SELECT 'TON_KHO',COUNT(*) FROM TON_KHO
+UNION ALL SELECT 'DON_HANG',COUNT(*) FROM DON_HANG
+UNION ALL SELECT 'CHI_TIET_DON_HANG',COUNT(*) FROM CHI_TIET_DON_HANG
+UNION ALL SELECT 'PHIEU_NHAP',COUNT(*) FROM PHIEU_NHAP
+UNION ALL SELECT 'CHI_TIET_PHIEU_NHAP',COUNT(*) FROM CHI_TIET_PHIEU_NHAP
+UNION ALL SELECT 'KHUYEN_MAI',COUNT(*) FROM KHUYEN_MAI
+UNION ALL SELECT 'CHI_TIET_KHUYEN_MAI',COUNT(*) FROM CHI_TIET_KHUYEN_MAI
+UNION ALL SELECT 'KHUYEN_MAI_KHACH_HANG',COUNT(*) FROM KHUYEN_MAI_KHACH_HANG
+UNION ALL SELECT 'VOUCHER',COUNT(*) FROM VOUCHER
+UNION ALL SELECT 'HOA_DON',COUNT(*) FROM HOA_DON
+UNION ALL SELECT 'HOA_DON_KHUYEN_MAI',COUNT(*) FROM HOA_DON_KHUYEN_MAI;
