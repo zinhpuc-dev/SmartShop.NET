@@ -5,84 +5,108 @@ namespace SmartShop.DAO
 {
     public class ProductManageDAO
     {
-        private static string ConnectionString =>
-            Environment.GetEnvironmentVariable("SMARTSHOP_MYSQL_CONNECTION")
-            ?? throw new InvalidOperationException("Chưa cấu hình SMARTSHOP_MYSQL_CONNECTION.");
+        string user = "root";
+        string password = "";
+        string connString => "Server=localhost;Port=3306;Database=QuanLyCuaHangDienTu_MySQL;Uid=root;Pwd='';";
 
-        private static MySqlConnection CreateConnection() => new(ConnectionString);
+        MySqlConnection connection=new MySqlConnection();
 
+        public ProductManageDAO()
+        {
+            if (connection==null)
+            {
+                try
+                {
+                    connection = new MySqlConnection(connString);
+                    connection.Open();
+                    Console.WriteLine("Connection successfull");
+                }
+                catch
+                {
+                    Console.WriteLine("Error connection");
+                }
+            }
+        }
+        
         public List<ProductManage> ReadData()
         {
             List<ProductManage> product = new List<ProductManage>();
-            const string query = "SELECT MaSP, MaLoai, TenSP, MoTa, DonViTinh, GiaNiemYet, GiaBan, TrangThai FROM Product";
-            using var connection = CreateConnection();
-            connection.Open();
-            using var command = new MySqlCommand(query, connection);
-            using MySqlDataReader reader = command.ExecuteReader();
-            while (reader.Read())
+            try
             {
-                string maSP = reader.GetString("MaSP");
-                string maLoai = reader.GetString("MaLoai");
-                string tenSP = reader.GetString("TenSP");
-                string moTa = reader.IsDBNull(reader.GetOrdinal("MoTa")) ? string.Empty : reader.GetString("MoTa");
-                string donViTinh = reader.GetString("DonViTinh");
-                int giaNiemYet = reader.GetInt32("GiaNiemYet");
-                int giaBan = reader.GetInt32("GiaBan");
-                string trangThai = reader.GetString("TrangThai");
+                string query= "SELECT MaSP, MaLoai, TenSP, MoTa, DonViTinh, GiaNiemYet, GiaBan, TrangThai FROM SAN_PHAM";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                MySqlDataReader reader=command.ExecuteReader();
+                while (reader.Read())
+                {
+                    string maSP = reader.GetString("MaSP");
+                    string maLoai = reader.GetString("MaLoai");
+                    string tenSP = reader.GetString("TenSP");
+                    string moTa = reader.IsDBNull(reader.GetOrdinal("MoTa")) ? string.Empty : reader.GetString("MoTa");
+                    string donViTinh = reader.GetString("DonViTinh");
+                    int giaNiemYet = reader.GetInt32("GiaNiemYet");
+                    int giaBan = reader.GetInt32("GiaBan");
+                    string trangThai = reader.GetString("TrangThai");
 
-                ProductManage pm = new ProductManage(maSP, maLoai, tenSP, moTa, donViTinh, giaNiemYet, giaBan, trangThai);
-                product.Add(pm);
+                    ProductManage pm = new ProductManage(maSP, maLoai, tenSP, moTa, donViTinh, giaNiemYet, giaBan, trangThai);
+                    product.Add(pm);
+                }
+
+            }
+            catch
+            {
+                Console.WriteLine("Lỗi đọc dữ liệu sản phẩm");
             }
             return product;
         }
 
         public void Update(ProductManage pm)
         {
-            const string query = "UPDATE Product SET MaLoai=@maLoai, TenSP=@tenSP, MoTa=@moTa, DonViTinh=@donViTinh, GiaNiemYet=@giaNiemYet, GiaBan=@giaBan, TrangThai=@trangThai WHERE MaSP=@maSP";
-            using var connection = CreateConnection();
-            connection.Open();
-            using var command = new MySqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@maLoai", pm.MaLoai);
-            command.Parameters.AddWithValue("@tenSP", pm.TenSP);
-            command.Parameters.AddWithValue("@moTa", pm.MoTa);
-            command.Parameters.AddWithValue("@donViTinh", pm.DonViTinh);
-            command.Parameters.AddWithValue("@giaNiemYet", pm.GiaNiemYet);
-            command.Parameters.AddWithValue("@giaBan", pm.GiaBan);
-            command.Parameters.AddWithValue("@trangThai", pm.TrangThai);
-            command.Parameters.AddWithValue("@maSP", pm.MaSP);
-
-            if (command.ExecuteNonQuery() == 0)
-                throw new InvalidOperationException("Không tìm thấy sản phẩm để cập nhật.");
+            try
+            {
+                string query = "UPDATE SAN_PHAM SET MaLoai='"+pm.MaLoai+"', TenSP='"+pm.TenSP+"', MoTa='"+pm.MoTa+"', DonViTinh='"+pm.DonViTinh+ "', GiaNiemYet='"+pm.GiaNiemYet+ "', GiaBan='"+pm.GiaBan+ "', TrangThai='"+pm.TrangThai+"' WHERE MaSP='" + pm.MaSP+"'";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                int r = command.ExecuteNonQuery();
+                if (r > 0)
+                {
+                    Console.WriteLine("Sửa dữ liệu sản phẩm thành công");
+                }
+                else
+                {
+                    Console.WriteLine("Lỗi sửa dữ liệu sản phẩm");
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Lỗi sửa sản phẩm");
+            }
         }
 
         public void Insert(ProductManage pm)
         {
-            const string query = "INSERT INTO Product(MaSP, MaLoai, TenSP, MoTa, DonViTinh, GiaNiemYet, GiaBan, TrangThai) VALUES(@maSP, @maLoai, @tenSP, @moTa, @donViTinh, @giaNiemYet, @giaBan, @trangThai)";
-            using var connection = CreateConnection();
-            connection.Open();
-            using var command = new MySqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@maSP", pm.MaSP);
-            command.Parameters.AddWithValue("@maLoai", pm.MaLoai);
-            command.Parameters.AddWithValue("@tenSP", pm.TenSP);
-            command.Parameters.AddWithValue("@moTa", pm.MoTa);
-            command.Parameters.AddWithValue("@donViTinh", pm.DonViTinh);
-            command.Parameters.AddWithValue("@giaNiemYet", pm.GiaNiemYet);
-            command.Parameters.AddWithValue("@giaBan", pm.GiaBan);
-            command.Parameters.AddWithValue("@trangThai", pm.TrangThai);
-
-            if (command.ExecuteNonQuery() == 0)
-                throw new InvalidOperationException("Không thể thêm sản phẩm.");
+            try
+            {
+                string query = "INSERT INTO SAN_PHAM VALUES('" + pm.MaSP + "', '" + pm.MaLoai + "', '" + pm.TenSP + "', '" + pm.MoTa + "', '" + pm.DonViTinh + "', '" + pm.GiaNiemYet + "', '" + pm.GiaBan + "', '" + pm.TrangThai + "')";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                int r = command.ExecuteNonQuery();
+                if (r > 0)
+                {
+                    Console.WriteLine("Thêm dữ liệu sản phẩm thành công");
+                }
+                else
+                {
+                    Console.WriteLine("Lỗi Thêm dữ liệu sản phẩm");
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Lỗi thêm sản phẩm");
+            }
         }
 
-        public bool CheckId(string ma)
+        public bool CheckProduct(string ma)
         {
-            const string query = "SELECT COUNT(*) FROM Product WHERE MaSP = @ma";
-            using var connection = CreateConnection();
-            connection.Open();
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@ma", ma);
+            string query = "SELECT COUNT(*) FROM SAN_PHAM WHERE MaSP = '"+ma+"' ";
+            MySqlCommand command= new MySqlCommand(query, connection);
             int count = Convert.ToInt32(command.ExecuteScalar());
             return count > 0;
         }

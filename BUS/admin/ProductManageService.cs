@@ -38,7 +38,7 @@ namespace SmartShop.BUS
         {
             Validate(pm);
             ProductManageDAO dao = new ProductManageDAO();
-            if (dao.CheckId(pm.MaSP))
+            if (dao.CheckProduct(pm.MaSP))
             {
                 throw new Exception("Sản phẩm đã tồn tại");
             }
