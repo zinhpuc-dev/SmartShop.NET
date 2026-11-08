@@ -4,8 +4,6 @@
     <dt>Số điện thoại</dt><dd>@Value.Phone</dd>
     <dt>Email</dt><dd>@(string.IsNullOrEmpty(Value.Email) ? "Chưa cung cấp" : Value.Email)</dd>
     <dt>Địa chỉ</dt><dd>@Value.Address</dd>
-    <dt>Trạng thái</dt><dd>@(Value.IsActive ? "Đang hoạt động" : "Đã khóa")</dd>
-    <dt>Ngày tạo</dt><dd>@Value.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
 </dl>
 
 @code {

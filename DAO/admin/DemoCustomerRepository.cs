@@ -9,15 +9,19 @@ public sealed class DemoCustomerRepository : ICustomerRepository
     private readonly object gate = new();
     private readonly List<Customer> customers =
     [
-        new(1, "KH001", "Nguyễn An", "0900000001", "an@example.com", "123 Đường Demo, TP. Hồ Chí Minh", true, new DateTime(2026, 10, 21)),
-        new(2, "KH002", "Trần Bình", "0900000002", "binh@example.com", "45 Đường Mẫu, TP. Hồ Chí Minh", true, new DateTime(2026, 10, 22)),
-        new(3, "KH003", "Lê Chi", "0900000003", "", "78 Đường Demo, TP. Hồ Chí Minh", false, new DateTime(2026, 10, 23))
+        new("KH000001", "Nguyễn An", "0900000001", "an@example.com", "123 Đường Demo, TP. Hồ Chí Minh"),
+        new("KH000002", "Trần Bình", "0900000002", "binh@example.com", "45 Đường Mẫu, TP. Hồ Chí Minh"),
+        new("KH000003", "Lê Chi", "0900000003", "", "78 Đường Demo, TP. Hồ Chí Minh")
     ];
-    private int nextId = 4;
 
     public IReadOnlyList<Customer> GetAll()
     {
         lock (gate) return customers.ToArray();
+    }
+
+    public Customer? GetByCode(string code)
+    {
+        lock (gate) return customers.SingleOrDefault(value => value.Code == code);
     }
 
     public Customer Insert(Customer customer)
@@ -25,9 +29,8 @@ public sealed class DemoCustomerRepository : ICustomerRepository
         lock (gate)
         {
             EnsureUnique(customer.Code);
-            var saved = customer with { Id = nextId++ };
-            customers.Add(saved);
-            return saved;
+            customers.Add(customer);
+            return customer;
         }
     }
 
@@ -35,29 +38,28 @@ public sealed class DemoCustomerRepository : ICustomerRepository
     {
         lock (gate)
         {
-            var index = IndexOf(customer.Id);
-            if (customers[index].Code != customer.Code || customers[index].CreatedAt != customer.CreatedAt)
-                throw new InvalidOperationException("Không được thay đổi mã hoặc ngày tạo khách hàng.");
-            EnsureUnique(customer.Code, customer.Id);
+            var index = IndexOf(customer.Code);
+            EnsureUnique(customer.Code, customer.Code);
             customers[index] = customer;
             return customer;
         }
     }
 
-    public void Delete(int id)
+    public void Delete(string code)
     {
-        lock (gate) customers.RemoveAt(IndexOf(id));
+        lock (gate) customers.RemoveAt(IndexOf(code));
     }
 
-    private int IndexOf(int id)
+    private int IndexOf(string code)
     {
-        var index = customers.FindIndex(c => c.Id == id);
+        var index = customers.FindIndex(c => c.Code == code);
         return index >= 0 ? index : throw new InvalidOperationException("Không tìm thấy khách hàng.");
     }
 
-    private void EnsureUnique(string code, int exceptId = 0)
+    private void EnsureUnique(string code, string? exceptCode = null)
     {
-        if (customers.Any(c => c.Id != exceptId && string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase)))
+        if (customers.Any(c => !string.Equals(c.Code, exceptCode, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Mã khách hàng đã tồn tại.");
     }
 }

@@ -11,6 +11,7 @@ public sealed class ShopState : IShopService
     private readonly IShopRepository dao;
     private readonly Dictionary<int, int> cart = [];
     private readonly IReadOnlyDictionary<int, int> cartView;
+    private string customerPhone = "";
 
     public ShopState(IShopRepository repository)
     {
@@ -20,7 +21,7 @@ public sealed class ShopState : IShopService
     }
 
     public IReadOnlyList<Product> Products => dao.GetProducts();
-    public IReadOnlyList<Order> Orders => dao.GetOrders();
+    public IReadOnlyList<Order> Orders => string.IsNullOrWhiteSpace(customerPhone) ? [] : dao.GetOrders(customerPhone);
     public IReadOnlyDictionary<int, int> Cart => cartView;
     public int Count => cart.Values.Sum();
     public decimal Total => cart.Sum(x => FindProduct(x.Key).Price * x.Value);
@@ -78,10 +79,11 @@ public sealed class ShopState : IShopService
         var lines = cart.Select(x => new OrderLine(FindProduct(x.Key), x.Value)).ToList().AsReadOnly();
         if (lines.Any(x => x.Quantity <= 0 || x.Quantity > x.Product.Stock))
             throw new InvalidOperationException("Không đủ tồn kho.");
-        var order = new Order($"SS{DateTime.Now:yyMMdd}{Orders.Count + 1:000}",
+        var order = new Order($"DH{Guid.NewGuid():N}"[..8].ToUpperInvariant(),
             name.Trim(), phone, address.Trim(), DateTime.Now, lines,
             lines.Sum(x => x.Product.Price * x.Quantity));
-        dao.CommitOrder(order);
+        order = dao.CommitOrder(order);
+        customerPhone = phone.Trim();
         cart.Clear();
         return order;
     }

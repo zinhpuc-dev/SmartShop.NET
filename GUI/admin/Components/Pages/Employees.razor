@@ -1,62 +1,65 @@
 @page "/admin/employees"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject IEmployeeService EmployeeService
+@inject ILogger<Employees> Logger
 
 <PageTitle>Quản lý nhân viên — SmartShop</PageTitle>
 <div class="section-heading customer-heading">
     <div>
         <div class="eyebrow red">SMARTSHOP / NHÂN VIÊN</div>
         <h1>Quản lý nhân viên</h1>
-        <p class="subtitle">Quản lý hồ sơ, thông tin liên hệ và tình trạng làm việc.</p>
+        <p class="subtitle">Hồ sơ nhân viên, bao gồm chức vụ.</p>
     </div>
-    <button type="button" class="primary" @onclick="Create">+ Thêm nhân viên</button>
+    <button type="button" class="primary" @onclick="Create" disabled="@loading || !string.IsNullOrEmpty(loadError)">+ Thêm nhân viên</button>
 </div>
-<p class="customer-help">Dữ liệu demo theo phiên. Tình trạng làm việc được quản lý độc lập với quyền đăng nhập.</p>
-<div class="metrics customer-metrics">
-    <div class="panel"><span>Tổng nhân viên</span><h2>@All.Count</h2></div>
-    <div class="panel"><span>Đang làm việc</span><h2>@All.Count(c => c.IsActive)</h2></div>
-    <div class="panel"><span>Ngừng làm việc</span><h2>@All.Count(c => !c.IsActive)</h2></div>
-</div>
+<p class="customer-help">Quản lý hồ sơ nhân viên và chức vụ.</p>
 @if (!string.IsNullOrEmpty(message))
 {
     <div class="customer-feedback @(failed ? "error" : "")" role="status">@message</div>
 }
 <section class="panel">
+    @if (loading)
+    {
+        <p role="status">Đang tải nhân viên...</p>
+    }
+    else if (!string.IsNullOrEmpty(loadError))
+    {
+        <div class="customer-feedback error" role="alert">@loadError <button type="button" @onclick="Load">Thử lại</button></div>
+    }
+    else
+    {
     <div class="customer-toolbar">
         <div class="customer-search"><input aria-label="Tìm nhân viên" placeholder="Tìm mã, họ tên, điện thoại, email..." @bind="query" @bind:event="oninput" /></div>
-        <select aria-label="Lọc trạng thái nhân viên" @bind="statusFilter">
-            <option value="all">Tất cả trạng thái</option><option value="active">Đang làm việc</option><option value="locked">Ngừng làm việc</option>
-        </select>
-        <button type="button" class="text-button" @onclick='() => { query = ""; statusFilter = "all"; }'>Xóa bộ lọc</button>
+        <button type="button" class="text-button" @onclick='() => query = ""'>Xóa tìm kiếm</button>
     </div>
-    <EmployeeSelector @bind-Value="selectedLookup" OnlyActive="false" />
+    <EmployeeSelector @bind-Value="selectedLookup" />
     @if (selectedLookup is not null)
     {
         <button type="button" class="text-button" @onclick="() => profile = selectedLookup">Xem hồ sơ đã chọn ↗</button>
     }
     <p class="customer-help">@Rows.Count kết quả · Có thể cuộn ngang bảng trên điện thoại.</p>
     <DataTable TItem="Employee" Items="Rows" Label="Danh sách nhân viên" ColumnCount="5" EmptyText="Không tìm thấy nhân viên phù hợp.">
-        <Header><th scope="col">Mã</th><th scope="col">Nhân viên</th><th scope="col">Điện thoại</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></Header>
+        <Header><th scope="col">Mã</th><th scope="col">Nhân viên</th><th scope="col">Chức vụ</th><th scope="col">Điện thoại</th><th scope="col">Thao tác</th></Header>
         <RowTemplate Context="employee">
             <td>@employee.Code</td>
             <td><strong>@employee.Name</strong><small>@employee.Email</small></td>
+            <td>@employee.Position</td>
             <td>@employee.Phone</td>
-            <td><span class="status @(employee.IsActive ? "" : "warning")">@(employee.IsActive ? "Đang làm" : "Ngừng làm việc")</span></td>
             <td><div class="customer-row-actions">
                 <button type="button" class="text-button" aria-label="Xem hồ sơ @employee.Code" @onclick="() => profile = employee">Hồ sơ</button>
                 <button type="button" class="text-button" aria-label="Sửa @employee.Code" @onclick="() => Edit(employee)">Sửa</button>
-                <button type="button" class="text-button" aria-label="Đổi tình trạng @employee.Code" @onclick="() => Toggle(employee)">@(employee.IsActive ? "Ngừng làm" : "Làm lại")</button>
                 <button type="button" class="text-button customer-danger" aria-label="Xóa @employee.Code" @onclick="() => deleting = employee">Xóa</button>
             </div></td>
         </RowTemplate>
     </DataTable>
+    }
 </section>
 
 @if (editorOpen)
 {
-    <ModalDialog Label="@(editingId is null ? "Thêm nhân viên" : "Sửa nhân viên")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseEditor">
-        <h2>@(editingId is null ? "Thêm nhân viên" : "Sửa nhân viên")</h2>
-        <EmployeeEditor Model="draft" IsEditing="@(editingId is not null)" Error="@formError" OnSave="Save" OnCancel="CloseEditor" />
+    <ModalDialog Label="@(editingCode is null ? "Thêm nhân viên" : "Sửa nhân viên")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseEditor">
+        <h2>@(editingCode is null ? "Thêm nhân viên" : "Sửa nhân viên")</h2>
+        <EmployeeEditor Model="draft" IsEditing="@(editingCode is not null)" Error="@formError" OnSave="Save" OnCancel="CloseEditor" />
     </ModalDialog>
 }
 @if (profile is not null)
@@ -70,7 +73,7 @@
 {
     <ModalDialog Label="Xác nhận xóa nhân viên" CssClass="narrow" OnClose="() => deleting = null">
         <h2>Xóa nhân viên?</h2>
-        <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong> khỏi danh sách demo của phiên này.</p>
+        <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong>. Không thể xóa nhân viên đang được liên kết với hóa đơn.</p>
         <div class="customer-actions">
             <button type="button" class="primary" @onclick="Delete">Xác nhận xóa</button>
             <button type="button" class="secondary" @onclick="() => deleting = null">Giữ lại</button>
@@ -78,24 +81,42 @@
     </ModalDialog>
 }
 @code {
-    private string query = "", statusFilter = "all", message = "", formError = "";
-    private bool editorOpen, failed;
-    private int? editingId;
+    private string query = "", message = "", formError = "", loadError = "";
+    private bool editorOpen, failed, loading = true;
+    private string? editingCode;
     private EmployeeDraft draft = new();
     private Employee? profile, deleting, selectedLookup;
-    private IReadOnlyList<Employee> All => EmployeeService.Search();
-    private IReadOnlyList<Employee> Rows => EmployeeService.Search(query, statusFilter switch { "active" => true, "locked" => false, _ => (bool?)null });
+    private IReadOnlyList<Employee> Rows => string.IsNullOrEmpty(loadError) ? EmployeeService.Search(query) : Array.Empty<Employee>();
+
+    protected override void OnInitialized() => Load();
+
+    private void Load()
+    {
+        loading = true;
+        try
+        {
+            _ = EmployeeService.Search();
+            loadError = "";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load Admin employees.");
+            loadError = "Không thể tải danh sách nhân viên. Vui lòng kiểm tra kết nối và thử lại.";
+        }
+        finally { loading = false; }
+    }
 
     private void Create()
     {
-        editingId = null;
+        if (loading || !string.IsNullOrEmpty(loadError)) return;
+        editingCode = null;
         draft = new EmployeeDraft { Code = EmployeeService.SuggestCode() };
         formError = "";
         editorOpen = true;
     }
     private void Edit(Employee employee)
     {
-        editingId = employee.Id;
+        editingCode = employee.Code;
         draft = EmployeeDraft.From(employee);
         formError = "";
         editorOpen = true;
@@ -105,23 +126,14 @@
     {
         try
         {
-            var saved = editingId is int id ? EmployeeService.Update(id, draft) : EmployeeService.Create(draft);
-            if (selectedLookup?.Id == saved.Id) selectedLookup = saved;
+            var saved = editingCode is string code ? EmployeeService.Update(code, draft) : EmployeeService.Create(draft);
+            if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             CloseEditor();
-            query = ""; statusFilter = "all";
+            query = "";
             Notice($"Đã lưu nhân viên {saved.Code}.");
         }
         catch (InvalidOperationException ex) { formError = ex.Message; }
-    }
-    private void Toggle(Employee employee)
-    {
-        try
-        {
-            var saved = EmployeeService.SetActive(employee.Id, !employee.IsActive);
-            if (selectedLookup?.Id == saved.Id) selectedLookup = saved;
-            Notice($"{saved.Code}: {(saved.IsActive ? "đang làm việc" : "đã ngừng làm việc")}.");
-        }
-        catch (InvalidOperationException ex) { Notice(ex.Message, true); }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin employee."); formError = "Không thể lưu nhân viên. Vui lòng thử lại."; }
     }
     private void Delete()
     {
@@ -129,12 +141,13 @@
         try
         {
             var code = deleting.Code;
-            EmployeeService.Delete(deleting.Id);
-            if (selectedLookup?.Id == deleting.Id) selectedLookup = null;
+            EmployeeService.Delete(deleting.Code);
+            if (selectedLookup?.Code == deleting.Code) selectedLookup = null;
             deleting = null;
             Notice($"Đã xóa nhân viên {code}.");
         }
         catch (InvalidOperationException ex) { deleting = null; Notice(ex.Message, true); }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to delete Admin employee."); deleting = null; Notice("Không thể xóa nhân viên. Vui lòng thử lại.", true); }
     }
     private void Notice(string text, bool error = false) { message = text; failed = error; }
 }

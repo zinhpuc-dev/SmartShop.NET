@@ -6,18 +6,18 @@
     <ValidatedForm Model="Model" OnValidSubmit="OnSave">
         <div class="customer-form-grid">
             <FormField Label="Mã nhà cung cấp">
-                <InputText @bind-Value="Model.Code" readonly="@IsEditing" aria-readonly="@IsEditing" maxlength="20" />
+                <InputText @bind-Value="Model.Code" readonly="@IsEditing" aria-readonly="@IsEditing" maxlength="6" />
             </FormField>
-            <FormField Label="Tên nhà cung cấp"><InputText @bind-Value="Model.Name" maxlength="120" /></FormField>
-            <FormField Label="Số điện thoại"><InputText @bind-Value="Model.Phone" maxlength="11" inputmode="tel" /></FormField>
-            <FormField Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="150" inputmode="email" /></FormField>
+            <FormField Label="Tên nhà cung cấp"><InputText @bind-Value="Model.Name" maxlength="200" /></FormField>
+            <FormField Label="Số điện thoại (không bắt buộc)"><InputText @bind-Value="Model.Phone" maxlength="20" inputmode="tel" /></FormField>
+            <FormField Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="255" inputmode="email" /></FormField>
             <div class="customer-span-all">
-                <FormField Label="Địa chỉ"><InputTextArea @bind-Value="Model.Address" maxlength="250" /></FormField>
+                <FormField Label="Địa chỉ (không bắt buộc)"><InputTextArea @bind-Value="Model.Address" maxlength="300" /></FormField>
             </div>
         </div>
         @if (IsEditing)
         {
-            <p class="customer-help">Mã nhà cung cấp và ngày tạo được giữ nguyên khi chỉnh sửa.</p>
+            <p class="customer-help">Mã nhà cung cấp được giữ nguyên khi chỉnh sửa.</p>
         }
         <div class="customer-actions">
             <button type="submit" class="primary">Lưu nhà cung cấp</button>

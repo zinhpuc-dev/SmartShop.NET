@@ -2,7 +2,7 @@
 
 <ModalDialog Label="Tìm và chọn nhân viên" CssClass="customer-modal" OnClose="OnClose">
     <h2>Tìm và chọn nhân viên</h2>
-    <p class="customer-help">@(OnlyActive ? "Chỉ hiển thị nhân viên đang làm việc." : "Tìm theo mã, tên, số điện thoại, email hoặc địa chỉ.")</p>
+    <p class="customer-help">Tìm theo mã, tên, chức vụ, số điện thoại hoặc email.</p>
     <div class="customer-search">
         <input aria-label="Tìm nhân viên trong popup" placeholder="Nhập mã, tên, số điện thoại..."
                @bind="query" @bind:event="oninput" />
@@ -11,31 +11,28 @@
     {
         <div class="customer-feedback error" role="alert">@error</div>
     }
-    <DataTable TItem="Employee" Items="Results" Label="Kết quả chọn nhân viên" ColumnCount="4" EmptyText="Không tìm thấy nhân viên phù hợp.">
-        <Header><th scope="col">Nhân viên</th><th scope="col">Liên hệ</th><th scope="col">Trạng thái</th><th scope="col">Chọn</th></Header>
+    <DataTable TItem="Employee" Items="Results" Label="Kết quả chọn nhân viên" ColumnCount="3" EmptyText="Không tìm thấy nhân viên phù hợp.">
+        <Header><th scope="col">Nhân viên</th><th scope="col">Liên hệ</th><th scope="col">Chọn</th></Header>
         <RowTemplate Context="employee">
             <td><strong>@employee.Name</strong><small>@employee.Code</small></td>
             <td>@employee.Phone<small>@employee.Email</small></td>
-            <td>@(employee.IsActive ? "Đang làm" : "Ngừng làm việc")</td>
-            <td><button type="button" class="text-button" aria-label="Chọn @employee.Code" @onclick="() => Choose(employee.Id)">Chọn →</button></td>
+            <td><button type="button" class="text-button" aria-label="Chọn @employee.Code" @onclick="() => Choose(employee.Code)">Chọn →</button></td>
         </RowTemplate>
     </DataTable>
     <div class="customer-actions"><button type="button" class="secondary" @onclick="OnClose">Đóng tìm kiếm</button></div>
 </ModalDialog>
 
 @code {
-    [Parameter] public bool OnlyActive { get; set; } = true;
     [Parameter] public EventCallback<Employee> OnSelected { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     private string query = "", error = "";
-    private IReadOnlyList<Employee> Results => Employees.Search(query, OnlyActive ? true : null);
+    private IReadOnlyList<Employee> Results => Employees.Search(query);
 
-    private async Task Choose(int id)
+    private async Task Choose(string code)
     {
         try
         {
-            var value = Employees.Get(id);
-            if (OnlyActive && !value.IsActive) throw new InvalidOperationException("Nhân viên này đã ngừng làm việc.");
+            var value = Employees.Get(code);
             await OnSelected.InvokeAsync(value);
             await OnClose.InvokeAsync();
         }

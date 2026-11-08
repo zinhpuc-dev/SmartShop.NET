@@ -2,37 +2,32 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SmartShop.DTO;
 
-public sealed record Employee(int Id, string Code, string Name, string Phone, string Email,
-    string Address, bool IsActive, DateTime CreatedAt);
+public sealed record Employee(string Code, string Name, string Position, string Phone, string Email);
 
 /// <summary>An editable copy; cancelling a form never mutates the stored employee.</summary>
 public sealed class EmployeeDraft
 {
     [Required(ErrorMessage = "Vui lòng nhập mã nhân viên.")]
-    [RegularExpression(@"[A-Za-z][A-Za-z0-9_-]{1,19}", ErrorMessage = "Mã gồm 2–20 ký tự, bắt đầu bằng chữ; chỉ dùng chữ, số, _ hoặc -.")]
+    [StringLength(8, ErrorMessage = "Mã nhân viên tối đa 8 ký tự.")]
     public string Code { get; set; } = "";
 
     [Required(ErrorMessage = "Vui lòng nhập họ tên.")]
-    [StringLength(120, MinimumLength = 2, ErrorMessage = "Họ tên cần từ 2 đến 120 ký tự.")]
+    [StringLength(150, MinimumLength = 2, ErrorMessage = "Họ tên cần từ 2 đến 150 ký tự.")]
     public string Name { get; set; } = "";
 
-    [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
-    [RegularExpression(@"0[0-9]{9}", ErrorMessage = "Số điện thoại gồm 10 số, bắt đầu bằng 0.")]
+    [Required(ErrorMessage = "Vui lòng nhập chức vụ.")]
+    [StringLength(100, ErrorMessage = "Chức vụ tối đa 100 ký tự.")]
+    public string Position { get; set; } = "";
+
+    [StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự.")]
     public string Phone { get; set; } = "";
 
-    [StringLength(150, ErrorMessage = "Email tối đa 150 ký tự.")]
-    [RegularExpression(@"[^@\s]+@[^@\s]+\.[^@\s]+", ErrorMessage = "Email không đúng định dạng.")]
+    [StringLength(255, ErrorMessage = "Email tối đa 255 ký tự.")]
     public string Email { get; set; } = "";
-
-    [Required(ErrorMessage = "Vui lòng nhập địa chỉ.")]
-    [StringLength(250, MinimumLength = 10, ErrorMessage = "Địa chỉ cần từ 10 đến 250 ký tự.")]
-    public string Address { get; set; } = "";
-
-    public bool IsActive { get; set; } = true;
 
     public static EmployeeDraft From(Employee value) => new()
     {
-        Code = value.Code, Name = value.Name, Phone = value.Phone,
-        Email = value.Email, Address = value.Address, IsActive = value.IsActive
+        Code = value.Code, Name = value.Name, Position = value.Position,
+        Phone = value.Phone, Email = value.Email
     };
 }

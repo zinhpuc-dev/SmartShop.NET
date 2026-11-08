@@ -20,7 +20,7 @@ public abstract class ShopPageBase : ComponentBase, IDisposable
     protected string PageName => page switch
     {
         "home" => "Trang chủ", "cart" => "Giỏ hàng", "checkout" => "Thanh toán",
-        "success" => "Đặt hàng thành công", "admin" => "Quản trị", "admin/customers" => "Khách hàng", "admin/employees" => "Nhân viên", "admin/suppliers" => "Nhà cung cấp", "orders" => "Đơn hàng",
+        "success" => "Đặt hàng thành công", "admin" => "Quản trị", "admin/customers" => "Khách hàng", "admin/employees" => "Nhân viên", "admin/suppliers" => "Nhà cung cấp", "admin/inventory" => "Kho & nhập hàng", "admin/promotions" => "Khuyến mại & voucher", "orders" => "Đơn hàng",
         "account" => "Tài khoản", "favorites" => "Yêu thích", "support" => "Hỗ trợ", _ => "Sản phẩm"
     };
     protected static readonly string[] categories = ["Tất cả", "Điện thoại", "Laptop", "Máy tính bảng", "Phụ kiện"];
@@ -32,13 +32,10 @@ public abstract class ShopPageBase : ComponentBase, IDisposable
     protected HashSet<int> favorites => Ui.Favorites;
     protected Product? selected { get => Ui.Selected; set { Ui.Selected = value; Ui.Notify(); } }
     protected Product? editing { get => Ui.Editing; set { Ui.Editing = value; Ui.Notify(); } }
-    protected decimal editPrice { get => Ui.EditPrice; set => Ui.EditPrice = value; }
-    protected int editStock { get => Ui.EditStock; set => Ui.EditStock = value; }
     protected Order? lastOrder => Ui.LastOrder;
     protected CheckoutInput checkout => Ui.Checkout;
 
-    protected IEnumerable<Product> Filtered => Shop.Search(query, category,
-        page == "favorites" ? favorites : null, sort);
+    protected IEnumerable<Product> Filtered => Shop.Search(query, category, page == "favorites" ? favorites : null, sort);
 
     protected override void OnInitialized()
     {
@@ -98,19 +95,12 @@ public abstract class ShopPageBase : ComponentBase, IDisposable
     }
     protected void EditProduct(Product p)
     {
-        Ui.EditPrice = p.Price;
-        Ui.EditStock = p.Stock;
         editing = p;
     }
     protected void SaveProduct()
     {
         if (editing is null) return;
-        try
-        {
-            Shop.UpdateProduct(editing.Id, editPrice, editStock);
-            editing = null;
-            toast = "Đã cập nhật sản phẩm";
-        }
-        catch (InvalidOperationException ex) { toast = ex.Message; }
+        toast = "Chỉnh sửa sản phẩm chỉ khả dụng trong phiên demo.";
+        editing = null;
     }
 }

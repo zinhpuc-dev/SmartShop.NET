@@ -1,87 +1,87 @@
-using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-/// <summary>Customer BUS: owns the ArrayList, validation and CRUD operations.</summary>
 public sealed class CustomerService : ICustomerService
 {
     private readonly ICustomerRepository repository;
-    private readonly ArrayList customers;
+    private List<Customer>? customers;
 
     public CustomerService(ICustomerRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         this.repository = repository;
-        customers = new ArrayList(repository.GetAll().ToArray());
     }
 
-    public IReadOnlyList<Customer> Search(string query = "", bool? isActive = null)
+    public IReadOnlyList<Customer> Search(string query = "")
     {
         var term = SearchText.Normalize((query ?? "").Trim());
-        // Search the BUS cache, never re-query storage while typing.
-        return customers.Cast<Customer>()
-            .Where(c => (isActive is null || c.IsActive == isActive)
-                && (term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
-                    .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase))))
+        return GetCustomers()
+            .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
+                .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public Customer Get(int id) => customers.Cast<Customer>().SingleOrDefault(c => c.Id == id)
+    public Customer Get(string code) => repository.GetByCode((code ?? string.Empty).Trim())
         ?? throw new InvalidOperationException("Không tìm thấy khách hàng.");
 
     public string SuggestCode()
     {
         var number = 1;
-        while (customers.Cast<Customer>().Any(c => c.Code.Equals($"KH{number:000}", StringComparison.OrdinalIgnoreCase))) number++;
-        return $"KH{number:000}";
+        while (GetCustomers().Any(c => c.Code.Equals($"KH{number:000000}", StringComparison.OrdinalIgnoreCase))) number++;
+        if (number > 999999) throw new InvalidOperationException("Không còn mã khách hàng khả dụng.");
+        return $"KH{number:000000}";
     }
 
     public Customer Create(CustomerDraft draft)
     {
         var value = Validate(draft);
         EnsureUnique(value.Code);
-        var saved = repository.Insert(new Customer(0, value.Code, value.Name, value.Phone, value.Email,
-            value.Address, value.IsActive, DateTime.Now));
-        customers.Add(saved);
+        var saved = repository.Insert(new Customer(value.Code, value.Name, value.Phone, value.Email, value.Address));
+        GetCustomers().Add(saved);
         return saved;
     }
 
-    public Customer Update(int id, CustomerDraft draft)
+    public Customer Update(string code, CustomerDraft draft)
     {
-        var existing = Get(id);
+        var existing = Get(code);
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã khách hàng không được sửa.");
-        EnsureUnique(value.Code, id);
-        return Save(existing with
+        EnsureUnique(value.Code, existing.Code);
+        var saved = repository.Update(existing with
         {
-            Name = value.Name, Phone = value.Phone, Email = value.Email,
-            Address = value.Address, IsActive = value.IsActive
+            Name = value.Name, Phone = value.Phone, Email = value.Email, Address = value.Address
         });
-    }
-
-    public Customer SetActive(int id, bool active) => Save(Get(id) with { IsActive = active });
-
-    public void Delete(int id)
-    {
-        var existing = Get(id);
-        repository.Delete(id);
-        customers.Remove(existing);
-    }
-
-    private Customer Save(Customer customer)
-    {
-        var previous = Get(customer.Id);
-        var saved = repository.Update(customer);
-        customers[customers.IndexOf(previous)] = saved;
+        Replace(existing, saved);
         return saved;
     }
 
-    private void EnsureUnique(string code, int exceptId = 0)
+    public void Delete(string code)
     {
-        if (customers.Cast<Customer>().Any(c => c.Id != exceptId && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
+        var existing = Get(code);
+        repository.Delete(existing.Code);
+        GetCustomers().RemoveAll(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private List<Customer> GetCustomers()
+    {
+        customers ??= repository.GetAll().ToList();
+        return customers;
+    }
+
+    private void Replace(Customer existing, Customer saved)
+    {
+        var index = GetCustomers().FindIndex(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        if (index < 0) throw new InvalidOperationException("Không tìm thấy khách hàng trong danh sách hiện tại.");
+        GetCustomers()[index] = saved;
+    }
+
+    private void EnsureUnique(string code, string? exceptCode = null)
+    {
+        if (GetCustomers().Any(c => !c.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)
+            && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Mã khách hàng đã tồn tại.");
     }
 
@@ -92,11 +92,13 @@ public sealed class CustomerService : ICustomerService
         {
             Code = (draft.Code ?? "").Trim().ToUpperInvariant(), Name = (draft.Name ?? "").Trim(),
             Phone = (draft.Phone ?? "").Trim(), Email = (draft.Email ?? "").Trim(),
-            Address = (draft.Address ?? "").Trim(), IsActive = draft.IsActive
+            Address = (draft.Address ?? "").Trim()
         };
         var errors = new List<ValidationResult>();
         if (!Validator.TryValidateObject(value, new ValidationContext(value), errors, validateAllProperties: true))
             throw new InvalidOperationException(string.Join(" ", errors.Select(e => e.ErrorMessage)));
+        if (!string.IsNullOrEmpty(value.Email) && !new EmailAddressAttribute().IsValid(value.Email))
+            throw new InvalidOperationException("Email không đúng định dạng.");
         return value;
     }
 

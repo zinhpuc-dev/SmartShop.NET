@@ -16,7 +16,7 @@
         <RowTemplate Context="supplier">
             <td><strong>@supplier.Name</strong><small>@supplier.Code</small></td>
             <td>@supplier.Phone<small>@supplier.Email</small></td>
-            <td><button type="button" class="text-button" aria-label="Chọn @supplier.Code" @onclick="() => Choose(supplier.Id)">Chọn →</button></td>
+            <td><button type="button" class="text-button" aria-label="Chọn @supplier.Code" @onclick="() => Choose(supplier.Code)">Chọn →</button></td>
         </RowTemplate>
     </DataTable>
     <div class="customer-actions"><button type="button" class="secondary" @onclick="OnClose">Đóng tìm kiếm</button></div>
@@ -28,11 +28,11 @@
     private string query = "", error = "";
     private IReadOnlyList<Supplier> Results => Suppliers.Search(query);
 
-    private async Task Choose(int id)
+    private async Task Choose(string code)
     {
         try
         {
-            var value = Suppliers.Get(id);
+            var value = Suppliers.Get(code);
             await OnSelected.InvokeAsync(value);
             await OnClose.InvokeAsync();
         }

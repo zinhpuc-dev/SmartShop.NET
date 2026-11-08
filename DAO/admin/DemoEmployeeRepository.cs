@@ -9,15 +9,19 @@ public sealed class DemoEmployeeRepository : IEmployeeRepository
     private readonly object gate = new();
     private readonly List<Employee> employees =
     [
-        new(1, "NV001", "Nguyễn Minh", "0910000001", "minh@example.com", "123 Đường Demo, TP. Hồ Chí Minh", true, new DateTime(2026, 10, 21)),
-        new(2, "NV002", "Trần Hà", "0910000002", "ha@example.com", "45 Đường Mẫu, TP. Hồ Chí Minh", true, new DateTime(2026, 10, 22)),
-        new(3, "NV003", "Lê Dũng", "0910000003", "", "78 Đường Demo, TP. Hồ Chí Minh", false, new DateTime(2026, 10, 23))
+        new("NV000001", "Nguyễn Minh", "Nhân viên", "0910000001", "minh@example.com"),
+        new("NV000002", "Trần Hà", "Nhân viên", "0910000002", "ha@example.com"),
+        new("NV000003", "Lê Dũng", "Quản lý", "0910000003", "")
     ];
-    private int nextId = 4;
 
     public IReadOnlyList<Employee> GetAll()
     {
         lock (gate) return employees.ToArray();
+    }
+
+    public Employee? GetByCode(string code)
+    {
+        lock (gate) return employees.SingleOrDefault(value => value.Code == code);
     }
 
     public Employee Insert(Employee employee)
@@ -25,9 +29,8 @@ public sealed class DemoEmployeeRepository : IEmployeeRepository
         lock (gate)
         {
             EnsureUnique(employee.Code);
-            var saved = employee with { Id = nextId++ };
-            employees.Add(saved);
-            return saved;
+            employees.Add(employee);
+            return employee;
         }
     }
 
@@ -35,29 +38,28 @@ public sealed class DemoEmployeeRepository : IEmployeeRepository
     {
         lock (gate)
         {
-            var index = IndexOf(employee.Id);
-            if (employees[index].Code != employee.Code || employees[index].CreatedAt != employee.CreatedAt)
-                throw new InvalidOperationException("Không được thay đổi mã hoặc ngày tạo nhân viên.");
-            EnsureUnique(employee.Code, employee.Id);
+            var index = IndexOf(employee.Code);
+            EnsureUnique(employee.Code, employee.Code);
             employees[index] = employee;
             return employee;
         }
     }
 
-    public void Delete(int id)
+    public void Delete(string code)
     {
-        lock (gate) employees.RemoveAt(IndexOf(id));
+        lock (gate) employees.RemoveAt(IndexOf(code));
     }
 
-    private int IndexOf(int id)
+    private int IndexOf(string code)
     {
-        var index = employees.FindIndex(c => c.Id == id);
+        var index = employees.FindIndex(c => c.Code == code);
         return index >= 0 ? index : throw new InvalidOperationException("Không tìm thấy nhân viên.");
     }
 
-    private void EnsureUnique(string code, int exceptId = 0)
+    private void EnsureUnique(string code, string? exceptCode = null)
     {
-        if (employees.Any(c => c.Id != exceptId && string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase)))
+        if (employees.Any(c => !string.Equals(c.Code, exceptCode, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Mã nhân viên đã tồn tại.");
     }
 }

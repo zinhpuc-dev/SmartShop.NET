@@ -1,22 +1,33 @@
 @page "/admin/suppliers"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject ISupplierService SupplierService
+@inject ILogger<Suppliers> Logger
 
 <PageTitle>Quản lý nhà cung cấp — SmartShop</PageTitle>
 <div class="section-heading customer-heading">
     <div>
         <div class="eyebrow red">SMARTSHOP / NHÀ CUNG CẤP</div>
         <h1>Quản lý nhà cung cấp</h1>
-        <p class="subtitle">Quản lý thông tin liên hệ của các nhà cung cấp.</p>
+        <p class="subtitle">Thông tin liên hệ nhà cung cấp.</p>
     </div>
-    <button type="button" class="primary" @onclick="Create">+ Thêm nhà cung cấp</button>
+    <button type="button" class="primary" @onclick="Create" disabled="@loading || !string.IsNullOrEmpty(loadError)">+ Thêm nhà cung cấp</button>
 </div>
-<p class="customer-help">Dữ liệu demo theo phiên.</p>
+<p class="customer-help">Xóa bị chặn khi nhà cung cấp đã có phiếu nhập liên kết.</p>
 @if (!string.IsNullOrEmpty(message))
 {
     <div class="customer-feedback @(failed ? "error" : "")" role="status">@message</div>
 }
 <section class="panel">
+    @if (loading)
+    {
+        <p role="status">Đang tải nhà cung cấp...</p>
+    }
+    else if (!string.IsNullOrEmpty(loadError))
+    {
+        <div class="customer-feedback error" role="alert">@loadError <button type="button" @onclick="Load">Thử lại</button></div>
+    }
+    else
+    {
     <div class="customer-toolbar">
         <div class="customer-search"><input aria-label="Tìm nhà cung cấp" placeholder="Tìm mã, tên, điện thoại, email..." @bind="query" @bind:event="oninput" /></div>
         <button type="button" class="text-button" @onclick='() => query = ""'>Xóa tìm kiếm</button>
@@ -36,20 +47,21 @@
             </div></td>
         </RowTemplate>
     </DataTable>
+    }
 </section>
 
 @if (editorOpen)
 {
-    <ModalDialog Label="@(editingId is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseEditor">
-        <h2>@(editingId is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")</h2>
-        <SupplierEditor Model="draft" IsEditing="@(editingId is not null)" Error="@formError" OnSave="Save" OnCancel="CloseEditor" />
+    <ModalDialog Label="@(editingCode is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseEditor">
+        <h2>@(editingCode is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")</h2>
+        <SupplierEditor Model="draft" IsEditing="@(editingCode is not null)" Error="@formError" OnSave="Save" OnCancel="CloseEditor" />
     </ModalDialog>
 }
 @if (deleting is not null)
 {
     <ModalDialog Label="Xác nhận xóa nhà cung cấp" CssClass="narrow" OnClose="() => deleting = null">
         <h2>Xóa nhà cung cấp?</h2>
-        <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong> khỏi danh sách demo của phiên này.</p>
+        <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong>. Không thể xóa nhà cung cấp đang được liên kết với phiếu nhập.</p>
         <div class="customer-actions">
             <button type="button" class="primary" @onclick="Delete">Xác nhận xóa</button>
             <button type="button" class="secondary" @onclick="() => deleting = null">Giữ lại</button>
@@ -57,23 +69,42 @@
     </ModalDialog>
 }
 @code {
-    private string query = "", message = "", formError = "";
-    private bool editorOpen, failed;
-    private int? editingId;
+    private string query = "", message = "", formError = "", loadError = "";
+    private bool editorOpen, failed, loading = true;
+    private string? editingCode;
     private SupplierDraft draft = new();
     private Supplier? deleting, selectedLookup;
-    private IReadOnlyList<Supplier> Rows => SupplierService.Search(query);
+    private IReadOnlyList<Supplier> Rows => string.IsNullOrEmpty(loadError) ? SupplierService.Search(query) : Array.Empty<Supplier>();
+
+    protected override void OnInitialized() => Load();
+
+    private void Load()
+    {
+        loading = true;
+        try
+        {
+            _ = SupplierService.Search();
+            loadError = "";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load Admin suppliers.");
+            loadError = "Không thể tải danh sách nhà cung cấp. Vui lòng kiểm tra kết nối và thử lại.";
+        }
+        finally { loading = false; }
+    }
 
     private void Create()
     {
-        editingId = null;
+        if (loading || !string.IsNullOrEmpty(loadError)) return;
+        editingCode = null;
         draft = new SupplierDraft { Code = SupplierService.SuggestCode() };
         formError = "";
         editorOpen = true;
     }
     private void Edit(Supplier supplier)
     {
-        editingId = supplier.Id;
+        editingCode = supplier.Code;
         draft = SupplierDraft.From(supplier);
         formError = "";
         editorOpen = true;
@@ -83,13 +114,14 @@
     {
         try
         {
-            var saved = editingId is int id ? SupplierService.Update(id, draft) : SupplierService.Create(draft);
-            if (selectedLookup?.Id == saved.Id) selectedLookup = saved;
+            var saved = editingCode is string code ? SupplierService.Update(code, draft) : SupplierService.Create(draft);
+            if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             CloseEditor();
             query = "";
             Notice($"Đã lưu nhà cung cấp {saved.Code}.");
         }
         catch (InvalidOperationException ex) { formError = ex.Message; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin supplier."); formError = "Không thể lưu nhà cung cấp. Vui lòng thử lại."; }
     }
     private void Delete()
     {
@@ -97,12 +129,13 @@
         try
         {
             var code = deleting.Code;
-            SupplierService.Delete(deleting.Id);
-            if (selectedLookup?.Id == deleting.Id) selectedLookup = null;
+            SupplierService.Delete(deleting.Code);
+            if (selectedLookup?.Code == deleting.Code) selectedLookup = null;
             deleting = null;
             Notice($"Đã xóa nhà cung cấp {code}.");
         }
         catch (InvalidOperationException ex) { deleting = null; Notice(ex.Message, true); }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to delete Admin supplier."); deleting = null; Notice("Không thể xóa nhà cung cấp. Vui lòng thử lại.", true); }
     }
     private void Notice(string text, bool error = false) { message = text; failed = error; }
 }

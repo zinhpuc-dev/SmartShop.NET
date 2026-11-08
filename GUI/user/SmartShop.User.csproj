@@ -4,6 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>SmartShop.Admin.Local</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../BUS/SmartShop.BUS.csproj" />

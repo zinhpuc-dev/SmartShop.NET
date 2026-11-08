@@ -6,13 +6,12 @@
 </div>
 @if (open)
 {
-    <CustomerPicker OnlyActive="OnlyActive" OnSelected="Select" OnClose="() => open = false" />
+    <CustomerPicker OnSelected="Select" OnClose="() => open = false" />
 }
 
 @code {
     [Parameter] public Customer? Value { get; set; }
     [Parameter] public EventCallback<Customer?> ValueChanged { get; set; }
-    [Parameter] public bool OnlyActive { get; set; } = true;
     private bool open;
     private string Display => Value is null ? "Chưa chọn khách hàng" : $"{Value.Code} — {Value.Name} — {Value.Phone}";
     private Task Select(Customer customer) => ValueChanged.InvokeAsync(customer);

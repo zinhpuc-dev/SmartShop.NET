@@ -1,77 +1,82 @@
-using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-/// <summary>Supplier BUS: owns the ArrayList, validation and CRUD operations.</summary>
 public sealed class SupplierService : ISupplierService
 {
     private readonly ISupplierRepository repository;
-    private readonly ArrayList suppliers;
+    private List<Supplier>? suppliers;
 
     public SupplierService(ISupplierRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         this.repository = repository;
-        suppliers = new ArrayList(repository.GetAll().ToArray());
     }
 
     public IReadOnlyList<Supplier> Search(string query = "")
     {
         var term = SearchText.Normalize((query ?? "").Trim());
         // Search the BUS cache, never re-query storage while typing.
-        return suppliers.Cast<Supplier>()
+        return GetSuppliers()
             .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
                     .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public Supplier Get(int id) => suppliers.Cast<Supplier>().SingleOrDefault(c => c.Id == id)
+    public Supplier Get(string code) => repository.GetByCode((code ?? string.Empty).Trim())
         ?? throw new InvalidOperationException("Không tìm thấy nhà cung cấp.");
 
     public string SuggestCode()
     {
         var number = 1;
-        while (suppliers.Cast<Supplier>().Any(c => c.Code.Equals($"NCC{number:000}", StringComparison.OrdinalIgnoreCase))) number++;
-        return $"NCC{number:000}";
+        while (GetSuppliers().Any(c => c.Code.Equals($"N{number:00000}", StringComparison.OrdinalIgnoreCase))) number++;
+        if (number > 99999) throw new InvalidOperationException("Không còn mã nhà cung cấp khả dụng.");
+        return $"N{number:00000}";
     }
 
     public Supplier Create(SupplierDraft draft)
     {
         var value = Validate(draft);
         EnsureUnique(value.Code);
-        var saved = repository.Insert(new Supplier(0, value.Code, value.Name, value.Phone, value.Email,
-            value.Address, DateTime.Now));
-        suppliers.Add(saved);
+        var saved = repository.Insert(new Supplier(value.Code, value.Name, value.Phone, value.Email, value.Address));
+        GetSuppliers().Add(saved);
         return saved;
     }
 
-    public Supplier Update(int id, SupplierDraft draft)
+    public Supplier Update(string code, SupplierDraft draft)
     {
-        var existing = Get(id);
+        var existing = Get(code);
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhà cung cấp không được sửa.");
+        EnsureUnique(value.Code, existing.Code);
         var saved = repository.Update(existing with
         {
-            Name = value.Name, Phone = value.Phone, Email = value.Email,
-            Address = value.Address
+            Name = value.Name, Phone = value.Phone, Email = value.Email, Address = value.Address
         });
-        suppliers[suppliers.IndexOf(existing)] = saved;
+        var index = GetSuppliers().IndexOf(existing);
+        GetSuppliers()[index] = saved;
         return saved;
     }
 
-    public void Delete(int id)
+    public void Delete(string code)
     {
-        var existing = Get(id);
-        repository.Delete(id);
-        suppliers.Remove(existing);
+        var existing = Get(code);
+        repository.Delete(existing.Code);
+        GetSuppliers().RemoveAll(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void EnsureUnique(string code)
+    private List<Supplier> GetSuppliers()
     {
-        if (suppliers.Cast<Supplier>().Any(c => c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
+        suppliers ??= repository.GetAll().ToList();
+        return suppliers;
+    }
+
+    private void EnsureUnique(string code, string? exceptCode = null)
+    {
+        if (GetSuppliers().Any(c => !c.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)
+            && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Mã nhà cung cấp đã tồn tại.");
     }
 
@@ -87,6 +92,8 @@ public sealed class SupplierService : ISupplierService
         var errors = new List<ValidationResult>();
         if (!Validator.TryValidateObject(value, new ValidationContext(value), errors, validateAllProperties: true))
             throw new InvalidOperationException(string.Join(" ", errors.Select(e => e.ErrorMessage)));
+        if (!string.IsNullOrEmpty(value.Email) && !new EmailAddressAttribute().IsValid(value.Email))
+            throw new InvalidOperationException("Email không đúng định dạng.");
         return value;
     }
 

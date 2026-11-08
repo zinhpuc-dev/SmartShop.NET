@@ -9,15 +9,19 @@ public sealed class DemoSupplierRepository : ISupplierRepository
     private readonly object gate = new();
     private readonly List<Supplier> suppliers =
     [
-        new(1, "NCC001", "Thiết Bị Ánh Dương", "02800000001", "anhduong@example.com", "123 Đường Demo, TP. Hồ Chí Minh", new DateTime(2026, 10, 21)),
-        new(2, "NCC002", "Linh Kiện Sao Việt", "02800000002", "saoviet@example.com", "45 Đường Mẫu, TP. Hồ Chí Minh", new DateTime(2026, 10, 22)),
-        new(3, "NCC003", "Công Nghệ Đông Nam", "02800000003", "", "78 Đường Demo, TP. Hồ Chí Minh", new DateTime(2026, 10, 23))
+        new("N00001", "Thiết Bị Ánh Dương", "02800000001", "anhduong@example.com", "123 Đường Demo, TP. Hồ Chí Minh"),
+        new("N00002", "Linh Kiện Sao Việt", "02800000002", "saoviet@example.com", "45 Đường Mẫu, TP. Hồ Chí Minh"),
+        new("N00003", "Công Nghệ Đông Nam", "02800000003", "", "78 Đường Demo, TP. Hồ Chí Minh")
     ];
-    private int nextId = 4;
 
     public IReadOnlyList<Supplier> GetAll()
     {
         lock (gate) return suppliers.ToArray();
+    }
+
+    public Supplier? GetByCode(string code)
+    {
+        lock (gate) return suppliers.SingleOrDefault(value => value.Code == code);
     }
 
     public Supplier Insert(Supplier supplier)
@@ -25,9 +29,8 @@ public sealed class DemoSupplierRepository : ISupplierRepository
         lock (gate)
         {
             EnsureUnique(supplier.Code);
-            var saved = supplier with { Id = nextId++ };
-            suppliers.Add(saved);
-            return saved;
+            suppliers.Add(supplier);
+            return supplier;
         }
     }
 
@@ -35,29 +38,28 @@ public sealed class DemoSupplierRepository : ISupplierRepository
     {
         lock (gate)
         {
-            var index = IndexOf(supplier.Id);
-            if (suppliers[index].Code != supplier.Code || suppliers[index].CreatedAt != supplier.CreatedAt)
-                throw new InvalidOperationException("Không được thay đổi mã hoặc ngày tạo nhà cung cấp.");
-            EnsureUnique(supplier.Code, supplier.Id);
+            var index = IndexOf(supplier.Code);
+            EnsureUnique(supplier.Code, supplier.Code);
             suppliers[index] = supplier;
             return supplier;
         }
     }
 
-    public void Delete(int id)
+    public void Delete(string code)
     {
-        lock (gate) suppliers.RemoveAt(IndexOf(id));
+        lock (gate) suppliers.RemoveAt(IndexOf(code));
     }
 
-    private int IndexOf(int id)
+    private int IndexOf(string code)
     {
-        var index = suppliers.FindIndex(c => c.Id == id);
+        var index = suppliers.FindIndex(c => c.Code == code);
         return index >= 0 ? index : throw new InvalidOperationException("Không tìm thấy nhà cung cấp.");
     }
 
-    private void EnsureUnique(string code, int exceptId = 0)
+    private void EnsureUnique(string code, string? exceptCode = null)
     {
-        if (suppliers.Any(c => c.Id != exceptId && string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase)))
+        if (suppliers.Any(c => !string.Equals(c.Code, exceptCode, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Mã nhà cung cấp đã tồn tại.");
     }
 }

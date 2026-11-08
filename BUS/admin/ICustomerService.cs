@@ -4,11 +4,10 @@ namespace SmartShop.BUS;
 
 public interface ICustomerService
 {
-    IReadOnlyList<Customer> Search(string query = "", bool? isActive = null);
-    Customer Get(int id);
+    IReadOnlyList<Customer> Search(string query = "");
+    Customer Get(string code);
     string SuggestCode();
     Customer Create(CustomerDraft draft);
-    Customer Update(int id, CustomerDraft draft);
-    Customer SetActive(int id, bool active);
-    void Delete(int id);
+    Customer Update(string code, CustomerDraft draft);
+    void Delete(string code);
 }

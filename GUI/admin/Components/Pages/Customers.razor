@@ -1,62 +1,65 @@
 @page "/admin/customers"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject ICustomerService CustomerService
+@inject ILogger<Customers> Logger
 
 <PageTitle>Quản lý khách hàng — SmartShop</PageTitle>
 <div class="section-heading customer-heading">
     <div>
         <div class="eyebrow red">SMARTSHOP / KHÁCH HÀNG</div>
         <h1>Quản lý khách hàng</h1>
-        <p class="subtitle">Hồ sơ, thông tin liên hệ và trạng thái khách hàng.</p>
+        <p class="subtitle">Hồ sơ và thông tin liên hệ khách hàng.</p>
     </div>
-    <button type="button" class="primary" @onclick="Create">+ Thêm khách hàng</button>
+    <button type="button" class="primary" @onclick="Create" disabled="@loading || !string.IsNullOrEmpty(loadError)">+ Thêm khách hàng</button>
 </div>
-<p class="customer-help">Dữ liệu demo theo phiên. Khóa/mở ở đây chỉ thay đổi trạng thái hồ sơ, chưa tích hợp hệ thống đăng nhập.</p>
-<div class="metrics customer-metrics">
-    <div class="panel"><span>Tổng khách hàng</span><h2>@All.Count</h2></div>
-    <div class="panel"><span>Đang hoạt động</span><h2>@All.Count(c => c.IsActive)</h2></div>
-    <div class="panel"><span>Đã khóa</span><h2>@All.Count(c => !c.IsActive)</h2></div>
-</div>
+<p class="customer-help">Quản lý thông tin liên hệ hiện có của khách hàng.</p>
 @if (!string.IsNullOrEmpty(message))
 {
     <div class="customer-feedback @(failed ? "error" : "")" role="status">@message</div>
 }
 <section class="panel">
+    @if (loading)
+    {
+        <p role="status">Đang tải khách hàng...</p>
+    }
+    else if (!string.IsNullOrEmpty(loadError))
+    {
+        <div class="customer-feedback error" role="alert">@loadError <button type="button" @onclick="Load">Thử lại</button></div>
+    }
+    else
+    {
     <div class="customer-toolbar">
         <div class="customer-search"><input aria-label="Tìm khách hàng" placeholder="Tìm mã, họ tên, điện thoại, email..." @bind="query" @bind:event="oninput" /></div>
-        <select aria-label="Lọc trạng thái khách hàng" @bind="statusFilter">
-            <option value="all">Tất cả trạng thái</option><option value="active">Đang hoạt động</option><option value="locked">Đã khóa</option>
-        </select>
-        <button type="button" class="text-button" @onclick='() => { query = ""; statusFilter = "all"; }'>Xóa bộ lọc</button>
+        <button type="button" class="text-button" @onclick='() => query = ""'>Xóa tìm kiếm</button>
     </div>
-    <CustomerSelector @bind-Value="selectedLookup" OnlyActive="false" />
+    <CustomerSelector @bind-Value="selectedLookup" />
     @if (selectedLookup is not null)
     {
         <button type="button" class="text-button" @onclick="() => profile = selectedLookup">Xem hồ sơ đã chọn ↗</button>
     }
-    <p class="customer-help">@Rows.Count kết quả · Có thể cuộn ngang bảng trên điện thoại.</p>
+    <p class="customer-help">@All.Count bản ghi · @Rows.Count kết quả · Có thể cuộn ngang bảng trên điện thoại.</p>
     <DataTable TItem="Customer" Items="Rows" Label="Danh sách khách hàng" ColumnCount="5" EmptyText="Không tìm thấy khách hàng phù hợp.">
-        <Header><th scope="col">Mã</th><th scope="col">Khách hàng</th><th scope="col">Điện thoại</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></Header>
+        <Header><th scope="col">Mã</th><th scope="col">Khách hàng</th><th scope="col">Điện thoại</th><th scope="col">Địa chỉ</th><th scope="col">Thao tác</th></Header>
         <RowTemplate Context="customer">
             <td>@customer.Code</td>
             <td><strong>@customer.Name</strong><small>@customer.Email</small></td>
             <td>@customer.Phone</td>
-            <td><span class="status @(customer.IsActive ? "" : "warning")">@(customer.IsActive ? "Hoạt động" : "Đã khóa")</span></td>
+            <td>@customer.Address</td>
             <td><div class="customer-row-actions">
                 <button type="button" class="text-button" aria-label="Xem hồ sơ @customer.Code" @onclick="() => profile = customer">Hồ sơ</button>
                 <button type="button" class="text-button" aria-label="Sửa @customer.Code" @onclick="() => Edit(customer)">Sửa</button>
-                <button type="button" class="text-button" aria-label="Đổi trạng thái @customer.Code" @onclick="() => Toggle(customer)">@(customer.IsActive ? "Khóa" : "Mở")</button>
                 <button type="button" class="text-button customer-danger" aria-label="Xóa @customer.Code" @onclick="() => deleting = customer">Xóa</button>
             </div></td>
         </RowTemplate>
     </DataTable>
+    }
 </section>
 
 @if (editorOpen)
 {
-    <ModalDialog Label="@(editingId is null ? "Thêm khách hàng" : "Sửa khách hàng")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseEditor">
-        <h2>@(editingId is null ? "Thêm khách hàng" : "Sửa khách hàng")</h2>
-        <CustomerEditor Model="draft" IsEditing="@(editingId is not null)" Error="@formError" OnSave="Save" OnCancel="CloseEditor" />
+    <ModalDialog Label="@(editingCode is null ? "Thêm khách hàng" : "Sửa khách hàng")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseEditor">
+        <h2>@(editingCode is null ? "Thêm khách hàng" : "Sửa khách hàng")</h2>
+        <CustomerEditor Model="draft" IsEditing="@(editingCode is not null)" Error="@formError" OnSave="Save" OnCancel="CloseEditor" />
     </ModalDialog>
 }
 @if (profile is not null)
@@ -70,7 +73,7 @@
 {
     <ModalDialog Label="Xác nhận xóa khách hàng" CssClass="narrow" OnClose="() => deleting = null">
         <h2>Xóa khách hàng?</h2>
-        <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong> khỏi danh sách demo của phiên này.</p>
+        <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong>. Không thể xóa khách hàng đang được liên kết với đơn hàng.</p>
         <div class="customer-actions">
             <button type="button" class="primary" @onclick="Delete">Xác nhận xóa</button>
             <button type="button" class="secondary" @onclick="() => deleting = null">Giữ lại</button>
@@ -78,24 +81,43 @@
     </ModalDialog>
 }
 @code {
-    private string query = "", statusFilter = "all", message = "", formError = "";
-    private bool editorOpen, failed;
-    private int? editingId;
+    private string query = "", message = "", formError = "", loadError = "";
+    private string? editingCode;
+    private bool editorOpen, failed, loading = true;
     private CustomerDraft draft = new();
     private Customer? profile, deleting, selectedLookup;
-    private IReadOnlyList<Customer> All => CustomerService.Search();
-    private IReadOnlyList<Customer> Rows => CustomerService.Search(query, statusFilter switch { "active" => true, "locked" => false, _ => (bool?)null });
+    private IReadOnlyList<Customer> All => string.IsNullOrEmpty(loadError) ? CustomerService.Search() : Array.Empty<Customer>();
+    private IReadOnlyList<Customer> Rows => string.IsNullOrEmpty(loadError) ? CustomerService.Search(query) : Array.Empty<Customer>();
+
+    protected override void OnInitialized() => Load();
+
+    private void Load()
+    {
+        loading = true;
+        try
+        {
+            _ = CustomerService.Search();
+            loadError = "";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load Admin customers.");
+            loadError = "Không thể tải danh sách khách hàng. Vui lòng kiểm tra kết nối và thử lại.";
+        }
+        finally { loading = false; }
+    }
 
     private void Create()
     {
-        editingId = null;
+        if (loading || !string.IsNullOrEmpty(loadError)) return;
+        editingCode = null;
         draft = new CustomerDraft { Code = CustomerService.SuggestCode() };
         formError = "";
         editorOpen = true;
     }
     private void Edit(Customer customer)
     {
-        editingId = customer.Id;
+        editingCode = customer.Code;
         draft = CustomerDraft.From(customer);
         formError = "";
         editorOpen = true;
@@ -105,23 +127,14 @@
     {
         try
         {
-            var saved = editingId is int id ? CustomerService.Update(id, draft) : CustomerService.Create(draft);
-            if (selectedLookup?.Id == saved.Id) selectedLookup = saved;
+            var saved = editingCode is string code ? CustomerService.Update(code, draft) : CustomerService.Create(draft);
+            if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             CloseEditor();
-            query = ""; statusFilter = "all";
+            query = "";
             Notice($"Đã lưu khách hàng {saved.Code}.");
         }
         catch (InvalidOperationException ex) { formError = ex.Message; }
-    }
-    private void Toggle(Customer customer)
-    {
-        try
-        {
-            var saved = CustomerService.SetActive(customer.Id, !customer.IsActive);
-            if (selectedLookup?.Id == saved.Id) selectedLookup = saved;
-            Notice($"{saved.Code}: {(saved.IsActive ? "đã mở hoạt động" : "đã khóa hồ sơ")}.");
-        }
-        catch (InvalidOperationException ex) { Notice(ex.Message, true); }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin customer."); formError = "Không thể lưu khách hàng. Vui lòng thử lại."; }
     }
     private void Delete()
     {
@@ -129,12 +142,13 @@
         try
         {
             var code = deleting.Code;
-            CustomerService.Delete(deleting.Id);
-            if (selectedLookup?.Id == deleting.Id) selectedLookup = null;
+            CustomerService.Delete(deleting.Code);
+            if (selectedLookup?.Code == deleting.Code) selectedLookup = null;
             deleting = null;
             Notice($"Đã xóa khách hàng {code}.");
         }
         catch (InvalidOperationException ex) { deleting = null; Notice(ex.Message, true); }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to delete Admin customer."); deleting = null; Notice("Không thể xóa khách hàng. Vui lòng thử lại.", true); }
     }
     private void Notice(string text, bool error = false) { message = text; failed = error; }
 }

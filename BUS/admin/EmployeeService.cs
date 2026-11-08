@@ -1,87 +1,87 @@
-using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-/// <summary>Employee BUS: owns the ArrayList, validation and CRUD operations.</summary>
 public sealed class EmployeeService : IEmployeeService
 {
     private readonly IEmployeeRepository repository;
-    private readonly ArrayList employees;
+    private List<Employee>? employees;
 
     public EmployeeService(IEmployeeRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         this.repository = repository;
-        employees = new ArrayList(repository.GetAll().ToArray());
     }
 
-    public IReadOnlyList<Employee> Search(string query = "", bool? isActive = null)
+    public IReadOnlyList<Employee> Search(string query = "")
     {
         var term = SearchText.Normalize((query ?? "").Trim());
-        // Search the BUS cache, never re-query storage while typing.
-        return employees.Cast<Employee>()
-            .Where(c => (isActive is null || c.IsActive == isActive)
-                && (term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
-                    .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase))))
+        return GetEmployees()
+            .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Position, c.Phone, c.Email }
+                .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public Employee Get(int id) => employees.Cast<Employee>().SingleOrDefault(c => c.Id == id)
+    public Employee Get(string code) => repository.GetByCode((code ?? string.Empty).Trim())
         ?? throw new InvalidOperationException("Không tìm thấy nhân viên.");
 
     public string SuggestCode()
     {
         var number = 1;
-        while (employees.Cast<Employee>().Any(c => c.Code.Equals($"NV{number:000}", StringComparison.OrdinalIgnoreCase))) number++;
-        return $"NV{number:000}";
+        while (GetEmployees().Any(c => c.Code.Equals($"NV{number:000000}", StringComparison.OrdinalIgnoreCase))) number++;
+        if (number > 999999) throw new InvalidOperationException("Không còn mã nhân viên khả dụng.");
+        return $"NV{number:000000}";
     }
 
     public Employee Create(EmployeeDraft draft)
     {
         var value = Validate(draft);
         EnsureUnique(value.Code);
-        var saved = repository.Insert(new Employee(0, value.Code, value.Name, value.Phone, value.Email,
-            value.Address, value.IsActive, DateTime.Now));
-        employees.Add(saved);
+        var saved = repository.Insert(new Employee(value.Code, value.Name, value.Position, value.Phone, value.Email));
+        GetEmployees().Add(saved);
         return saved;
     }
 
-    public Employee Update(int id, EmployeeDraft draft)
+    public Employee Update(string code, EmployeeDraft draft)
     {
-        var existing = Get(id);
+        var existing = Get(code);
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhân viên không được sửa.");
-        EnsureUnique(value.Code, id);
-        return Save(existing with
+        EnsureUnique(value.Code, existing.Code);
+        var saved = repository.Update(existing with
         {
-            Name = value.Name, Phone = value.Phone, Email = value.Email,
-            Address = value.Address, IsActive = value.IsActive
+            Name = value.Name, Position = value.Position, Phone = value.Phone, Email = value.Email
         });
-    }
-
-    public Employee SetActive(int id, bool active) => Save(Get(id) with { IsActive = active });
-
-    public void Delete(int id)
-    {
-        var existing = Get(id);
-        repository.Delete(id);
-        employees.Remove(existing);
-    }
-
-    private Employee Save(Employee employee)
-    {
-        var previous = Get(employee.Id);
-        var saved = repository.Update(employee);
-        employees[employees.IndexOf(previous)] = saved;
+        Replace(existing, saved);
         return saved;
     }
 
-    private void EnsureUnique(string code, int exceptId = 0)
+    public void Delete(string code)
     {
-        if (employees.Cast<Employee>().Any(c => c.Id != exceptId && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
+        var existing = Get(code);
+        repository.Delete(existing.Code);
+        GetEmployees().RemoveAll(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private List<Employee> GetEmployees()
+    {
+        employees ??= repository.GetAll().ToList();
+        return employees;
+    }
+
+    private void Replace(Employee existing, Employee saved)
+    {
+        var index = GetEmployees().FindIndex(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        if (index < 0) throw new InvalidOperationException("Không tìm thấy nhân viên trong danh sách hiện tại.");
+        GetEmployees()[index] = saved;
+    }
+
+    private void EnsureUnique(string code, string? exceptCode = null)
+    {
+        if (GetEmployees().Any(c => !c.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)
+            && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Mã nhân viên đã tồn tại.");
     }
 
@@ -91,12 +91,14 @@ public sealed class EmployeeService : IEmployeeService
         var value = new EmployeeDraft
         {
             Code = (draft.Code ?? "").Trim().ToUpperInvariant(), Name = (draft.Name ?? "").Trim(),
-            Phone = (draft.Phone ?? "").Trim(), Email = (draft.Email ?? "").Trim(),
-            Address = (draft.Address ?? "").Trim(), IsActive = draft.IsActive
+            Position = (draft.Position ?? "").Trim(), Phone = (draft.Phone ?? "").Trim(),
+            Email = (draft.Email ?? "").Trim()
         };
         var errors = new List<ValidationResult>();
         if (!Validator.TryValidateObject(value, new ValidationContext(value), errors, validateAllProperties: true))
             throw new InvalidOperationException(string.Join(" ", errors.Select(e => e.ErrorMessage)));
+        if (!string.IsNullOrEmpty(value.Email) && !new EmailAddressAttribute().IsValid(value.Email))
+            throw new InvalidOperationException("Email không đúng định dạng.");
         return value;
     }
 

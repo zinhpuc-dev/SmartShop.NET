@@ -2,30 +2,26 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SmartShop.DTO;
 
-public sealed record Supplier(int Id, string Code, string Name, string Phone, string Email,
-    string Address, DateTime CreatedAt);
+public sealed record Supplier(string Code, string Name, string Phone, string Email, string Address);
 
 /// <summary>An editable copy; cancelling a form never mutates the stored supplier.</summary>
 public sealed class SupplierDraft
 {
     [Required(ErrorMessage = "Vui lòng nhập mã nhà cung cấp.")]
-    [RegularExpression(@"[A-Za-z][A-Za-z0-9_-]{1,19}", ErrorMessage = "Mã gồm 2–20 ký tự, bắt đầu bằng chữ; chỉ dùng chữ, số, _ hoặc -.")]
+    [StringLength(6, ErrorMessage = "Mã nhà cung cấp tối đa 6 ký tự.")]
     public string Code { get; set; } = "";
 
     [Required(ErrorMessage = "Vui lòng nhập tên nhà cung cấp.")]
-    [StringLength(120, MinimumLength = 2, ErrorMessage = "Tên nhà cung cấp cần từ 2 đến 120 ký tự.")]
+    [StringLength(200, MinimumLength = 2, ErrorMessage = "Tên nhà cung cấp cần từ 2 đến 200 ký tự.")]
     public string Name { get; set; } = "";
 
-    [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
-    [RegularExpression(@"0[0-9]{9,10}", ErrorMessage = "Số điện thoại gồm 10–11 chữ số, bắt đầu bằng 0.")]
+    [StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự.")]
     public string Phone { get; set; } = "";
 
-    [StringLength(150, ErrorMessage = "Email tối đa 150 ký tự.")]
-    [RegularExpression(@"[^@\s]+@[^@\s]+\.[^@\s]+", ErrorMessage = "Email không đúng định dạng.")]
+    [StringLength(255, ErrorMessage = "Email tối đa 255 ký tự.")]
     public string Email { get; set; } = "";
 
-    [Required(ErrorMessage = "Vui lòng nhập địa chỉ.")]
-    [StringLength(250, MinimumLength = 10, ErrorMessage = "Địa chỉ cần từ 10 đến 250 ký tự.")]
+    [StringLength(300, ErrorMessage = "Địa chỉ tối đa 300 ký tự.")]
     public string Address { get; set; } = "";
 
     public static SupplierDraft From(Supplier value) => new()

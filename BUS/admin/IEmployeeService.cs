@@ -4,11 +4,10 @@ namespace SmartShop.BUS;
 
 public interface IEmployeeService
 {
-    IReadOnlyList<Employee> Search(string query = "", bool? isActive = null);
-    Employee Get(int id);
+    IReadOnlyList<Employee> Search(string query = "");
+    Employee Get(string code);
     string SuggestCode();
     Employee Create(EmployeeDraft draft);
-    Employee Update(int id, EmployeeDraft draft);
-    Employee SetActive(int id, bool active);
-    void Delete(int id);
+    Employee Update(string code, EmployeeDraft draft);
+    void Delete(string code);
 }

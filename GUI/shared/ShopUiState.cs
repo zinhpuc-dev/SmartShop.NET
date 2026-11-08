@@ -16,8 +16,6 @@ public sealed class ShopUiState
     public HashSet<int> Favorites { get; } = [];
     public Product? Selected { get; set; }
     public Product? Editing { get; set; }
-    public decimal EditPrice { get; set; }
-    public int EditStock { get; set; }
     public Order? LastOrder { get; set; }
     public CheckoutInput Checkout { get; } = new();
 }

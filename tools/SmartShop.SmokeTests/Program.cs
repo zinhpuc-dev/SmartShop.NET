@@ -64,32 +64,35 @@ Check(serviceA.Count == 1 && serviceB.Count == 0 && !ReferenceEquals(serviceA, s
     "DI scopes isolate customer session data");
 CustomerChecks.Run();
 EmployeeChecks.Run();
+WarehouseChecks.Run();
+OrderManagementChecks.Run();
+PromotionChecks.Run();
 
 var supplierRepository = new DemoSupplierRepository();
 var supplierService = new SupplierService(supplierRepository);
-Check(supplierService.Search("thiet bi anh duong").Single().Code == "NCC001",
+Check(supplierService.Search("thiet bi anh duong").Single().Code == "N00001",
     "Supplier search matches an accentless name");
 var supplierDraft = new SupplierDraft
 {
-    Code = " ncc900 ",
+    Code = " n00900 ",
     Name = "Công ty Kiểm Thử",
     Phone = "02800000009",
     Address = "123 Đường Mẫu, TP. Hồ Chí Minh"
 };
 var supplier = supplierService.Create(supplierDraft);
-Check(supplier.Code == "NCC900" && supplierService.Search("kiem thu").Single() == supplier,
+Check(supplier.Code == "N00900" && supplierService.Search("kiem thu").Single() == supplier,
     "Supplier creation normalizes the code and updates the search cache");
 Rejected(() => supplierService.Create(supplierDraft), "Supplier rejects a duplicate code");
 Rejected(() => supplierService.Create(new SupplierDraft()), "Supplier rejects missing required fields");
 var supplierEdit = SupplierDraft.From(supplier);
 supplierEdit.Name = "Công ty Đổi Tên";
-var updatedSupplier = supplierService.Update(supplier.Id, supplierEdit);
-Check(supplierService.Search("doi ten").Single() == updatedSupplier
-    && updatedSupplier.CreatedAt == supplier.CreatedAt, "Supplier edit refreshes the search cache and preserves the creation date");
-supplierEdit.Code = "NCC901";
-Rejected(() => supplierService.Update(supplier.Id, supplierEdit), "Supplier code cannot be changed");
-supplierService.Delete(supplier.Id);
-Check(supplierService.Search("NCC900").Count == 0 && supplierRepository.GetAll().All(value => value.Id != supplier.Id),
+var updatedSupplier = supplierService.Update(supplier.Code, supplierEdit);
+Check(supplierService.Search("doi ten").Single() == updatedSupplier,
+    "Supplier edit refreshes the search cache");
+supplierEdit.Code = "N00901";
+Rejected(() => supplierService.Update(supplier.Code, supplierEdit), "Supplier code cannot be changed");
+supplierService.Delete(supplier.Code);
+Check(supplierService.Search("N00900").Count == 0 && supplierRepository.GetAll().All(value => value.Code != supplier.Code),
     "Supplier deletion updates both storage and the search cache");
 
 Console.WriteLine("All integration smoke checks passed.");
@@ -100,10 +103,10 @@ sealed class RejectingRepository : IShopRepository
     public int CommitAttempts { get; private set; }
     public IReadOnlyList<Product> GetProducts() => new[] { product };
     public ArrayList LoadProductArray() => new() { product };
-    public IReadOnlyList<Order> GetOrders() => Array.Empty<Order>();
+    public IReadOnlyList<Order> GetOrders(string phone) => Array.Empty<Order>();
     public void UpdateProduct(Product value) => throw new NotSupportedException();
     public void UpdateOrderStatus(string code, string status) => throw new NotSupportedException();
-    public void CommitOrder(Order order)
+    public Order CommitOrder(Order order)
     {
         CommitAttempts++;
         throw new InvalidOperationException("Simulated storage failure.");

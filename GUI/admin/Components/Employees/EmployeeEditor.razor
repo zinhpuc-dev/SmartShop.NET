@@ -6,19 +6,16 @@
     <ValidatedForm Model="Model" OnValidSubmit="OnSave">
         <div class="customer-form-grid">
             <FormField Label="Mã nhân viên">
-                <InputText @bind-Value="Model.Code" readonly="@IsEditing" aria-readonly="@IsEditing" maxlength="20" />
+                <InputText @bind-Value="Model.Code" readonly="@IsEditing" aria-readonly="@IsEditing" maxlength="8" />
             </FormField>
-            <FormField Label="Họ và tên"><InputText @bind-Value="Model.Name" maxlength="120" /></FormField>
-            <FormField Label="Số điện thoại"><InputText @bind-Value="Model.Phone" maxlength="10" inputmode="tel" /></FormField>
-            <FormField Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="150" inputmode="email" /></FormField>
-            <div class="customer-span-all">
-                <FormField Label="Địa chỉ"><InputTextArea @bind-Value="Model.Address" maxlength="250" /></FormField>
-            </div>
+            <FormField Label="Họ và tên"><InputText @bind-Value="Model.Name" maxlength="150" /></FormField>
+            <FormField Label="Chức vụ"><InputText @bind-Value="Model.Position" maxlength="100" /></FormField>
+            <FormField Label="Số điện thoại (không bắt buộc)"><InputText @bind-Value="Model.Phone" maxlength="20" inputmode="tel" /></FormField>
+            <FormField Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="255" inputmode="email" /></FormField>
         </div>
-        <label class="customer-checkbox"><InputCheckbox @bind-Value="Model.IsActive" /> Nhân viên đang làm việc</label>
         @if (IsEditing)
         {
-            <p class="customer-help">Mã nhân viên và ngày tạo được giữ nguyên khi chỉnh sửa.</p>
+            <p class="customer-help">Mã nhân viên được giữ nguyên khi chỉnh sửa. Hồ sơ nhân viên không thay thế tài khoản đăng nhập.</p>
         }
         <div class="customer-actions">
             <button type="submit" class="primary">Lưu nhân viên</button>

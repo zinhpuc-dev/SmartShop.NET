@@ -22,7 +22,7 @@ public sealed class DemoShopDao : IShopRepository
 
     public IReadOnlyList<Product> GetProducts() => products.AsReadOnly();
     public ArrayList LoadProductArray() => new(products);
-    public IReadOnlyList<Order> GetOrders() => orders.AsReadOnly();
+    public IReadOnlyList<Order> GetOrders(string phone) => orders.Where(order => order.Phone == phone).ToList().AsReadOnly();
 
     public void UpdateProduct(Product value)
     {
@@ -44,7 +44,7 @@ public sealed class DemoShopDao : IShopRepository
         }
     }
 
-    public void CommitOrder(Order order)
+    public Order CommitOrder(Order order)
     {
         lock (gate)
         {
@@ -63,6 +63,7 @@ public sealed class DemoShopDao : IShopRepository
             nextOrders.Insert(0, order);
             products = nextProducts;
             orders = nextOrders;
+            return order;
         }
     }
 }
