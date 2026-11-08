@@ -1,3 +1,4 @@
+@attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/suppliers"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject ISupplierService SupplierService
@@ -83,6 +84,7 @@
         loading = true;
         try
         {
+            SupplierService.Reload();
             _ = SupplierService.Search();
             loadError = "";
         }
@@ -120,6 +122,7 @@
             query = "";
             Notice($"Đã lưu nhà cung cấp {saved.Code}.");
         }
+        catch (ArgumentException ex) { formError = ex.Message; }
         catch (InvalidOperationException ex) { formError = ex.Message; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin supplier."); formError = "Không thể lưu nhà cung cấp. Vui lòng thử lại."; }
     }

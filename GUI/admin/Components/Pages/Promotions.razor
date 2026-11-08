@@ -1,3 +1,4 @@
+@attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/promotions"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject PromotionService PromotionService
@@ -78,6 +79,7 @@ else if (!loaded) { <div class="customer-feedback error" role="alert">@loadError
     private void SavePromotion()
     {
         try { PromotionService.SavePromotion(promotion, editingPromotion); message = "Đã lưu chương trình."; failed = false; ResetPromotion(); Load(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin promotion."); message = "Không thể lưu chương trình khuyến mại. Vui lòng thử lại."; failed = true; }
     }
@@ -93,6 +95,7 @@ else if (!loaded) { <div class="customer-feedback error" role="alert">@loadError
     private void SaveVoucher()
     {
         try { PromotionService.SaveVoucher(voucher, editingVoucher); message = "Đã lưu voucher."; failed = false; ResetVoucher(); Load(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin voucher."); message = "Không thể lưu voucher. Vui lòng thử lại."; failed = true; }
     }

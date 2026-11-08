@@ -16,3 +16,7 @@ Gợi ý phân bổ trang: bìa 1, mục I 1, mục II 2, mục III 12, mục IV
 | V-link-nop.md | Link source code, file báo cáo DOC/PDF | Phúc |
 
 Mỗi người chụp ảnh form ngay khi làm xong, lưu vào `docs/images/<tên chức năng>/`.
+
+## Cập nhật 08/11/2026
+
+Các phần II, III theo thành viên và IV đã phản ánh hiện trạng Admin MySQL. Đối chiếu ADMIN_REPORT_CURRENT.md và progress/TONG_QUAN.md để phân biệt triển khai, kiểm chứng đọc và việc còn lại. Chưa có ảnh nghiệm thu mới, thử ghi MySQL hoặc bản DOC/PDF cuối cùng. Giữ nguyên phân công và quy cách báo cáo ở trên.

@@ -1,60 +1,50 @@
-# SmartShop Admin — implementation and verification report
+# SmartShop Admin — triển khai và kiểm chứng
 
-## Current status
+Cập nhật **08/11/2026**. Trạng thái này thay thế kết luận cũ về DAO demo Admin và đăng nhập cần bảng tài khoản.
 
-Admin workflows are implemented in the .NET 10 Blazor application with GUI → BUS → DTO contracts → DAO MySQL persistence. `dotnet build SmartShop.slnx` passed, and the smoke suite passed after BUS normalization was corrected before DataAnnotations validation. The suite includes warehouse/receiving, order/report, and promotion/voucher checks.
+## Phạm vi hiện tại
 
-No destructive schema script or database write has been run. The Admin-auth/order-warehouse additive migration remains unapplied. Therefore, real database sign-in, actual MySQL writes, and order allocation using `DON_HANG.MaKho` are not verified.
+.NET 10 Razor/Blazor, MySql.Data; GUI → BUS → hợp đồng DTO → DAO MySQL. Chỉ sửa Admin. Hai file host Program.cs/Routes.razor bổ sung xác thực Admin, không sửa giỏ hàng/checkout User. User vẫn dùng DemoShopDao; không khẳng định User đặt đơn đã lưu MySQL. Solution vẫn gồm các project riêng, chưa gom toàn bộ về một project/folder.
 
-## Module status
+## Các module
 
-| Module | Implementation | Status / limits |
+| Module | Đã triển khai | Kiểm chứng / giới hạn |
 |---|---|---|
-| Admin authentication | Role-protected routes, cookie login, password hashes, setup utility | Implemented. Requires the reviewed additive migration and account provisioning before real DB sign-in works. |
-| Customers | MySQL CRUD for `KHACH_HANG` | Implemented; live writes not run. |
-| Employees | MySQL CRUD for `NHAN_VIEN`, including `ChucVu` | Implemented; live writes not run. |
-| Suppliers | MySQL CRUD for `NHA_CUNG_CAP` | Implemented; live writes not run. |
-| Products/categories | Product CRUD, category code/status, soft-deactivation | Implemented. `LOAI_SAN_PHAM` has no category-name column. |
-| Stock/receiving | `TON_KHO` totals and per-warehouse reads; warehouse management; receipts update header/details/stock in one transaction | Implemented in code; no live receipt was posted. |
-| Orders | MySQL orders/details; transactional warehouse stock deduction on delivery completion | Implemented in code. Migration adding `DON_HANG.MaKho` is not applied. Existing orders without a warehouse need allocation before completing stock-affecting transitions. |
-| Invoices/reports | MySQL invoice/detail reads and 30-day sales summary | Implemented; not verified against a live database. |
-| Promotions/vouchers | MySQL CRUD UI/DAO with date, discount, and redeemed-quantity validation | Implemented; normalization and discount-rule smoke checks pass. |
+| Đăng nhập | Một Admin cục bộ, PasswordHasher, cookie HttpOnly, CSRF, giới hạn đăng nhập, session/đăng xuất | HTTP đúng/sai/ẩn danh/CSRF/đăng xuất đạt; không cần bảng tài khoản |
+| Khách hàng | CustomerDAO MySQL, CRUD/validation/tìm kiếm/Reload cache | Đọc 10 hồ sơ; chưa thử ghi/xóa |
+| Nhân viên | EmployeeDAO, ChucVu, CRUD/tìm kiếm | Đọc 10 hồ sơ; chưa thử ghi, schema không có địa chỉ/tình trạng |
+| Nhà cung cấp | SupplierDAO, CRUD/tìm kiếm và dùng trong nhập hàng | Đọc 10 NCC; chưa thử ghi/xóa |
+| Sản phẩm/loại | Thêm/sửa/ngừng bán, lọc, mã loại/trạng thái, tồn theo kho | Đọc 10 sản phẩm; chưa có CRUD đơn vị/ảnh, tên danh mục/ngưỡng tồn |
+| Kho/nhập hàng | Sửa loaded; tồn theo kho/chi tiết phiếu; mã ghi phiếu+chi tiết+cộng tồn cùng transaction | Đọc 10 phiếu/10 chi tiết, tồn tổng 485; chưa thử ghi/rollback |
+| Đơn hàng | Sửa List trong foreach; đọc chi tiết, kiểm tra chuyển trạng thái, transaction trừ tồn | Đọc 10 đơn/10 chi tiết; MaKho chưa được áp dụng, trừ tồn chưa thử |
+| Hóa đơn | Sửa List trong foreach; lập từ đơn đã giao/hoàn thành; xác nhận thu tiền | Đọc 10 hóa đơn/10 chi tiết; chưa thử lập/thu tiền |
+| Báo cáo | Khoảng ngày, chỉ hóa đơn đã thanh toán theo ngày hóa đơn | Năm 2026: 114.100.000 đồng, 10 hóa đơn; chưa có chi/lợi nhuận/ma trận quý |
+| Khuyến mại/voucher | Chuẩn hóa PhanTram/SoTien, kiểm tra thời gian/chương trình/số lượt dùng | Đọc 10 chương trình/10 voucher; chưa thử ghi hoặc áp dụng toàn bộ giảm giá bán hàng |
 
-## Data safety
+## Kiểm tra 08/11/2026
 
-- Connection lookup uses ASP.NET configuration `ConnectionStrings:SmartShop`, then `SMARTSHOP_DB_CONNECTION`. Keep credentials out of source control and chat.
-- `Database/QuanLyCuaHangDienTu_MySQL.sql` is a reference schema and contains `DROP TABLE`; do not run it against the existing database.
-- Migration awaiting review: `Database/migrations/2026-03-Admin-Auth-Order-Warehouse.sql`. It creates `TAI_KHOAN_ADMIN` and adds nullable `DON_HANG.MaKho`; it has not been applied.
-- No writes or destructive testing were performed against the configured database.
+Build solution: 0 lỗi, 0 cảnh báo. 19 smoke checks User còn lại pass (không phải test Admin). HTTP đăng nhập đúng/sai, thiếu CSRF, chặn ẩn danh và đăng xuất đều đạt. DAO chỉ đọc MySQL: 10 đơn + 10 chi tiết, 10 hóa đơn + 10 chi tiết, 10 phiếu nhập + 10 chi tiết, 10 dòng tồn kho tổng 485; 10 chương trình/10 voucher. Doanh thu hóa đơn đã thanh toán năm 2026: 114.100.000 đồng trên dữ liệu mẫu tại thời điểm kiểm tra.
 
-## Build and tests
+Kiểm tra HTTP dùng host thử ở cổng riêng; kiểm tra DAO là chỉ đọc trực tiếp, không phải toàn bộ thao tác trình duyệt/Blazor. Host thử đã dừng, công cụ C# tạm ngoài repo đã xóa. Không dùng Computer Use.
 
-Build passed:
+## Dọn test
 
-```powershell
-dotnet build SmartShop.slnx
-```
+Đã xóa 5 file CustomerChecks/EmployeeChecks/WarehouseChecks/OrderManagementChecks/PromotionChecks và 3 DemoCustomer/Employee/SupplierRepository chỉ dùng cho test Admin. Đã gỡ các lời gọi Admin và test NCC trong runner dùng chung. tools/SmartShop.SmokeTests hiện giữ 19 checks User/dữ liệu giả. Không xóa DemoShopDao vì User vẫn sử dụng.
 
-Run the console smoke suite:
+## An toàn và phần chưa xong
 
-```powershell
-dotnet run --project tools/SmartShop.SmokeTests/SmartShop.SmokeTests.csproj
-```
+Chưa kiểm thử ghi CRUD, lập/thu tiền hóa đơn, cộng/trừ tồn, rollback hoặc concurrency trên database riêng. Chưa áp dụng migration DON_HANG.MaKho. Chưa nghiệm thu toàn bộ đồ án, UI tương tác hoặc máy sạch. Không coi build/HTTP 200/dữ liệu giả là bằng chứng nghiệp vụ ghi MySQL.
 
-The smoke command passed after the promotion normalization fix. Smoke tests use fake/demo repositories; they do not prove live MySQL operations or account login.
+- Không chạy INSERT/UPDATE/DELETE hoặc migration trong đợt sửa/kiểm tra này.
+- Database/QuanLyCuaHangDienTu_MySQL.sql có DROP TABLE: không chạy lại trên database hiện có.
+- Database/migrations/2026-03-Admin-Auth-Order-Warehouse.sql hiện chỉ thêm MaKho/index/FK vào DON_HANG, không tạo TAI_KHOAN_ADMIN, chưa chạy.
+- Đăng nhập dùng hash trong GUI/admin/Security/AdminLoginService.cs; có thể override Admin:Username/Admin:PasswordHash qua User Secrets. Không ghi mật khẩu thô hoặc chuỗi kết nối vào tài liệu/Git.
+- Ngoài phần đã làm: User checkout thật, Excel/PDF, VAT/tham số, hoàn trả sau giao, báo cáo nâng cao, ảnh mới, gom project và máy sạch chưa nghiệm thu.
 
-## Run the web app
-
-From the repository root in PowerShell:
+## Chạy
 
 ```powershell
-dotnet run --project GUI/user/SmartShop.User.csproj
+dotnet run --project GUI/user/SmartShop.User.csproj --launch-profile http
 ```
 
-The configured launch profiles use HTTP `http://localhost:5264` and HTTPS `https://localhost:7040` (HTTPS profile also binds HTTP on port 5264). Open the URL printed by the app. Admin routes include `/admin/login`, `/admin`, `/admin/customers`, `/admin/employees`, `/admin/suppliers`, `/admin/inventory`, and `/admin/promotions`. Admin pages require an authenticated Admin account. Configure `ConnectionStrings:SmartShop` in local User Secrets (ID `SmartShop.Admin.Local`) or set `SMARTSHOP_DB_CONNECTION`. Never commit credentials. Back up the database and review the additive migration before applying it or provisioning an Admin account.
-
-## Remaining work
-
-1. In an isolated test database, review/apply the additive migration, provision an Admin account, and verify login/authorization.
-2. Test CRUD, receiving rollback, stock deduction/idempotence, invoice reads, and reports only with isolated or disposable data.
-3. Verify browser flows against a configured test database. Do not use production or existing seed data for destructive tests.
+HTTP mặc định http://localhost:5264; HTTPS profile dùng https://localhost:7040. Mở /admin/login. Kết nối đọc ConnectionStrings:SmartShop, fallback SMARTSHOP_DB_CONNECTION; UserSecretsId SmartShop.Admin.Local. Tài khoản/mật khẩu do quản trị viên giữ riêng.

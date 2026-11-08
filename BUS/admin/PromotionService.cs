@@ -23,9 +23,18 @@ public sealed class PromotionService(IPromotionRepository repository)
         if (draft.PercentOff > 0 && draft.AmountOff > 0) throw new ArgumentException("Voucher chỉ dùng giảm phần trăm hoặc số tiền, không dùng đồng thời.");
         if (draft.PercentOff == 0 && draft.AmountOff == 0) throw new ArgumentException("Voucher cần mức giảm phần trăm hoặc số tiền lớn hơn 0.");
         if (draft.PercentOff > 0 && draft.PercentOff > 100) throw new ArgumentException("Phần trăm giảm không được vượt quá 100.");
+        ManagedPromotion program = repository.GetPromotions().SingleOrDefault(p => p.Code == draft.PromotionCode)
+            ?? throw new ArgumentException("Không tìm thấy chương trình khuyến mại.");
+        if (draft.StartsAt < program.StartsAt || draft.EndsAt > program.EndsAt)
+            throw new ArgumentException("Thời gian voucher phải nằm trong thời gian chương trình.");
+        if (draft.IsActive && !program.IsActive)
+            throw new ArgumentException("Cần bật chương trình trước khi kích hoạt voucher.");
         if (editing)
         {
             ManagedVoucher existing = repository.GetVoucher(draft.Code) ?? throw new InvalidOperationException("Không tìm thấy voucher.");
+            if (existing.Used > 0 && (draft.PromotionCode != existing.PromotionCode || draft.VoucherCode != existing.VoucherCode
+                || draft.PercentOff != existing.PercentOff || draft.AmountOff != existing.AmountOff))
+                throw new ArgumentException("Voucher đã sử dụng không được đổi chương trình, mã áp dụng hoặc mức giảm.");
             if (draft.Quantity < existing.Used) throw new ArgumentException("Số lượng voucher không thể nhỏ hơn số lượt đã sử dụng.");
             repository.UpdateVoucher(draft);
         }

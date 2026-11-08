@@ -1,8 +1,8 @@
 # Nút "..." tìm kiếm và điền form bằng biến static
 
 **Người phụ trách:** Phúc  
-**Trạng thái:** Chưa làm  
-**Cập nhật lần cuối:** (chưa cập nhật)
+**Trạng thái:** Đang làm
+**Cập nhật lần cuối:** 08/11/2026
 
 | Mục | Nội dung |
 |---|---|
@@ -14,6 +14,18 @@
 | Ảnh form | `docs/images/14-nut-ba-cham/` |
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
+
+## Cập nhật hiện tại — 08/11/2026
+
+Có Customer/Employee/Supplier Picker/Selector dùng EventCallback theo phiên, không static chung người dùng. Hóa đơn/nhập hàng hiện dùng dropdown; chưa nghiệm thu toàn bộ popup theo mẫu desktop.
+
+### Mốc triển khai và kiểm chứng
+
+- [x] Có các component tìm/chọn hồ sơ Admin trả callback.
+- [x] Có danh sách chọn dữ liệu thật trong hóa đơn/phiếu nhập.
+- [ ] Nghiệm thu popup và khác biệt với cơ chế static trong đề bài.
+
+> Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
 
 ## Việc cần làm
 
@@ -33,7 +45,7 @@ Nút "..." tìm, chọn và điền đúng thông tin vào form ở hóa đơn v
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
-| | | | | |
+| 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |
 
 ## Vướng mắc
 

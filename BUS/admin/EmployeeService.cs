@@ -15,6 +15,8 @@ public sealed class EmployeeService : IEmployeeService
         this.repository = repository;
     }
 
+    public void Reload() => employees = null;
+
     public IReadOnlyList<Employee> Search(string query = "")
     {
         var term = SearchText.Normalize((query ?? "").Trim());

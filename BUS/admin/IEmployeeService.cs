@@ -4,6 +4,7 @@ namespace SmartShop.BUS;
 
 public interface IEmployeeService
 {
+    void Reload();
     IReadOnlyList<Employee> Search(string query = "");
     Employee Get(string code);
     string SuggestCode();

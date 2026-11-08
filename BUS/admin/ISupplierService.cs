@@ -4,6 +4,7 @@ namespace SmartShop.BUS;
 
 public interface ISupplierService
 {
+    void Reload();
     IReadOnlyList<Supplier> Search(string query = "");
     Supplier Get(string code);
     string SuggestCode();

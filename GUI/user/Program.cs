@@ -1,4 +1,5 @@
 using SmartShop.User.Components;
+using SmartShop.Admin.Security;
 using SmartShop.BUS;
 using SmartShop.DAO;
 using SmartShop.DTO.Contracts;
@@ -44,6 +45,7 @@ builder.Services.AddScoped<SmartShop.UI.Shared.ShopUiState>();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddSmartShopAdmin();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -55,7 +57,11 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 app.UseAntiforgery();
+app.MapSmartShopAdmin();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

@@ -1,9 +1,12 @@
+@attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inherits ShopPageBase
 @inject ProductManageService ProductService
 @inject OrderManagementService OrderService
 @inject InvoiceManagementService InvoiceService
+@inject IEmployeeService EmployeeService
+@inject IJSRuntime JavaScript
 @inject ILogger<Admin> Logger
 <PageTitle>@PageName — SmartShop</PageTitle>
 <div class="section-heading">
@@ -22,6 +25,7 @@
 </div>
 <ChoiceTabs Items="AdminTabs" @bind-Value="adminTab" CssClass="admin-tabs" />
 <section class="panel">
+    @if (!string.IsNullOrEmpty(successMessage)) { <p class="customer-feedback" role="status">@successMessage</p> }
     @if (adminTab == "Sản phẩm")
     {
         <div class="section-heading"><h2>Quản lý sản phẩm</h2><span class="muted">Sản phẩm và tồn kho theo kho</span></div>
@@ -44,7 +48,7 @@
         </DataTable>
         <div class="form-grid">
             <label>Mã sản phẩm<input @bind="productDraft.MaSP" maxlength="8" disabled="@productEditing" /></label>
-            <label>Loại sản phẩm<select @bind="productDraft.MaLoai"><option value="">Chọn loại</option>@foreach (var category in productCategories.Where(c => c.TrangThai)){<option value="@category.MaLoai">@category.MaLoai</option>}</select></label>
+            <label>Loại sản phẩm<select @bind="productDraft.MaLoai"><option value="">Chọn loại</option>@foreach (var category in productCategories.Where(c => c.TrangThai || c.MaLoai == productDraft.MaLoai)){<option value="@category.MaLoai">@category.MaLoai</option>}</select></label>
             <label>Tên sản phẩm<input @bind="productDraft.TenSP" maxlength="200" /></label>
             <label>Đơn vị tính<input @bind="productDraft.DonViTinh" maxlength="30" /></label>
             <label>Giá niêm yết<input type="number" min="0" step="0.01" @bind="productDraft.GiaNiemYet" /></label>
@@ -54,7 +58,8 @@
             <button type="button" @onclick="SaveManagedProduct" disabled="@(!productLoaded)">@(productEditing ? "Cập nhật sản phẩm" : "Thêm sản phẩm")</button>
             @if (productEditing){<button type="button" @onclick="ResetProduct">Hủy</button>}
         </div>
-        <DataTable TItem="ProductManage" Items="products" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Chưa có sản phẩm.">
+        <label>Tìm sản phẩm<input placeholder="Mã hoặc tên sản phẩm" @bind="productSearch" @bind:event="oninput" /></label>
+        <DataTable TItem="ProductManage" Items="FilteredProducts" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Chưa có sản phẩm.">
             <Header>
                 <th scope="col">Sản phẩm</th><th scope="col">Mã danh mục</th><th scope="col">Giá bán</th><th scope="col">Giá niêm yết</th><th scope="col">Tồn</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th>
             </Header>
@@ -83,13 +88,18 @@
     else if (adminTab == "Đơn hàng")
     {
         <h2>Quản lý đơn hàng</h2>
+        <div class="form-grid">
+            <label>Tìm đơn hàng<input placeholder="Mã đơn, khách hàng" @bind="orderSearch" @bind:event="oninput" /></label>
+            <label>Trạng thái<select @bind="orderFilter"><option value="">Tất cả</option><option>Đang xử lý</option><option>Đã xác nhận</option><option>Đang giao hàng</option><option>Đã giao</option><option>Hoàn thành</option><option>Đã hủy</option></select></label>
+            <button type="button" @onclick="LoadOrderData">Tải lại</button>
+        </div>
         @if (ordersLoading) { <p role="status">Đang tải đơn hàng...</p> }
         else if (!ordersLoaded) { <div class="customer-feedback error" role="alert">@ordersError <button type="button" @onclick="LoadOrderData">Thử lại</button></div> }
         else
         {
         @if (!string.IsNullOrEmpty(warehouseError)) { <div class="customer-feedback error" role="alert">@warehouseError <button type="button" @onclick="LoadOrderData">Thử lại</button></div> }
         @if (!string.IsNullOrEmpty(orderActionError)) { <div class="customer-feedback error" role="alert">@orderActionError</div> }
-        <DataTable TItem="ManagedOrder" Items="orders" Label="Danh sách đơn hàng" ColumnCount="7" EmptyText="Chưa có đơn hàng.">
+        <DataTable TItem="ManagedOrder" Items="FilteredOrders" Label="Danh sách đơn hàng" ColumnCount="7" EmptyText="Chưa có đơn hàng.">
             <Header><th scope="col">Đơn hàng / khách hàng</th><th scope="col">Ngày tạo</th><th scope="col">Chi tiết</th><th scope="col">Kho xuất</th><th scope="col">Tổng tiền</th><th scope="col">Trạng thái</th><th scope="col">Lưu</th></Header>
             <RowTemplate Context="order">
                 <td><strong>@order.Code</strong><small>@order.CustomerName (@order.CustomerCode)</small><small>@order.Address</small></td>
@@ -97,7 +107,7 @@
                 <td>@foreach (var line in order.Lines){<small>@line.ProductName × @line.Quantity — @MoneyFormatter.Format(line.LineTotal)</small>}</td>
                 <td><select aria-label="Kho xuất @order.Code" @bind="warehouseSelection[order.Code]"><option value="">Chọn kho</option>@foreach(var warehouse in warehouses){<option value="@warehouse.Code">@warehouse.Code — @warehouse.Name</option>}</select></td>
                 <td>@MoneyFormatter.Format(order.Total)</td>
-                <td><select aria-label="Trạng thái @order.Code" @bind="statusSelection[order.Code]"><option>Đang xử lý</option><option>Đã xác nhận</option><option>Đang giao hàng</option><option>Đã giao</option><option>Đã hủy</option></select></td>
+                <td><select aria-label="Trạng thái @order.Code" @bind="statusSelection[order.Code]"><option>Đang xử lý</option><option>Đã xác nhận</option><option>Đang giao hàng</option><option>Đã giao</option><option>Hoàn thành</option><option>Đã hủy</option></select></td>
                 <td><button type="button" @onclick="() => SaveOrderStatus(order.Code)" disabled="@(!string.IsNullOrEmpty(warehouseError))">Lưu</button></td>
             </RowTemplate>
         </DataTable>
@@ -106,6 +116,25 @@
     else
     {
         <h2>Báo cáo doanh thu và hóa đơn</h2>
+        <h3>Lập hóa đơn</h3>
+        <div class="form-grid">
+            <label>Đơn đã giao<select @bind="invoiceOrder"><option value="">Chọn đơn hàng</option>
+                @foreach (var order in orders.Where(o => o.InvoiceCode is null && (o.Status == "Đã giao" || o.Status == "Hoàn thành")))
+                { <option value="@order.Code">@order.Code — @order.CustomerName</option> }
+            </select></label>
+            <label>Nhân viên<select @bind="invoiceEmployee"><option value="">Chọn nhân viên</option>
+                @foreach (var employee in invoiceEmployees) { <option value="@employee.Code">@employee.Code — @employee.Name</option> }
+            </select></label>
+            <label>Thanh toán<select @bind="invoiceMethod"><option>Tiền mặt</option><option>Chuyển khoản</option><option>COD</option></select></label>
+            <button type="button" @onclick="CreateInvoice" disabled="@(!ordersLoaded || !invoiceEmployeesLoaded)">Lập hóa đơn</button>
+        </div>
+        @if (!invoiceEmployeesLoaded) { <p class="customer-feedback error">Chưa tải được nhân viên lập hóa đơn. <button @onclick="LoadInvoiceEmployees">Thử lại</button></p> }
+        @if (!string.IsNullOrEmpty(invoiceActionError)) { <p class="customer-feedback error" role="alert">@invoiceActionError</p> }
+        <div class="form-grid">
+            <label>Từ ngày<input type="date" @bind="reportFrom" /></label>
+            <label>Đến ngày<input type="date" @bind="reportTo" /></label>
+            <button type="button" @onclick="LoadReportData">Xem báo cáo</button>
+        </div>
         @if (reportLoaded) { <p>@summary!.From.ToString("yyyy-MM-dd") — @summary.To.ToString("yyyy-MM-dd") · @summary.OrderCount đơn có hóa đơn đã thanh toán · @summary.InvoiceCount hóa đơn đã thanh toán · @summary.ProductsSold sản phẩm bán</p> }
         else if (reportLoading) { <p role="status">Đang tải báo cáo...</p> }
         else { <div class="customer-feedback error" role="alert">@reportError <button type="button" @onclick="LoadReportData">Thử lại</button></div> }
@@ -114,9 +143,9 @@
         else if (!invoicesLoaded) { <div class="customer-feedback error" role="alert">@invoiceError <button type="button" @onclick="LoadInvoiceData">Thử lại</button></div> }
         else
         {
-        <DataTable TItem="ManagedInvoice" Items="invoices" Label="Hóa đơn" ColumnCount="6" EmptyText="Chưa có hóa đơn.">
-            <Header><th scope="col">Hóa đơn</th><th scope="col">Đơn hàng</th><th scope="col">Nhân viên</th><th scope="col">Thời gian</th><th scope="col">Chi tiết</th><th scope="col">Tổng thanh toán</th></Header>
-            <RowTemplate Context="invoice"><td>@invoice.Code<small>@invoice.PaymentMethod · @invoice.Status</small></td><td>@invoice.OrderCode</td><td>@invoice.EmployeeName (@invoice.EmployeeCode)</td><td>@invoice.Created.ToString("yyyy-MM-dd HH:mm")</td><td>@foreach(var line in invoice.Lines){<small>@line.ProductName × @line.Quantity</small>}</td><td>@MoneyFormatter.Format(invoice.Total)</td></RowTemplate>
+        <DataTable TItem="ManagedInvoice" Items="invoices" Label="Hóa đơn" ColumnCount="7" EmptyText="Chưa có hóa đơn.">
+            <Header><th scope="col">Hóa đơn</th><th scope="col">Đơn hàng</th><th scope="col">Nhân viên</th><th scope="col">Thời gian</th><th scope="col">Chi tiết</th><th scope="col">Tổng thanh toán</th><th scope="col">Thu tiền</th></Header>
+            <RowTemplate Context="invoice"><td>@invoice.Code<small>@invoice.PaymentMethod · @invoice.Status</small></td><td>@invoice.OrderCode</td><td>@invoice.EmployeeName (@invoice.EmployeeCode)</td><td>@invoice.Created.ToString("yyyy-MM-dd HH:mm")</td><td>@foreach(var line in invoice.Lines){<small>@line.ProductName × @line.Quantity</small>}</td><td>@MoneyFormatter.Format(invoice.Total)</td><td>@if (invoice.Status == "Chờ thanh toán") { <button type="button" @onclick="() => MarkInvoicePaid(invoice)">Xác nhận đã thu tiền</button> }</td></RowTemplate>
         </DataTable>
         }
     }
@@ -125,6 +154,12 @@
 @code {
     private static readonly string[] AdminTabs = ["Sản phẩm", "Đơn hàng", "Thống kê"];
     private List<ProductManage> products = [];
+    private string productSearch = "", orderSearch = "", orderFilter = "";
+    private IEnumerable<ProductManage> FilteredProducts => products.Where(p => string.IsNullOrWhiteSpace(productSearch)
+        || p.MaSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase) || p.TenSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<ManagedOrder> FilteredOrders => orders.Where(o => (string.IsNullOrEmpty(orderFilter) || o.Status == orderFilter)
+        && (string.IsNullOrWhiteSpace(orderSearch) || o.Code.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+            || o.CustomerName.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)));
     private List<ProductCategory> productCategories = [];
     private ProductManage productDraft = new() { TrangThai = "1" };
     private ProductCategory categoryDraft = new();
@@ -136,6 +171,7 @@
     private bool categoryEditing;
     private string productError = "Không thể tải danh sách sản phẩm. Vui lòng kiểm tra kết nối và thử lại.";
     private string productActionError = "";
+    private string successMessage = "";
     private bool productLoading = true;
     private bool productLoaded;
     private bool productsLoaded;
@@ -144,7 +180,11 @@
     private IReadOnlyList<ManagedInvoice> invoices = [];
     private Dictionary<string, string> statusSelection = [];
     private Dictionary<string, string> warehouseSelection = [];
+    private IReadOnlyList<Employee> invoiceEmployees = [];
+    private bool invoiceEmployeesLoaded;
+    private string invoiceOrder = "", invoiceEmployee = "", invoiceMethod = "Tiền mặt", invoiceActionError = "";
     private SalesSummary? summary;
+    private DateTime reportFrom = DateTime.Today.AddDays(-29), reportTo = DateTime.Today;
     private string ordersError = "Không thể tải danh sách đơn hàng. Vui lòng thử lại.";
     private string warehouseError = "";
     private string orderActionError = "";
@@ -163,6 +203,7 @@
         LoadProducts();
         LoadOrderData();
         LoadInvoiceData();
+        LoadInvoiceEmployees();
         LoadReportData();
     }
 
@@ -220,6 +261,41 @@
         finally { ordersLoading = false; }
     }
 
+    private void LoadInvoiceEmployees()
+    {
+        try { invoiceEmployees = EmployeeService.Search(); invoiceEmployeesLoaded = true; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to load invoice employees."); invoiceEmployees = []; invoiceEmployeesLoaded = false; }
+    }
+
+    private void CreateInvoice()
+    {
+        invoiceActionError = "";
+        try
+        {
+            InvoiceService.CreateInvoice(invoiceOrder, invoiceEmployee, invoiceMethod);
+            invoiceOrder = "";
+            LoadInvoiceData(); LoadOrderData(); LoadReportData();
+            successMessage = "Đã lập hóa đơn chờ thanh toán.";
+        }
+        catch (ArgumentException ex) { invoiceActionError = ex.Message; }
+        catch (InvalidOperationException ex) { invoiceActionError = ex.Message; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to issue invoice."); invoiceActionError = "Không thể lập hóa đơn. Vui lòng thử lại."; }
+    }
+
+    private async Task MarkInvoicePaid(ManagedInvoice invoice)
+    {
+        if (!await JavaScript.InvokeAsync<bool>("confirm", $"Xác nhận đã thu đủ {MoneyFormatter.Format(invoice.Total)} cho hóa đơn {invoice.Code}?")) return;
+        invoiceActionError = "";
+        try
+        {
+            InvoiceService.MarkPaid(invoice.Code);
+            LoadInvoiceData(); LoadReportData();
+            successMessage = "Đã xác nhận thanh toán hóa đơn.";
+        }
+        catch (InvalidOperationException ex) { invoiceActionError = ex.Message; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to mark invoice paid."); invoiceActionError = "Không thể xác nhận thanh toán. Vui lòng thử lại."; }
+    }
+
     private void LoadInvoiceData()
     {
         invoicesLoading = true;
@@ -247,7 +323,8 @@
         reportError = "Không thể tải báo cáo doanh thu. Vui lòng thử lại.";
         try
         {
-            summary = OrderService.GetSalesSummary(DateTime.Today.AddDays(-30), DateTime.Today.AddDays(1));
+            if (reportFrom.Date > reportTo.Date) throw new ArgumentException("Ngày bắt đầu không được sau ngày kết thúc.");
+            summary = OrderService.GetSalesSummary(reportFrom.Date, reportTo.Date.AddDays(1));
             reportLoaded = true;
             reportError = "";
         }
@@ -266,12 +343,13 @@
         {
             OrderService.UpdateStatus(code, statusSelection[code], warehouseSelection[code]);
             LoadOrderData();
+            successMessage = "Đã cập nhật đơn hàng.";
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to update order status for {OrderCode}.", code);
             orderActionError = ex.Message.Contains("migration", StringComparison.OrdinalIgnoreCase)
-                ? "Chưa thể hoàn tất đơn hàng vì cần thiết lập phân bổ kho. Vui lòng xem phần ghi chú migration cần duyệt."
+                ? "Chưa thể hoàn tất đơn hàng vì cần thiết lập phân bổ kho. Vui lòng liên hệ người quản lý để hoàn tất thiết lập."
                 : ex is InvalidOperationException ? ex.Message : "Không thể cập nhật đơn hàng. Vui lòng kiểm tra thông tin và thử lại.";
         }
     }
@@ -285,6 +363,7 @@
             productError = "";
             productActionError = "";
             ResetProduct();
+            successMessage = "Đã lưu sản phẩm.";
         }
         catch (Exception ex)
         {
@@ -308,6 +387,7 @@
     private void DeactivateProduct(ProductManage item)
     {
         try { ProductService.Delete(item.MaSP); products = ProductService.Read(); productError = ""; productActionError = ""; }
+        catch (ArgumentException ex) { productActionError = ex.Message; }
         catch (InvalidOperationException ex) { productActionError = ex.Message; }
         catch (Exception ex)
         {
@@ -327,6 +407,7 @@
             productError = "";
             productActionError = "";
         }
+        catch (ArgumentException ex) { productActionError = ex.Message; }
         catch (InvalidOperationException ex) { productActionError = ex.Message; }
         catch (Exception ex)
         {
@@ -345,12 +426,12 @@
     {
         try
         {
-            category.TrangThai = false;
-            ProductService.SaveCategory(category);
+            ProductService.SaveCategory(new ProductCategory { MaLoai = category.MaLoai, TrangThai = false });
             productCategories = ProductService.ReadCategories();
             productError = "";
             productActionError = "";
         }
+        catch (ArgumentException ex) { productActionError = ex.Message; }
         catch (InvalidOperationException ex) { productActionError = ex.Message; }
         catch (Exception ex)
         {

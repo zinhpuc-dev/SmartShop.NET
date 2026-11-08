@@ -1,5 +1,15 @@
 # Giao diện web mobile trên develop
 
+## Trạng thái hiện tại — 08/11/2026
+
+Admin đã dùng MySQL và đăng nhập riêng; User vẫn dùng DemoShopDao, không kết luận checkout lưu MySQL. Solution còn nhiều project. Xem ADMIN_REPORT_CURRENT.md và progress/AI_HANDOFF.md.
+
+Build solution: 0 lỗi, 0 cảnh báo. 19 smoke checks User còn lại pass (không phải test Admin). HTTP đăng nhập đúng/sai, thiếu CSRF, chặn ẩn danh và đăng xuất đều đạt. DAO chỉ đọc MySQL: 10 đơn + 10 chi tiết, 10 hóa đơn + 10 chi tiết, 10 phiếu nhập + 10 chi tiết, 10 dòng tồn kho tổng 485; 10 chương trình/10 voucher. Doanh thu hóa đơn đã thanh toán năm 2026: 114.100.000 đồng trên dữ liệu mẫu tại thời điểm kiểm tra.
+
+Chưa kiểm thử ghi CRUD, lập/thu tiền hóa đơn, cộng/trừ tồn, rollback hoặc concurrency trên database riêng. Chưa áp dụng migration DON_HANG.MaKho. Chưa nghiệm thu toàn bộ đồ án, UI tương tác hoặc máy sạch. Không coi build/HTTP 200/dữ liệu giả là bằng chứng nghiệp vụ ghi MySQL.
+
+## Tài liệu ghép GUI trước đây (lịch sử)
+
 Bản giao diện được gộp từ `feature/web-mobile-gui` vào `develop`, giữ nguyên toàn bộ các file và thư mục đã pull từ `origin/develop`. Mã ứng dụng đặt theo sườn nhánh `main`: giao diện trong `GUI/user`, `GUI/admin`, component dùng chung trong `GUI/shared`, nghiệp vụ trong `BUS`, truy cập dữ liệu trong `DAO` và mô hình dữ liệu trong `DTO`. Không sửa nội dung README, phân công hoặc checklist gốc của nhóm.
 
 ## Chạy ứng dụng

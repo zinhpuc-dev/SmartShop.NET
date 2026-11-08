@@ -129,4 +129,27 @@ public sealed class WarehouseDAO : IWarehouseRepository
             throw;
         }
     }
+
+    public IReadOnlyList<ReceivingDetail> GetReceivingDetails(string code)
+    {
+        List<ReceivingDetail> rows = [];
+        using MySqlConnection connection = new(connectionString);
+        connection.Open();
+        using MySqlCommand command = new("SELECT ct.MaSP,p.TenSP,ct.SoLuongNhap,ct.DonGiaNhap,ct.ThanhTien FROM CHI_TIET_PHIEU_NHAP ct JOIN SAN_PHAM p ON p.MaSP=ct.MaSP WHERE ct.MaPN=@Code ORDER BY ct.MaSP", connection);
+        command.Parameters.AddWithValue("@Code", code);
+        using MySqlDataReader reader = command.ExecuteReader();
+        while (reader.Read()) rows.Add(new ReceivingDetail(reader.GetString(0).Trim(), reader.GetString(1), reader.GetInt32(2), reader.GetDecimal(3), reader.GetDecimal(4)));
+        return rows;
+    }
+
+    public IReadOnlyList<WarehouseStock> GetStock()
+    {
+        List<WarehouseStock> rows = [];
+        using MySqlConnection connection = new(connectionString);
+        connection.Open();
+        using MySqlCommand command = new("SELECT t.MaKho,k.TenKho,t.MaSP,p.TenSP,t.SoLuongTon FROM TON_KHO t JOIN KHO k ON k.MaKho=t.MaKho JOIN SAN_PHAM p ON p.MaSP=t.MaSP ORDER BY t.MaKho,t.MaSP", connection);
+        using MySqlDataReader reader = command.ExecuteReader();
+        while (reader.Read()) rows.Add(new WarehouseStock(reader.GetString(0).Trim(), reader.GetString(1), reader.GetString(2).Trim(), reader.GetString(3), reader.GetInt32(4)));
+        return rows;
+    }
 }

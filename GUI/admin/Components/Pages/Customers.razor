@@ -1,3 +1,4 @@
+@attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/customers"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject ICustomerService CustomerService
@@ -96,6 +97,7 @@
         loading = true;
         try
         {
+            CustomerService.Reload();
             _ = CustomerService.Search();
             loadError = "";
         }
@@ -133,6 +135,7 @@
             query = "";
             Notice($"Đã lưu khách hàng {saved.Code}.");
         }
+        catch (ArgumentException ex) { formError = ex.Message; }
         catch (InvalidOperationException ex) { formError = ex.Message; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin customer."); formError = "Không thể lưu khách hàng. Vui lòng thử lại."; }
     }

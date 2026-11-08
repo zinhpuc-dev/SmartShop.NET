@@ -7,6 +7,8 @@ public sealed class WarehouseService(IWarehouseRepository dao, ISupplierReposito
 {
     public IReadOnlyList<Warehouse> GetAll() => dao.GetAll();
     public IReadOnlyList<ReceivingRecord> GetReceivings() => dao.GetReceivings();
+    public IReadOnlyList<ReceivingDetail> GetReceivingDetails(string code) => dao.GetReceivingDetails(Normalize(code, 8, "Mã phiếu nhập"));
+    public IReadOnlyList<WarehouseStock> GetStock() => dao.GetStock();
 
     public void Save(Warehouse warehouse, bool editing)
     {

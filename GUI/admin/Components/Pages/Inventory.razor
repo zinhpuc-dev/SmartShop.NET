@@ -1,3 +1,4 @@
+@attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/inventory"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject WarehouseService WarehouseService
@@ -35,6 +36,14 @@ else if (!loaded)
     </DataTable> }
 </section>
 <section class="panel">
+    <h2>Tồn kho</h2>
+    <label>Lọc kho<select @bind="stockFilter"><option value="">Tất cả kho</option>@foreach (var warehouse in warehouses){<option value="@warehouse.Code">@warehouse.Name</option>}</select></label>
+    @if (loaded) {
+        <DataTable TItem="WarehouseStock" Items="FilteredStock.ToList()" Label="Tồn kho" ColumnCount="3" EmptyText="Chưa có tồn kho.">
+            <Header><th>Kho</th><th>Sản phẩm</th><th>Số lượng</th></Header>
+            <RowTemplate Context="stock"><td>@stock.WarehouseName</td><td>@stock.ProductCode — @stock.ProductName</td><td>@stock.Quantity</td></RowTemplate>
+        </DataTable>
+    }
     <h2>Tạo phiếu nhập</h2>
     <div class="form-grid">
         <label>Mã phiếu<input @bind="receiving.Code" maxlength="8" /></label>
@@ -56,15 +65,27 @@ else if (!loaded)
     <h2>Lịch sử phiếu nhập</h2>
     @if (loaded) { <DataTable TItem="ReceivingRecord" Items="receivings" Label="Lịch sử phiếu nhập" ColumnCount="7" EmptyText="Chưa có phiếu nhập.">
         <Header><th scope="col">Mã phiếu</th><th scope="col">Nhà cung cấp</th><th scope="col">Kho</th><th scope="col">Ngày nhập</th><th scope="col">Số dòng</th><th scope="col">Tổng tiền</th><th scope="col">Mã NCC</th></Header>
-        <RowTemplate Context="record"><td>@record.Code</td><td>@record.SupplierName</td><td>@record.WarehouseName (@record.WarehouseCode)</td><td>@record.ReceivedAt.ToString("yyyy-MM-dd HH:mm")</td><td>@record.LineCount</td><td>@MoneyFormatter.Format(record.Total)</td><td>@record.SupplierCode</td></RowTemplate>
+        <RowTemplate Context="record"><td><button type="button" @onclick="() => ShowReceipt(record.Code)">@record.Code</button></td><td>@record.SupplierName</td><td>@record.WarehouseName (@record.WarehouseCode)</td><td>@record.ReceivedAt.ToString("yyyy-MM-dd HH:mm")</td><td>@record.LineCount</td><td>@MoneyFormatter.Format(record.Total)</td><td>@record.SupplierCode</td></RowTemplate>
     </DataTable> }
 </section>
+
+@if (!string.IsNullOrEmpty(selectedReceipt)) {
+    <section class="panel"><h2>Chi tiết phiếu @selectedReceipt</h2><button type="button" @onclick='() => selectedReceipt = ""'>Đóng</button>
+    <DataTable TItem="ReceivingDetail" Items="receiptDetails" Label="Chi tiết phiếu nhập" ColumnCount="4" EmptyText="Phiếu chưa có chi tiết.">
+        <Header><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></Header>
+        <RowTemplate Context="line"><td>@line.ProductCode — @line.ProductName</td><td>@line.Quantity</td><td>@MoneyFormatter.Format(line.UnitCost)</td><td>@MoneyFormatter.Format(line.Total)</td></RowTemplate>
+    </DataTable></section>
+}
 
 @code {
     private List<Warehouse> warehouses = [];
     private List<Supplier> suppliers = [];
     private List<ProductManage> products = [];
     private IReadOnlyList<ReceivingRecord> receivings = [];
+    private IReadOnlyList<ReceivingDetail> receiptDetails = [];
+    private IReadOnlyList<WarehouseStock> stockRows = [];
+    private string selectedReceipt = "", stockFilter = "";
+    private IEnumerable<WarehouseStock> FilteredStock => stockRows.Where(r => string.IsNullOrEmpty(stockFilter) || r.WarehouseCode == stockFilter);
     private Warehouse warehouseDraft = new();
     private ReceivingDraft receiving = new() { Lines = [new ReceivingLineDraft()] };
     private bool editingWarehouse, failed, loading = true, loaded;
@@ -82,9 +103,11 @@ else if (!loaded)
             suppliers = SupplierService.Search().ToList();
             products = ProductService.Read();
             receivings = WarehouseService.GetReceivings();
+            stockRows = WarehouseService.GetStock();
             if (string.IsNullOrWhiteSpace(warehouseDraft.Code)) warehouseDraft.Code = WarehouseService.SuggestCode();
             if (string.IsNullOrWhiteSpace(receiving.Code)) receiving.Code = SuggestReceivingCode();
             loadError = "";
+            loaded = true;
         }
         catch (Exception ex)
         {
@@ -101,6 +124,7 @@ else if (!loaded)
     private void SaveWarehouse()
     {
         try { WarehouseService.Save(warehouseDraft, editingWarehouse); message = "Đã lưu kho."; failed = false; ResetWarehouse(); Load(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin warehouse."); message = "Không thể lưu kho. Vui lòng thử lại."; failed = true; }
     }
@@ -120,8 +144,15 @@ else if (!loaded)
     private void DeleteWarehouse(Warehouse value)
     {
         try { WarehouseService.Delete(value.Code); message = "Đã xóa kho."; failed = false; Load(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to delete Admin warehouse."); message = "Không thể xóa kho. Vui lòng thử lại."; failed = true; }
+    }
+
+    private void ShowReceipt(string code)
+    {
+        try { receiptDetails = WarehouseService.GetReceivingDetails(code); selectedReceipt = code; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to load receiving details."); message = "Không thể tải chi tiết phiếu nhập. Vui lòng thử lại."; failed = true; selectedReceipt = ""; }
     }
 
     private void AddLine() => receiving.Lines.Add(new ReceivingLineDraft());
@@ -132,11 +163,12 @@ else if (!loaded)
         try
         {
             WarehouseService.CreateReceiving(receiving);
-            message = "Đã tạo phiếu nhập và cập nhật tồn kho nguyên tử.";
+            message = "Đã tạo phiếu nhập và cập nhật tồn kho.";
             failed = false;
             receiving = new ReceivingDraft { Code = SuggestReceivingCode(), Lines = [new ReceivingLineDraft()] };
             Load();
         }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to create Admin receiving record."); message = "Không thể lưu phiếu nhập. Vui lòng thử lại."; failed = true; }
     }

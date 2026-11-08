@@ -2,7 +2,7 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 03/11/2026
+**Cập nhật lần cuối:** 08/11/2026
 
 | Mục | Nội dung |
 |---|---|
@@ -15,16 +15,28 @@
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
 
+## Cập nhật hiện tại — 08/11/2026
+
+EmployeeService → IEmployeeRepository/EmployeeDAO → NHAN_VIEN; mapping Code/Name/Position(ChucVu)/Phone/Email. Không giả định địa chỉ/tình trạng làm việc vì schema không có. Đã đọc 10 hồ sơ, chưa thử ghi/xóa hoặc liên kết tài khoản nhân viên.
+
+### Mốc triển khai và kiểm chứng
+
+- [x] Đọc được 10 nhân viên MySQL, có ChucVu.
+- [x] Có mã CRUD, validation, khóa mã và Reload cache.
+- [ ] Kiểm thử ghi, ràng buộc hóa đơn và liên kết tài khoản nếu cần.
+
+> Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
+
 ## Việc cần làm
 
-- [x] CRUD Nhân viên theo GUI-BUS-DAO (bản demo theo phiên)
+- [x] CRUD Nhân viên theo GUI-BUS-DAO (đã có DAO MySQL; thao tác ghi chưa nghiệm thu)
 - [x] Kiểm tra trùng mã, field bắt buộc, field khóa không cho sửa
 - [x] Form tìm nhân viên cho nút "..." (popup web trong Admin)
 - [x] Chụp ảnh form cho báo cáo
 - [x] Đã có ảnh form trong `docs/images/06-nhan-vien/`
 - [ ] Đã viết phần báo cáo tương ứng (III (Triết))
 
-### Phạm vi đã thực hiện
+### Phạm vi trước 08/11/2026 (lịch sử)
 
 - Trang `/admin/employees` thuộc Admin, có menu riêng trên desktop và điện thoại; hỗ trợ thêm, sửa, xóa có xác nhận, xem hồ sơ và đổi tình trạng làm việc.
 - Tách DTO Employee/EmployeeDraft, BUS IEmployeeService/EmployeeService, hợp đồng IEmployeeRepository và DAO DemoEmployeeRepository; ghép qua dependency injection theo phiên, BUS không tham chiếu DAO cụ thể.
@@ -46,7 +58,9 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 |---|---|---|---|---|
 | 03/11/2026 | Triết | Hoàn thành bản demo web phần 06: CRUD, hồ sơ, tình trạng làm việc, tìm/lọc, popup chọn, kiểm tra dữ liệu; tái sử dụng component, lưu ảnh và nháp báo cáo | Codex | Local trên develop, chưa commit/push. Còn CSDL thật, liên kết tài khoản/giao dịch và báo cáo chính |
 
-## Vướng mắc
+| 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |
+
+## Vướng mắc lịch sử (đối chiếu cập nhật phía trên)
 
 - 03/11/2026: dữ liệu hiện nằm trong bộ nhớ theo phiên, chưa lưu bền vững; chờ phối hợp Vinh chốt schema, UNIQUE và tích hợp SQL/MyConnection.
 - Tình trạng làm việc chưa liên kết đăng nhập/phân quyền; cần phối hợp Phúc khi tích hợp tài khoản.

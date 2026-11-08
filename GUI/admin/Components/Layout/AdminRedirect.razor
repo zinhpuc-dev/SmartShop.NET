@@ -1,0 +1,9 @@
+@inject NavigationManager Navigation
+<p role="status">Đang chuyển đến trang đăng nhập...</p>
+@code {
+    protected override void OnInitialized()
+    {
+        string path = new Uri(Navigation.Uri).PathAndQuery;
+        Navigation.NavigateTo("/admin/login?returnUrl=" + Uri.EscapeDataString(path), forceLoad: true);
+    }
+}

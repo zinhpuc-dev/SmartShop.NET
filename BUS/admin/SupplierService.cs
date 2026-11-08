@@ -15,6 +15,8 @@ public sealed class SupplierService : ISupplierService
         this.repository = repository;
     }
 
+    public void Reload() => suppliers = null;
+
     public IReadOnlyList<Supplier> Search(string query = "")
     {
         var term = SearchText.Normalize((query ?? "").Trim());

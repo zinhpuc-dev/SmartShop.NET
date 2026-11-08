@@ -2,7 +2,7 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 03/11/2026
+**Cập nhật lần cuối:** 08/11/2026
 
 | Mục | Nội dung |
 |---|---|
@@ -14,6 +14,18 @@
 | Ảnh form | `docs/images/04-form-chinh/` |
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
+
+## Cập nhật hiện tại — 08/11/2026
+
+Menu Admin có tổng quan/sản phẩm/đơn/thống kê, khách hàng, nhân viên, NCC, kho và khuyến mại; đã bảo vệ route và thêm đăng xuất. Không sửa luồng User. Host dùng chung chỉ bổ sung xác thực Admin. Solution hiện vẫn nhiều project, chưa gom về một project.
+
+### Mốc triển khai và kiểm chứng
+
+- [x] Các route chính đã trả dữ liệu qua HTTP sau đăng nhập.
+- [x] Có đăng xuất và kiểm soát truy cập Admin phía server.
+- [ ] Chụp ảnh mới, nghiệm thu tương tác desktop/mobile; chốt riêng việc gom project.
+
+> Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
 
 ## Việc cần làm
 
@@ -44,6 +56,8 @@ Form chính mở được đủ các form con theo mẫu giảng viên
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
 | 03/11/2026 | Triết | Rà soát phần 04 đã có: layout User/Admin riêng, menu trái, vùng nội dung, breadcrumb, điều hướng mobile và liên kết các trang đang triển khai; xác nhận đã có ảnh desktop/mobile | Codex | Đang làm, 3/6 mục. Còn tên người đăng nhập, phân quyền menu, tích hợp đủ trang và báo cáo chính. Chỉ cập nhật nhật ký, chưa commit/push |
+
+| 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |
 
 ## Vướng mắc
 

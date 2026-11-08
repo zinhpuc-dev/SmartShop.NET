@@ -15,6 +15,8 @@ public sealed class CustomerService : ICustomerService
         this.repository = repository;
     }
 
+    public void Reload() => customers = null;
+
     public IReadOnlyList<Customer> Search(string query = "")
     {
         var term = SearchText.Normalize((query ?? "").Trim());

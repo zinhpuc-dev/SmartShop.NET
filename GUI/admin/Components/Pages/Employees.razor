@@ -1,3 +1,4 @@
+@attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/employees"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inject IEmployeeService EmployeeService
@@ -95,6 +96,7 @@
         loading = true;
         try
         {
+            EmployeeService.Reload();
             _ = EmployeeService.Search();
             loadError = "";
         }
@@ -132,6 +134,7 @@
             query = "";
             Notice($"Đã lưu nhân viên {saved.Code}.");
         }
+        catch (ArgumentException ex) { formError = ex.Message; }
         catch (InvalidOperationException ex) { formError = ex.Message; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin employee."); formError = "Không thể lưu nhân viên. Vui lòng thử lại."; }
     }

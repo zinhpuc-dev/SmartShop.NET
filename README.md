@@ -1,5 +1,13 @@
 # SmartShop
 
+## Trạng thái thực tế — 08/11/2026
+
+Mã hiện tại là .NET 10 Razor/Blazor và MySQL. Admin có đăng nhập/DAO thật và đã kiểm tra chỉ đọc; User vẫn dùng dữ liệu demo. Chưa nghiệm thu thao tác ghi, chưa chạy migration kho, chưa gom các project. Xem [báo cáo Admin](ADMIN_REPORT_CURRENT.md), [tiến độ](progress/TONG_QUAN.md), [hướng dẫn chạy](docs/bao-cao/IV-huong-dan-cai-dat.md).
+
+Mô tả WinForms/SQL Server và cây thư mục dưới đây là kế hoạch ban đầu, giữ để đối chiếu.
+
+## Kế hoạch ban đầu (lịch sử)
+
 Đồ án học phần Lập trình C#: phần mềm quản lý bán hàng đồ điện tử. WinForms 3 lớp GUI-BUS-DAO, SQL Server.
 
 ## Cấu trúc thư mục

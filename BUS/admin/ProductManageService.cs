@@ -1,4 +1,4 @@
-﻿using SmartShop.DTO;
+using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS
@@ -48,6 +48,7 @@ namespace SmartShop.BUS
             Validate(pm);
             if (!dao.CheckProduct(pm.MaSP))
                 throw new InvalidOperationException("Không tìm thấy sản phẩm.");
+            if (!dao.CheckCategory(pm.MaLoai)) throw new ArgumentException("Không tìm thấy loại sản phẩm đã chọn.");
             dao.Update(pm);
             product = dao.ReadData();
         }
@@ -59,6 +60,8 @@ namespace SmartShop.BUS
             {
                 throw new Exception("Sản phẩm đã tồn tại");
             }
+            if (!dao.ReadCategories().Any(c => c.MaLoai == pm.MaLoai && c.TrangThai))
+                throw new ArgumentException("Vui lòng chọn loại sản phẩm đang hoạt động.");
             dao.Insert(pm);
             product = dao.ReadData();
         }
@@ -86,6 +89,8 @@ namespace SmartShop.BUS
                 string.IsNullOrWhiteSpace(pm.TenSP) || string.IsNullOrWhiteSpace(pm.DonViTinh) ||
                 string.IsNullOrWhiteSpace(pm.TrangThai))
                 throw new ArgumentException("Thông tin sản phẩm bắt buộc không được để trống.");
+            if (decimal.Round(pm.GiaNiemYet, 2) != pm.GiaNiemYet || decimal.Round(pm.GiaBan, 2) != pm.GiaBan)
+                throw new ArgumentException("Giá sản phẩm chỉ được có tối đa hai chữ số thập phân.");
             if (pm.GiaNiemYet < 0 || pm.GiaBan < 0)
                 throw new ArgumentException("Giá sản phẩm không được âm.");
             if (pm.TrangThai is not ("0" or "1"))

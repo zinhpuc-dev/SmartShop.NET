@@ -1,8 +1,8 @@
 # Hóa đơn bán hàng (main-sub), trừ tồn
 
 **Người phụ trách:** Phúc  
-**Trạng thái:** Chưa làm  
-**Cập nhật lần cuối:** (chưa cập nhật)
+**Trạng thái:** Đang làm
+**Cập nhật lần cuối:** 08/11/2026
 
 | Mục | Nội dung |
 |---|---|
@@ -14,6 +14,18 @@
 | Ảnh form | `docs/images/12-hoa-don-ban/` |
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
+
+## Cập nhật hiện tại — 08/11/2026
+
+Đã sửa lỗi sửa List trong foreach ở DAO đơn/hóa đơn. Đã đọc 10 đơn/10 chi tiết và 10 hóa đơn/10 chi tiết. Có mã lập hóa đơn từ đơn đã giao/hoàn thành, xác nhận thu tiền. Trừ tồn ở bước hoàn tất đơn, không phải lập hóa đơn; cần migration MaKho đã duyệt. Chưa thử ghi, VAT/giảm giá/hoàn trả sau giao chưa đầy đủ.
+
+### Mốc triển khai và kiểm chứng
+
+- [x] Đọc được 10 đơn và 10 hóa đơn kèm chi tiết từ MySQL.
+- [x] Có mã lập/thu tiền hóa đơn và transaction chuyển trạng thái/trừ tồn.
+- [ ] Duyệt migration; thử ghi/rollback/trừ tồn lặp và hoàn trả trên database riêng.
+
+> Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
 
 ## Việc cần làm
 
@@ -37,7 +49,7 @@ Click 1 hóa đơn hiện đúng chi tiết; bán thì tồn giảm; hủy thì 
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
-| | | | | |
+| 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |
 
 ## Vướng mắc
 

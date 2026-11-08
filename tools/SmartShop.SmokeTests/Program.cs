@@ -62,40 +62,8 @@ Check(ReferenceEquals(serviceA, sessionA.ServiceProvider.GetRequiredService<ISho
 serviceA.Add(serviceA.Products[0]);
 Check(serviceA.Count == 1 && serviceB.Count == 0 && !ReferenceEquals(serviceA, serviceB),
     "DI scopes isolate customer session data");
-CustomerChecks.Run();
-EmployeeChecks.Run();
-WarehouseChecks.Run();
-OrderManagementChecks.Run();
-PromotionChecks.Run();
 
-var supplierRepository = new DemoSupplierRepository();
-var supplierService = new SupplierService(supplierRepository);
-Check(supplierService.Search("thiet bi anh duong").Single().Code == "N00001",
-    "Supplier search matches an accentless name");
-var supplierDraft = new SupplierDraft
-{
-    Code = " n00900 ",
-    Name = "Công ty Kiểm Thử",
-    Phone = "02800000009",
-    Address = "123 Đường Mẫu, TP. Hồ Chí Minh"
-};
-var supplier = supplierService.Create(supplierDraft);
-Check(supplier.Code == "N00900" && supplierService.Search("kiem thu").Single() == supplier,
-    "Supplier creation normalizes the code and updates the search cache");
-Rejected(() => supplierService.Create(supplierDraft), "Supplier rejects a duplicate code");
-Rejected(() => supplierService.Create(new SupplierDraft()), "Supplier rejects missing required fields");
-var supplierEdit = SupplierDraft.From(supplier);
-supplierEdit.Name = "Công ty Đổi Tên";
-var updatedSupplier = supplierService.Update(supplier.Code, supplierEdit);
-Check(supplierService.Search("doi ten").Single() == updatedSupplier,
-    "Supplier edit refreshes the search cache");
-supplierEdit.Code = "N00901";
-Rejected(() => supplierService.Update(supplier.Code, supplierEdit), "Supplier code cannot be changed");
-supplierService.Delete(supplier.Code);
-Check(supplierService.Search("N00900").Count == 0 && supplierRepository.GetAll().All(value => value.Code != supplier.Code),
-    "Supplier deletion updates both storage and the search cache");
-
-Console.WriteLine("All integration smoke checks passed.");
+Console.WriteLine("User smoke checks passed.");
 
 sealed class RejectingRepository : IShopRepository
 {

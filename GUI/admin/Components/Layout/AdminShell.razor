@@ -2,6 +2,9 @@
 <header class="admin-header">
     <a class="brand" href="/admin"><span class="brand-icon">S</span>Smart<span>Shop</span><small>ADMINISTRATION</small></a>
     <span class="admin-mode">Không gian quản trị</span>
+    <form method="post" action="/admin/sign-out" data-enhance="false">
+        <AntiforgeryToken /><button type="submit" class="secondary">Đăng xuất</button>
+    </form>
     <a class="secondary" href="/">Xem cửa hàng ↗</a>
 </header>
 <div class="shell admin-shell">
@@ -21,7 +24,7 @@
     <main>
         <div class="breadcrumbs">Quản trị <span>/</span> @(page == "admin" ? "Tổng quan" : PageName)</div>
         @ChildContent
-        <footer><span class="brand-small">S <b>SmartShop Admin</b></span><small>Quản trị demo theo phiên</small></footer>
+        <footer><span class="brand-small">S <b>SmartShop Admin</b></span><small>Quản lý cửa hàng</small></footer>
     </main>
 </div>
 <nav class="mobile-nav">

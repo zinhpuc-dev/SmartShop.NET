@@ -22,7 +22,10 @@ public sealed class OrderManagementDAO(string connectionString) : IOrderManageme
         List<ManagedOrder> orders = [];
         using MySqlConnection connection = new(connectionString);
         connection.Open();
-        const string query = "SELECT d.MaDH,d.MaKH,k.HoTen,d.NgayLap,d.TrangThai,d.DiaChiGiaoHang,d.TongTien,NULL AS MaKho," +
+        using MySqlCommand schema = new("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='DON_HANG' AND COLUMN_NAME='MaKho'", connection);
+        bool hasWarehouse = Convert.ToInt32(schema.ExecuteScalar()) == 1;
+        string warehouseColumn = hasWarehouse ? "d.MaKho" : "NULL";
+        string query = "SELECT d.MaDH,d.MaKH,k.HoTen,d.NgayLap,d.TrangThai,d.DiaChiGiaoHang,d.TongTien," + warehouseColumn + " AS MaKho," +
             "h.MaHoaDon,h.MaNV,n.TenNV FROM DON_HANG d JOIN KHACH_HANG k ON k.MaKH=d.MaKH " +
             "LEFT JOIN HOA_DON h ON h.MaDH=d.MaDH LEFT JOIN NHAN_VIEN n ON n.MaNV=h.MaNV ORDER BY d.NgayLap DESC,d.MaDH";
         using (MySqlCommand command = new(query, connection))
@@ -39,15 +42,15 @@ public sealed class OrderManagementDAO(string connectionString) : IOrderManageme
                     reader.IsDBNull(reader.GetOrdinal("TenNV")) ? null : reader.GetString("TenNV"), []));
             }
         }
-        foreach (ManagedOrder order in orders)
+        for (int index = 0; index < orders.Count; index++)
         {
+            ManagedOrder order = orders[index];
             using MySqlCommand lines = new("SELECT ct.MaSP,p.TenSP,ct.SoLuongDat,ct.DonGia,ct.DonGiaThucTe,ct.ThanhTien FROM CHI_TIET_DON_HANG ct JOIN SAN_PHAM p ON p.MaSP=ct.MaSP WHERE ct.MaDH=@Code ORDER BY ct.MaSP", connection);
             lines.Parameters.AddWithValue("@Code", order.Code);
             using MySqlDataReader lineReader = lines.ExecuteReader();
             List<ManagedOrderLine> items = [];
             while (lineReader.Read()) items.Add(new ManagedOrderLine(lineReader.GetString("MaSP").Trim(), lineReader.GetString("TenSP"),
                 lineReader.GetInt32("SoLuongDat"), lineReader.GetDecimal("DonGia"), lineReader.GetDecimal("DonGiaThucTe"), lineReader.GetDecimal("ThanhTien")));
-            int index = orders.IndexOf(order);
             orders[index] = order with { Lines = items };
         }
         return orders;
@@ -81,6 +84,14 @@ public sealed class OrderManagementDAO(string connectionString) : IOrderManageme
                 oldWarehouse = reader.IsDBNull(reader.GetOrdinal("MaKho")) ? null : reader.GetString("MaKho").Trim();
             }
             if (oldStatus == status) { transaction.Commit(); return; }
+            bool validTransition = oldStatus switch
+            {
+                "Đang xử lý" or "Chờ xác nhận" => status is "Đã xác nhận" or "Đã hủy",
+                "Đã xác nhận" => status is "Đang giao hàng" or "Đã hủy",
+                "Đang giao hàng" => status is "Đã giao" or "Hoàn thành" or "Đã hủy",
+                _ => false
+            };
+            if (!validTransition) throw new InvalidOperationException("Không thể chuyển sang trạng thái đã chọn từ trạng thái hiện tại.");
             if (oldStatus is "Đã giao" or "Hoàn thành" or "Đã hủy")
                 throw new InvalidOperationException("Đơn hàng đã ở trạng thái kết thúc và không thể thay đổi.");
             if (status is "Đã giao" or "Hoàn thành")
@@ -95,8 +106,10 @@ public sealed class OrderManagementDAO(string connectionString) : IOrderManageme
                     List<(string Product, int Quantity)> required = [];
                     while (reader.Read()) required.Add((reader.GetString("MaSP"), reader.GetInt32("SoLuongDat")));
                     reader.Close();
-                    foreach (var line in required)
+                    if (required.Count == 0) throw new InvalidOperationException("Đơn hàng chưa có sản phẩm để xuất kho.");
+                    foreach (var line in required.OrderBy(line => line.Product))
                     {
+                        if (line.Quantity <= 0) throw new InvalidOperationException("Số lượng sản phẩm trong đơn không hợp lệ.");
                         using MySqlCommand stock = new("UPDATE TON_KHO SET SoLuongTon=SoLuongTon-@Quantity WHERE MaKho=@Warehouse AND MaSP=@Product AND SoLuongTon>=@Quantity", connection, transaction);
                         stock.Parameters.AddWithValue("@Quantity", line.Quantity);
                         stock.Parameters.AddWithValue("@Warehouse", selectedWarehouse);

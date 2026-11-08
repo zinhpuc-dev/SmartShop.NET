@@ -16,7 +16,7 @@ public sealed class PromotionDAO(string connectionString) : IPromotionRepository
         using MySqlCommand command = new(query, connection);
         using MySqlDataReader reader = command.ExecuteReader();
         while (reader.Read()) rows.Add(new ManagedPromotion(reader.GetString("MaKM").Trim(), reader.GetString("TenKM"),
-            reader.IsDBNull(reader.GetOrdinal("MoTa")) ? string.Empty : reader.GetString("MoTa"), reader.GetString("LoaiKhuyenMai"), reader.GetString("HinhThucGiam"),
+            reader.IsDBNull(reader.GetOrdinal("MoTa")) ? string.Empty : reader.GetString("MoTa"), reader.GetString("LoaiKhuyenMai"), reader.GetString("HinhThucGiam") switch { "PhanTram" => "Phần trăm", "SoTien" => "Số tiền", var form => form },
             reader.GetDecimal("GiaTriGiam"), reader.GetDecimal("GiaTriDonToiThieu"), reader.GetDateTime("NgayBatDau"), reader.GetDateTime("NgayKetThuc"),
             reader.GetBoolean("TrangThai"), reader.GetInt32("ProductCount"), reader.GetInt32("VoucherCount")));
         return rows;
@@ -72,7 +72,7 @@ public sealed class PromotionDAO(string connectionString) : IPromotionRepository
     {
         using MySqlConnection connection = new(connectionString);
         connection.Open();
-        const string sql = "UPDATE VOUCHER SET MaKM=@Promotion,MaCode=@Voucher,PhanTramGiam=@Percent,SoTienGiam=@Amount,GiaTriDonToiThieu=@Minimum,SoLuong=@Quantity,NgayBatDau=@Starts,NgayKetThuc=@Ends,TrangThai=@Active WHERE MaVoucher=@Code AND SoLuong>=SoLuongDaSuDung";
+        const string sql = "UPDATE VOUCHER SET MaKM=@Promotion,MaCode=@Voucher,PhanTramGiam=@Percent,SoTienGiam=@Amount,GiaTriDonToiThieu=@Minimum,SoLuong=@Quantity,NgayBatDau=@Starts,NgayKetThuc=@Ends,TrangThai=@Active WHERE MaVoucher=@Code AND @Quantity>=SoLuongDaSuDung";
         using MySqlCommand command = new(sql, connection);
         AddVoucherParameters(command, draft);
         if (command.ExecuteNonQuery() == 0) throw new InvalidOperationException("Không tìm thấy voucher hoặc số lượng mới nhỏ hơn lượt đã sử dụng.");
@@ -84,7 +84,7 @@ public sealed class PromotionDAO(string connectionString) : IPromotionRepository
         command.Parameters.AddWithValue("@Name", draft.Name);
         command.Parameters.AddWithValue("@Description", string.IsNullOrWhiteSpace(draft.Description) ? DBNull.Value : draft.Description);
         command.Parameters.AddWithValue("@Type", draft.Type);
-        command.Parameters.AddWithValue("@Form", draft.DiscountForm);
+        command.Parameters.AddWithValue("@Form", draft.DiscountForm == "Phần trăm" ? "PhanTram" : "SoTien");
         command.Parameters.AddWithValue("@Value", draft.DiscountValue);
         command.Parameters.AddWithValue("@Minimum", draft.MinimumOrderValue);
         command.Parameters.AddWithValue("@Starts", draft.StartsAt);

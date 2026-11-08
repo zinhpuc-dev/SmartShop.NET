@@ -9,4 +9,6 @@ public interface IWarehouseRepository
     void Delete(string code);
     IReadOnlyList<ReceivingRecord> GetReceivings();
     void CreateReceiving(ReceivingDraft draft);
+    IReadOnlyList<ReceivingDetail> GetReceivingDetails(string code);
+    IReadOnlyList<WarehouseStock> GetStock();
 }
