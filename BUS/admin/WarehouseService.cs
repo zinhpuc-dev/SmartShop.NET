@@ -3,7 +3,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class WarehouseService(IWarehouseRepository dao, ISupplierRepository suppliers, IProductManageDAO products)
+public sealed class WarehouseService(IWarehouseRepository dao, ISupplierRepository suppliers, IProductManage products)
 {
     public IReadOnlyList<Warehouse> GetAll() => dao.GetAll();
     public IReadOnlyList<ReceivingRecord> GetReceivings() => dao.GetReceivings();

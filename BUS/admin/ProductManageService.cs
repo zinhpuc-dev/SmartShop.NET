@@ -5,10 +5,10 @@ namespace SmartShop.BUS
 {
     public class ProductManageService
     {
-        private readonly IProductManageDAO dao;
+        private readonly IProductManage dao;
         public List<ProductManage> product = new();
 
-        public ProductManageService(IProductManageDAO dao)
+        public ProductManageService(IProductManage dao)
         {
             this.dao = dao ?? throw new ArgumentNullException(nameof(dao));
         }

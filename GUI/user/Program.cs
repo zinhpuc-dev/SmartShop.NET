@@ -23,7 +23,7 @@ builder.Services.AddScoped<IEmployeeRepository>(services => new EmployeeDAO(GetS
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ISupplierRepository>(services => new SupplierDAO(GetSmartShopConnectionString(services)));
 builder.Services.AddScoped<ISupplierService, SupplierService>();
-builder.Services.AddScoped<IProductManageDAO>(services =>
+builder.Services.AddScoped<IProductManage>(services =>
 {
     string? connectionString = services.GetRequiredService<IConfiguration>().GetConnectionString("SmartShop");
     connectionString ??= Environment.GetEnvironmentVariable("SMARTSHOP_DB_CONNECTION");

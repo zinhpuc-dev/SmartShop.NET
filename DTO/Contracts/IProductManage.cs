@@ -2,7 +2,7 @@ using SmartShop.DTO;
 
 namespace SmartShop.DTO.Contracts;
 
-public interface IProductManageDAO
+public interface IProductManage
 {
     List<ProductManage> ReadData();
     List<ProductManage> Search(string keyword);

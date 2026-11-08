@@ -4,7 +4,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DAO
 {
-    public class ProductManageDAO : IProductManageDAO
+    public class ProductManageDAO : IProductManage
     {
         private readonly string? connectionString;
 

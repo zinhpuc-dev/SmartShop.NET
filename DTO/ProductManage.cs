@@ -2,7 +2,7 @@
 
 namespace SmartShop.DTO
 {
-    public class ProductManage
+    public sealed record ProductManage
     {
         // Thuộc tính 
         [Required(ErrorMessage = "Vui lòng nhập mã sản phẩm.")]
