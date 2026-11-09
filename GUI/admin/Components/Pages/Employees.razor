@@ -11,7 +11,7 @@
         <h1>Quản lý nhân viên</h1>
         <p class="subtitle">Hồ sơ nhân viên, bao gồm chức vụ.</p>
     </div>
-    <button type="button" class="primary" @onclick="Create" disabled="@loading || !string.IsNullOrEmpty(loadError)">+ Thêm nhân viên</button>
+    <button type="button" class="primary" @onclick="Create" disabled="@(loading || !string.IsNullOrEmpty(loadError))">+ Thêm nhân viên</button>
 </div>
 <p class="customer-help">Quản lý hồ sơ nhân viên và chức vụ.</p>
 @if (!string.IsNullOrEmpty(message))

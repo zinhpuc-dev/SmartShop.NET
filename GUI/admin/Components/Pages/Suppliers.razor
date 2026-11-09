@@ -11,7 +11,7 @@
         <h1>Quản lý nhà cung cấp</h1>
         <p class="subtitle">Thông tin liên hệ nhà cung cấp.</p>
     </div>
-    <button type="button" class="primary" @onclick="Create" disabled="@loading || !string.IsNullOrEmpty(loadError)">+ Thêm nhà cung cấp</button>
+    <button type="button" class="primary" @onclick="Create" disabled="@(loading || !string.IsNullOrEmpty(loadError))">+ Thêm nhà cung cấp</button>
 </div>
 <p class="customer-help">Xóa bị chặn khi nhà cung cấp đã có phiếu nhập liên kết.</p>
 @if (!string.IsNullOrEmpty(message))

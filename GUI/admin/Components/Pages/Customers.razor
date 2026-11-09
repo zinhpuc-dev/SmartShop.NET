@@ -11,7 +11,7 @@
         <h1>Quản lý khách hàng</h1>
         <p class="subtitle">Hồ sơ và thông tin liên hệ khách hàng.</p>
     </div>
-    <button type="button" class="primary" @onclick="Create" disabled="@loading || !string.IsNullOrEmpty(loadError)">+ Thêm khách hàng</button>
+    <button type="button" class="primary" @onclick="Create" disabled="@(loading || !string.IsNullOrEmpty(loadError))">+ Thêm khách hàng</button>
 </div>
 <p class="customer-help">Quản lý thông tin liên hệ hiện có của khách hàng.</p>
 @if (!string.IsNullOrEmpty(message))
