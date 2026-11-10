@@ -1,3 +1,4 @@
+using System.Collections;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
@@ -7,6 +8,7 @@ namespace SmartShop.BUS
     {
         private readonly IProductManage dao;
         public List<ProductManage> product = new();
+        private ArrayList? products;
 
         public ProductBUS(IProductManage dao)
         {
@@ -15,13 +17,28 @@ namespace SmartShop.BUS
 
         public List<ProductManage> Read()
         {
-            product = dao.ReadData();
-            return product;
+            products = null;
+            var loaded = dao.ReadData();
+            products = new ArrayList(loaded.Select(value => value with { }).ToArray());
+            product = loaded;
+            return loaded;
         }
 
         public List<ProductManage> Search(string keyword)
         {
-            return dao.Search(keyword);
+            return Search(keyword, null);
+        }
+
+        public List<ProductManage> Search(string? keyword, string? category)
+        {
+            if (products is null) Read();
+            var term = SearchText.Normalize((keyword ?? "").Trim());
+            return products!.Cast<ProductManage>()
+                .Where(value => (string.IsNullOrEmpty(category) || value.MaLoai == category)
+                    && (term.Length == 0
+                        || SearchText.Normalize(value.MaSP).Contains(term, StringComparison.OrdinalIgnoreCase)
+                        || SearchText.Normalize(value.TenSP).Contains(term, StringComparison.OrdinalIgnoreCase)))
+                .Select(value => value with { }).ToList();
         }
 
         public ProductManage? Get(string maSP) => dao.GetByCode(NormalizeCode(maSP, 8, "Mã sản phẩm"));
@@ -50,7 +67,7 @@ namespace SmartShop.BUS
                 throw new InvalidOperationException("Không tìm thấy sản phẩm.");
             if (!dao.CheckCategory(pm.MaLoai)) throw new ArgumentException("Không tìm thấy loại sản phẩm đã chọn.");
             dao.Update(pm);
-            product = dao.ReadData();
+            Read();
         }
 
         public void Insert(ProductManage pm)
@@ -63,7 +80,7 @@ namespace SmartShop.BUS
             if (!dao.ReadCategories().Any(c => c.MaLoai == pm.MaLoai && c.TrangThai))
                 throw new ArgumentException("Vui lòng chọn loại sản phẩm đang hoạt động.");
             dao.Insert(pm);
-            product = dao.ReadData();
+            Read();
         }
 
         public void Delete(string maSP)
@@ -74,7 +91,7 @@ namespace SmartShop.BUS
                 throw new InvalidOperationException("Không tìm thấy sản phẩm.");
             existing.TrangThai = "0";
             dao.Update(existing);
-            product = dao.ReadData();
+            Read();
         }
 
         public void SetActive(string maSP, bool active)
@@ -82,6 +99,7 @@ namespace SmartShop.BUS
             string code = NormalizeCode(maSP, 8, "Mã sản phẩm");
             if (!dao.CheckProduct(code)) throw new InvalidOperationException("Không tìm thấy sản phẩm.");
             dao.SetActive(code, active);
+            Read();
         }
 
         private static void Validate(ProductManage pm)

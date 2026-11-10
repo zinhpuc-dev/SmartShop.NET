@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
@@ -7,7 +8,7 @@ namespace SmartShop.BUS;
 public sealed class CustomerBUS : ICustomerBUS
 {
     private readonly ICustomerRepository repository;
-    private List<Customer>? customers;
+    private ArrayList? customers;
 
     public CustomerBUS(ICustomerRepository repository)
     {
@@ -42,13 +43,14 @@ public sealed class CustomerBUS : ICustomerBUS
         var value = Validate(draft);
         EnsureUnique(value.Code);
         var saved = repository.Insert(new Customer(value.Code, value.Name, value.Phone, value.Email, value.Address));
-        GetCustomers().Add(saved);
+        customers!.Add(saved);
         return saved;
     }
 
     public Customer Update(string code, CustomerDraft draft)
     {
         var existing = Get(code);
+        _ = GetCustomers();
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã khách hàng không được sửa.");
         EnsureUnique(value.Code, existing.Code);
@@ -63,21 +65,23 @@ public sealed class CustomerBUS : ICustomerBUS
     public void Delete(string code)
     {
         var existing = Get(code);
+        _ = GetCustomers();
         repository.Delete(existing.Code);
-        GetCustomers().RemoveAll(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        customers!.Remove(GetCustomers().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase)));
     }
 
-    private List<Customer> GetCustomers()
+    private IEnumerable<Customer> GetCustomers()
     {
-        customers ??= repository.GetAll().ToList();
-        return customers;
+        customers ??= new ArrayList(repository.GetAll().ToArray());
+        return customers.Cast<Customer>();
     }
 
     private void Replace(Customer existing, Customer saved)
     {
-        var index = GetCustomers().FindIndex(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
-        if (index < 0) throw new InvalidOperationException("Không tìm thấy khách hàng trong danh sách hiện tại.");
-        GetCustomers()[index] = saved;
+        var cached = GetCustomers().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        var index = customers!.IndexOf(cached);
+        if (index < 0) customers!.Add(saved);
+        else customers![index] = saved;
     }
 
     private void EnsureUnique(string code, string? exceptCode = null)

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
@@ -7,7 +8,7 @@ namespace SmartShop.BUS;
 public sealed class EmployeeBUS : IEmployeeBUS
 {
     private readonly IEmployeeRepository repository;
-    private List<Employee>? employees;
+    private ArrayList? employees;
 
     public EmployeeBUS(IEmployeeRepository repository)
     {
@@ -42,13 +43,14 @@ public sealed class EmployeeBUS : IEmployeeBUS
         var value = Validate(draft);
         EnsureUnique(value.Code);
         var saved = repository.Insert(new Employee(value.Code, value.Name, value.Position, value.Phone, value.Email));
-        GetEmployees().Add(saved);
+        employees!.Add(saved);
         return saved;
     }
 
     public Employee Update(string code, EmployeeDraft draft)
     {
         var existing = Get(code);
+        _ = GetEmployees();
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhân viên không được sửa.");
         EnsureUnique(value.Code, existing.Code);
@@ -63,21 +65,23 @@ public sealed class EmployeeBUS : IEmployeeBUS
     public void Delete(string code)
     {
         var existing = Get(code);
+        _ = GetEmployees();
         repository.Delete(existing.Code);
-        GetEmployees().RemoveAll(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        employees!.Remove(GetEmployees().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase)));
     }
 
-    private List<Employee> GetEmployees()
+    private IEnumerable<Employee> GetEmployees()
     {
-        employees ??= repository.GetAll().ToList();
-        return employees;
+        employees ??= new ArrayList(repository.GetAll().ToArray());
+        return employees.Cast<Employee>();
     }
 
     private void Replace(Employee existing, Employee saved)
     {
-        var index = GetEmployees().FindIndex(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
-        if (index < 0) throw new InvalidOperationException("Không tìm thấy nhân viên trong danh sách hiện tại.");
-        GetEmployees()[index] = saved;
+        var cached = GetEmployees().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        var index = employees!.IndexOf(cached);
+        if (index < 0) employees!.Add(saved);
+        else employees![index] = saved;
     }
 
     private void EnsureUnique(string code, string? exceptCode = null)

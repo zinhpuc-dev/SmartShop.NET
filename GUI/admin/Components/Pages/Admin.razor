@@ -203,11 +203,9 @@
     private List<ProductManage> products = [];
     private string productSearch = "", orderSearch = "", orderFilter = "";
     private string productCategoryFilter = "";
-    private IEnumerable<ProductManage> FilteredProducts => products.Where(p =>
-        (string.IsNullOrEmpty(productCategoryFilter) || p.MaLoai == productCategoryFilter)
-        && (string.IsNullOrWhiteSpace(productSearch)
-            || p.MaSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase)
-            || p.TenSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase)));
+    private IEnumerable<ProductManage> FilteredProducts => productLoaded
+        ? ProductService.Search(productSearch, productCategoryFilter)
+        : Enumerable.Empty<ProductManage>();
     private IEnumerable<ManagedOrder> FilteredOrders => orders.Where(o => (string.IsNullOrEmpty(orderFilter) || o.Status == orderFilter)
         && (string.IsNullOrWhiteSpace(orderSearch) || o.Code.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)
             || o.CustomerName.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)));

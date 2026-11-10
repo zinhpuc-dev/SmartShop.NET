@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
@@ -7,7 +8,7 @@ namespace SmartShop.BUS;
 public sealed class SupplierBUS : ISupplierBUS
 {
     private readonly ISupplierRepository repository;
-    private List<Supplier>? suppliers;
+    private ArrayList? suppliers;
 
     public SupplierBUS(ISupplierRepository repository)
     {
@@ -43,13 +44,14 @@ public sealed class SupplierBUS : ISupplierBUS
         var value = Validate(draft);
         EnsureUnique(value.Code);
         var saved = repository.Insert(new Supplier(value.Code, value.Name, value.Phone, value.Email, value.Address));
-        GetSuppliers().Add(saved);
+        suppliers!.Add(saved);
         return saved;
     }
 
     public Supplier Update(string code, SupplierDraft draft)
     {
         var existing = Get(code);
+        _ = GetSuppliers();
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhà cung cấp không được sửa.");
         EnsureUnique(value.Code, existing.Code);
@@ -57,22 +59,25 @@ public sealed class SupplierBUS : ISupplierBUS
         {
             Name = value.Name, Phone = value.Phone, Email = value.Email, Address = value.Address
         });
-        var index = GetSuppliers().IndexOf(existing);
-        GetSuppliers()[index] = saved;
+        var cached = GetSuppliers().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        var index = suppliers!.IndexOf(cached);
+        if (index < 0) suppliers!.Add(saved);
+        else suppliers![index] = saved;
         return saved;
     }
 
     public void Delete(string code)
     {
         var existing = Get(code);
+        _ = GetSuppliers();
         repository.Delete(existing.Code);
-        GetSuppliers().RemoveAll(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
+        suppliers!.Remove(GetSuppliers().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase)));
     }
 
-    private List<Supplier> GetSuppliers()
+    private IEnumerable<Supplier> GetSuppliers()
     {
-        suppliers ??= repository.GetAll().ToList();
-        return suppliers;
+        suppliers ??= new ArrayList(repository.GetAll().ToArray());
+        return suppliers.Cast<Supplier>();
     }
 
     private void EnsureUnique(string code, string? exceptCode = null)
