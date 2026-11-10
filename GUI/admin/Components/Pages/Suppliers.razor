@@ -1,7 +1,7 @@
 @attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/suppliers"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
-@inject ISupplierService SupplierService
+@inject ISupplierBUS SupplierBUS
 @inject ILogger<Suppliers> Logger
 
 <PageTitle>Quản lý nhà cung cấp — SmartShop</PageTitle>
@@ -75,7 +75,7 @@
     private string? editingCode;
     private SupplierDraft draft = new();
     private Supplier? deleting, selectedLookup;
-    private IReadOnlyList<Supplier> Rows => string.IsNullOrEmpty(loadError) ? SupplierService.Search(query) : Array.Empty<Supplier>();
+    private IReadOnlyList<Supplier> Rows => string.IsNullOrEmpty(loadError) ? SupplierBUS.Search(query) : Array.Empty<Supplier>();
 
     protected override void OnInitialized() => Load();
 
@@ -84,8 +84,8 @@
         loading = true;
         try
         {
-            SupplierService.Reload();
-            _ = SupplierService.Search();
+            SupplierBUS.Reload();
+            _ = SupplierBUS.Search();
             loadError = "";
         }
         catch (Exception ex)
@@ -100,7 +100,7 @@
     {
         if (loading || !string.IsNullOrEmpty(loadError)) return;
         editingCode = null;
-        draft = new SupplierDraft { Code = SupplierService.SuggestCode() };
+        draft = new SupplierDraft { Code = SupplierBUS.SuggestCode() };
         formError = "";
         editorOpen = true;
     }
@@ -116,7 +116,7 @@
     {
         try
         {
-            var saved = editingCode is string code ? SupplierService.Update(code, draft) : SupplierService.Create(draft);
+            var saved = editingCode is string code ? SupplierBUS.Update(code, draft) : SupplierBUS.Create(draft);
             if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             CloseEditor();
             query = "";
@@ -132,7 +132,7 @@
         try
         {
             var code = deleting.Code;
-            SupplierService.Delete(deleting.Code);
+            SupplierBUS.Delete(deleting.Code);
             if (selectedLookup?.Code == deleting.Code) selectedLookup = null;
             deleting = null;
             Notice($"Đã xóa nhà cung cấp {code}.");

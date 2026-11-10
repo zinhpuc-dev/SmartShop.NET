@@ -18,28 +18,28 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IShopRepository, DemoShopDao>();
 builder.Services.AddScoped<IShopService, ShopState>();
 builder.Services.AddScoped<ICustomerRepository>(services => new CustomerDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ICustomerBUS, CustomerBUS>();
 builder.Services.AddScoped<IEmployeeRepository>(services => new EmployeeDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IEmployeeBUS, EmployeeBUS>();
 builder.Services.AddScoped<ISupplierRepository>(services => new SupplierDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<ISupplierBUS, SupplierBUS>();
 builder.Services.AddScoped<IProductManage>(services =>
 {
     string? connectionString = services.GetRequiredService<IConfiguration>().GetConnectionString("SmartShop");
     connectionString ??= Environment.GetEnvironmentVariable("SMARTSHOP_DB_CONNECTION");
     return string.IsNullOrWhiteSpace(connectionString)
-        ? new ProductManageDAO()
-        : new ProductManageDAO(connectionString);
+        ? new ProductDAO()
+        : new ProductDAO(connectionString);
 });
-builder.Services.AddScoped<ProductManageService>();
+builder.Services.AddScoped<ProductBUS>();
 builder.Services.AddScoped<IWarehouseRepository>(services => new WarehouseDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<WarehouseService>();
-builder.Services.AddScoped<IOrderManagementRepository>(services => new OrderManagementDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<OrderManagementService>();
-builder.Services.AddScoped<IInvoiceManagementRepository>(services => new InvoiceManagementDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<InvoiceManagementService>();
+builder.Services.AddScoped<WarehouseBUS>();
+builder.Services.AddScoped<IOrderManagementRepository>(services => new OrderDAO(GetSmartShopConnectionString(services)));
+builder.Services.AddScoped<OrderBUS>();
+builder.Services.AddScoped<IInvoiceManagementRepository>(services => new InvoiceDAO(GetSmartShopConnectionString(services)));
+builder.Services.AddScoped<InvoiceBUS>();
 builder.Services.AddScoped<IPromotionRepository>(services => new PromotionDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<PromotionService>();
+builder.Services.AddScoped<PromotionBUS>();
 builder.Services.AddScoped<SmartShop.UI.Shared.ShopUiState>();
 
 // Add services to the container.

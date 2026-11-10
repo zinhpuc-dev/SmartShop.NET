@@ -4,7 +4,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class PromotionService(IPromotionRepository repository)
+public sealed class PromotionBUS(IPromotionRepository repository)
 {
     public IReadOnlyList<ManagedPromotion> GetPromotions() => repository.GetPromotions();
     public IReadOnlyList<ManagedVoucher> GetVouchers() => repository.GetVouchers();

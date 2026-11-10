@@ -17,7 +17,7 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 08/11/2026
 
-ProductManageService/ProductManageDAO có thêm/sửa/ngừng bán, tìm kiếm, mã loại/trạng thái và tồn theo kho. Đã đọc 10 sản phẩm; tồn không nhập tay. DonViTinh vẫn là trường chuỗi; chưa có CRUD đơn vị/ảnh/ngưỡng tồn/tên danh mục.
+ProductBUS/ProductDAO có thêm/sửa/ngừng bán, tìm kiếm, mã loại/trạng thái và tồn theo kho. Đã đọc 10 sản phẩm; tồn không nhập tay. DonViTinh vẫn là trường chuỗi; chưa có CRUD đơn vị/ảnh/ngưỡng tồn/tên danh mục.
 
 ### Mốc triển khai và kiểm chứng
 

@@ -4,7 +4,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DAO;
 
-public sealed class InvoiceManagementDAO(string connectionString) : IInvoiceManagementRepository
+public sealed class InvoiceDAO(string connectionString) : IInvoiceManagementRepository
 {
     public IReadOnlyList<ManagedInvoice> GetInvoices()
     {

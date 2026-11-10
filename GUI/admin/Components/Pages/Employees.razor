@@ -1,7 +1,7 @@
 @attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/employees"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
-@inject IEmployeeService EmployeeService
+@inject IEmployeeBUS EmployeeBUS
 @inject ILogger<Employees> Logger
 
 <PageTitle>Quản lý nhân viên — SmartShop</PageTitle>
@@ -87,7 +87,7 @@
     private string? editingCode;
     private EmployeeDraft draft = new();
     private Employee? profile, deleting, selectedLookup;
-    private IReadOnlyList<Employee> Rows => string.IsNullOrEmpty(loadError) ? EmployeeService.Search(query) : Array.Empty<Employee>();
+    private IReadOnlyList<Employee> Rows => string.IsNullOrEmpty(loadError) ? EmployeeBUS.Search(query) : Array.Empty<Employee>();
 
     protected override void OnInitialized() => Load();
 
@@ -96,8 +96,8 @@
         loading = true;
         try
         {
-            EmployeeService.Reload();
-            _ = EmployeeService.Search();
+            EmployeeBUS.Reload();
+            _ = EmployeeBUS.Search();
             loadError = "";
         }
         catch (Exception ex)
@@ -112,7 +112,7 @@
     {
         if (loading || !string.IsNullOrEmpty(loadError)) return;
         editingCode = null;
-        draft = new EmployeeDraft { Code = EmployeeService.SuggestCode() };
+        draft = new EmployeeDraft { Code = EmployeeBUS.SuggestCode() };
         formError = "";
         editorOpen = true;
     }
@@ -128,7 +128,7 @@
     {
         try
         {
-            var saved = editingCode is string code ? EmployeeService.Update(code, draft) : EmployeeService.Create(draft);
+            var saved = editingCode is string code ? EmployeeBUS.Update(code, draft) : EmployeeBUS.Create(draft);
             if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             CloseEditor();
             query = "";
@@ -144,7 +144,7 @@
         try
         {
             var code = deleting.Code;
-            EmployeeService.Delete(deleting.Code);
+            EmployeeBUS.Delete(deleting.Code);
             if (selectedLookup?.Code == deleting.Code) selectedLookup = null;
             deleting = null;
             Notice($"Đã xóa nhân viên {code}.");

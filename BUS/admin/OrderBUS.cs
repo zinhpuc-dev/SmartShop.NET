@@ -3,7 +3,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class OrderManagementService(IOrderManagementRepository repository)
+public sealed class OrderBUS(IOrderManagementRepository repository)
 {
     private static readonly HashSet<string> AllowedStatuses = ["Đang xử lý", "Đã xác nhận", "Đang giao hàng", "Đã giao", "Đã hủy", "Hoàn thành"];
 

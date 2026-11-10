@@ -2,7 +2,7 @@ using SmartShop.DTO;
 
 namespace SmartShop.BUS;
 
-public interface IEmployeeService
+public interface IEmployeeBUS
 {
     void Reload();
     IReadOnlyList<Employee> Search(string query = "");

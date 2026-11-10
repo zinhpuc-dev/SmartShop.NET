@@ -17,7 +17,7 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 08/11/2026
 
-Đã sửa cờ loaded, thêm xem tồn theo kho và chi tiết phiếu. WarehouseService/WarehouseDAO có tạo phiếu/chi tiết/cộng tồn cùng transaction. Đã đọc 10 phiếu/10 chi tiết; tổng tồn 485. Chưa có nhật ký điều chỉnh kho riêng hoặc kiểm thử ghi/rollback.
+Đã sửa cờ loaded, thêm xem tồn theo kho và chi tiết phiếu. WarehouseBUS/WarehouseDAO có tạo phiếu/chi tiết/cộng tồn cùng transaction. Đã đọc 10 phiếu/10 chi tiết; tổng tồn 485. Chưa có nhật ký điều chỉnh kho riêng hoặc kiểm thử ghi/rollback.
 
 ### Mốc triển khai và kiểm chứng
 

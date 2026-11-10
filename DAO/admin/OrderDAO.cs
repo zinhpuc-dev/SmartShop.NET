@@ -4,7 +4,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DAO;
 
-public sealed class OrderManagementDAO(string connectionString) : IOrderManagementRepository
+public sealed class OrderDAO(string connectionString) : IOrderManagementRepository
 {
     public IReadOnlyList<Warehouse> GetWarehouses()
     {

@@ -1,7 +1,7 @@
 @attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/customers"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
-@inject ICustomerService CustomerService
+@inject ICustomerBUS CustomerBUS
 @inject ILogger<Customers> Logger
 
 <PageTitle>Quản lý khách hàng — SmartShop</PageTitle>
@@ -87,8 +87,8 @@
     private bool editorOpen, failed, loading = true;
     private CustomerDraft draft = new();
     private Customer? profile, deleting, selectedLookup;
-    private IReadOnlyList<Customer> All => string.IsNullOrEmpty(loadError) ? CustomerService.Search() : Array.Empty<Customer>();
-    private IReadOnlyList<Customer> Rows => string.IsNullOrEmpty(loadError) ? CustomerService.Search(query) : Array.Empty<Customer>();
+    private IReadOnlyList<Customer> All => string.IsNullOrEmpty(loadError) ? CustomerBUS.Search() : Array.Empty<Customer>();
+    private IReadOnlyList<Customer> Rows => string.IsNullOrEmpty(loadError) ? CustomerBUS.Search(query) : Array.Empty<Customer>();
 
     protected override void OnInitialized() => Load();
 
@@ -97,8 +97,8 @@
         loading = true;
         try
         {
-            CustomerService.Reload();
-            _ = CustomerService.Search();
+            CustomerBUS.Reload();
+            _ = CustomerBUS.Search();
             loadError = "";
         }
         catch (Exception ex)
@@ -113,7 +113,7 @@
     {
         if (loading || !string.IsNullOrEmpty(loadError)) return;
         editingCode = null;
-        draft = new CustomerDraft { Code = CustomerService.SuggestCode() };
+        draft = new CustomerDraft { Code = CustomerBUS.SuggestCode() };
         formError = "";
         editorOpen = true;
     }
@@ -129,7 +129,7 @@
     {
         try
         {
-            var saved = editingCode is string code ? CustomerService.Update(code, draft) : CustomerService.Create(draft);
+            var saved = editingCode is string code ? CustomerBUS.Update(code, draft) : CustomerBUS.Create(draft);
             if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             CloseEditor();
             query = "";
@@ -145,7 +145,7 @@
         try
         {
             var code = deleting.Code;
-            CustomerService.Delete(deleting.Code);
+            CustomerBUS.Delete(deleting.Code);
             if (selectedLookup?.Code == deleting.Code) selectedLookup = null;
             deleting = null;
             Notice($"Đã xóa khách hàng {code}.");

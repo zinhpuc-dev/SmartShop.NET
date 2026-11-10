@@ -4,12 +4,12 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class EmployeeService : IEmployeeService
+public sealed class EmployeeBUS : IEmployeeBUS
 {
     private readonly IEmployeeRepository repository;
     private List<Employee>? employees;
 
-    public EmployeeService(IEmployeeRepository repository)
+    public EmployeeBUS(IEmployeeRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         this.repository = repository;

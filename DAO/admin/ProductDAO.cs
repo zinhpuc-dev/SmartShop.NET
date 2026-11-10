@@ -1,18 +1,18 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DAO
 {
-    public class ProductManageDAO : IProductManage
+    public class ProductDAO : IProductManage
     {
         private readonly string? connectionString;
 
-        public ProductManageDAO()
+        public ProductDAO()
         {
         }
 
-        public ProductManageDAO(string connectionString)
+        public ProductDAO(string connectionString)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentException("Chuỗi kết nối không được để trống.", nameof(connectionString));

@@ -18,7 +18,7 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 08/11/2026
 
-CustomerService → ICustomerRepository/CustomerDAO → KHACH_HANG; đã có CRUD, validation, tìm kiếm và Reload cache. Đã đọc 10 hồ sơ. Schema không có trạng thái khóa tài khoản; không coi cờ demo cũ là đã tích hợp. Chưa thử ghi/xóa thật.
+CustomerBUS → ICustomerRepository/CustomerDAO → KHACH_HANG; đã có CRUD, validation, tìm kiếm và Reload cache. Đã đọc 10 hồ sơ. Schema không có trạng thái khóa tài khoản; không coi cờ demo cũ là đã tích hợp. Chưa thử ghi/xóa thật.
 
 ### Mốc triển khai và kiểm chứng
 
@@ -42,7 +42,7 @@ CustomerService → ICustomerRepository/CustomerDAO → KHACH_HANG; đã có CRU
 
 - Trang `/admin/customers` thuộc project Admin, có bố cục và menu quản trị riêng; giao diện User không có quản lý hoặc tra cứu danh sách khách hàng.
 - Đã có xem hồ sơ và khóa/mở cờ trạng thái trong dữ liệu demo. Mục trạng thái tài khoản ở trên chưa tick vì chưa tích hợp hệ thống đăng nhập thật.
-- Tách Customer/CustomerDraft, ICustomerService/CustomerService và ICustomerRepository/DemoCustomerRepository; đăng ký dependency injection theo phiên.
+- Tách Customer/CustomerDraft, ICustomerBUS/CustomerBUS và ICustomerRepository/DemoCustomerRepository; đăng ký dependency injection theo phiên.
 - BUS giữ ArrayList và tìm kiếm trên danh sách đã nạp, không đọc lại DAO khi gõ; hỗ trợ tên tiếng Việt không dấu, mã, điện thoại, email, địa chỉ và lọc trạng thái.
 - Chặn mã trùng không phân biệt hoa/thường, khóa mã và ngày tạo khi sửa; kiểm tra dữ liệu cả ở form và BUS. Hủy form hoặc lưu lỗi không thay đổi danh sách BUS.
 - CustomerPicker/CustomerSelector trả dữ liệu bằng callback và điền ô khách hàng đã chọn trong Admin; component có thể dùng lại cho các nghiệp vụ quản trị.

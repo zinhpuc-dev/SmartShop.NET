@@ -2,10 +2,10 @@
 @page "/admin"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inherits ShopPageBase
-@inject ProductManageService ProductService
-@inject OrderManagementService OrderService
-@inject InvoiceManagementService InvoiceService
-@inject IEmployeeService EmployeeService
+@inject ProductBUS ProductService
+@inject OrderBUS OrderService
+@inject InvoiceBUS InvoiceService
+@inject IEmployeeBUS EmployeeBUS
 @inject IJSRuntime JavaScript
 @inject ILogger<Admin> Logger
 <PageTitle>@PageName — SmartShop</PageTitle>
@@ -263,7 +263,7 @@
 
     private void LoadInvoiceEmployees()
     {
-        try { invoiceEmployees = EmployeeService.Search(); invoiceEmployeesLoaded = true; }
+        try { invoiceEmployees = EmployeeBUS.Search(); invoiceEmployeesLoaded = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to load invoice employees."); invoiceEmployees = []; invoiceEmployeesLoaded = false; }
     }
 

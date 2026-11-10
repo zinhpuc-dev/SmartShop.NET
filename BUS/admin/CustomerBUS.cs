@@ -4,12 +4,12 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class CustomerService : ICustomerService
+public sealed class CustomerBUS : ICustomerBUS
 {
     private readonly ICustomerRepository repository;
     private List<Customer>? customers;
 
-    public CustomerService(ICustomerRepository repository)
+    public CustomerBUS(ICustomerRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         this.repository = repository;

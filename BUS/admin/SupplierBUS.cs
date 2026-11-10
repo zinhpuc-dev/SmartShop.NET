@@ -4,12 +4,12 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class SupplierService : ISupplierService
+public sealed class SupplierBUS : ISupplierBUS
 {
     private readonly ISupplierRepository repository;
     private List<Supplier>? suppliers;
 
-    public SupplierService(ISupplierRepository repository)
+    public SupplierBUS(ISupplierRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         this.repository = repository;

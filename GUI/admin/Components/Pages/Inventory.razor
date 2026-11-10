@@ -1,9 +1,9 @@
 @attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/inventory"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
-@inject WarehouseService WarehouseService
-@inject ISupplierService SupplierService
-@inject ProductManageService ProductService
+@inject WarehouseBUS WarehouseBUS
+@inject ISupplierBUS SupplierBUS
+@inject ProductBUS ProductService
 @inject ILogger<Inventory> Logger
 
 <PageTitle>Kho và nhập hàng — SmartShop</PageTitle>
@@ -99,12 +99,12 @@ else if (!loaded)
         loaded = false;
         try
         {
-            warehouses = WarehouseService.GetAll().ToList();
-            suppliers = SupplierService.Search().ToList();
+            warehouses = WarehouseBUS.GetAll().ToList();
+            suppliers = SupplierBUS.Search().ToList();
             products = ProductService.Read();
-            receivings = WarehouseService.GetReceivings();
-            stockRows = WarehouseService.GetStock();
-            if (string.IsNullOrWhiteSpace(warehouseDraft.Code)) warehouseDraft.Code = WarehouseService.SuggestCode();
+            receivings = WarehouseBUS.GetReceivings();
+            stockRows = WarehouseBUS.GetStock();
+            if (string.IsNullOrWhiteSpace(warehouseDraft.Code)) warehouseDraft.Code = WarehouseBUS.SuggestCode();
             if (string.IsNullOrWhiteSpace(receiving.Code)) receiving.Code = SuggestReceivingCode();
             loadError = "";
             loaded = true;
@@ -123,7 +123,7 @@ else if (!loaded)
 
     private void SaveWarehouse()
     {
-        try { WarehouseService.Save(warehouseDraft, editingWarehouse); message = "Đã lưu kho."; failed = false; ResetWarehouse(); Load(); }
+        try { WarehouseBUS.Save(warehouseDraft, editingWarehouse); message = "Đã lưu kho."; failed = false; ResetWarehouse(); Load(); }
         catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin warehouse."); message = "Không thể lưu kho. Vui lòng thử lại."; failed = true; }
@@ -137,13 +137,13 @@ else if (!loaded)
 
     private void ResetWarehouse()
     {
-        warehouseDraft = new Warehouse { Code = WarehouseService.SuggestCode() };
+        warehouseDraft = new Warehouse { Code = WarehouseBUS.SuggestCode() };
         editingWarehouse = false;
     }
 
     private void DeleteWarehouse(Warehouse value)
     {
-        try { WarehouseService.Delete(value.Code); message = "Đã xóa kho."; failed = false; Load(); }
+        try { WarehouseBUS.Delete(value.Code); message = "Đã xóa kho."; failed = false; Load(); }
         catch (ArgumentException ex) { message = ex.Message; failed = true; }
         catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to delete Admin warehouse."); message = "Không thể xóa kho. Vui lòng thử lại."; failed = true; }
@@ -151,7 +151,7 @@ else if (!loaded)
 
     private void ShowReceipt(string code)
     {
-        try { receiptDetails = WarehouseService.GetReceivingDetails(code); selectedReceipt = code; }
+        try { receiptDetails = WarehouseBUS.GetReceivingDetails(code); selectedReceipt = code; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to load receiving details."); message = "Không thể tải chi tiết phiếu nhập. Vui lòng thử lại."; failed = true; selectedReceipt = ""; }
     }
 
@@ -162,7 +162,7 @@ else if (!loaded)
     {
         try
         {
-            WarehouseService.CreateReceiving(receiving);
+            WarehouseBUS.CreateReceiving(receiving);
             message = "Đã tạo phiếu nhập và cập nhật tồn kho.";
             failed = false;
             receiving = new ReceivingDraft { Code = SuggestReceivingCode(), Lines = [new ReceivingLineDraft()] };

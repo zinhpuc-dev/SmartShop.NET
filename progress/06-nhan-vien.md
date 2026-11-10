@@ -17,7 +17,7 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 08/11/2026
 
-EmployeeService → IEmployeeRepository/EmployeeDAO → NHAN_VIEN; mapping Code/Name/Position(ChucVu)/Phone/Email. Không giả định địa chỉ/tình trạng làm việc vì schema không có. Đã đọc 10 hồ sơ, chưa thử ghi/xóa hoặc liên kết tài khoản nhân viên.
+EmployeeBUS → IEmployeeRepository/EmployeeDAO → NHAN_VIEN; mapping Code/Name/Position(ChucVu)/Phone/Email. Không giả định địa chỉ/tình trạng làm việc vì schema không có. Đã đọc 10 hồ sơ, chưa thử ghi/xóa hoặc liên kết tài khoản nhân viên.
 
 ### Mốc triển khai và kiểm chứng
 
@@ -39,7 +39,7 @@ EmployeeService → IEmployeeRepository/EmployeeDAO → NHAN_VIEN; mapping Code/
 ### Phạm vi trước 08/11/2026 (lịch sử)
 
 - Trang `/admin/employees` thuộc Admin, có menu riêng trên desktop và điện thoại; hỗ trợ thêm, sửa, xóa có xác nhận, xem hồ sơ và đổi tình trạng làm việc.
-- Tách DTO Employee/EmployeeDraft, BUS IEmployeeService/EmployeeService, hợp đồng IEmployeeRepository và DAO DemoEmployeeRepository; ghép qua dependency injection theo phiên, BUS không tham chiếu DAO cụ thể.
+- Tách DTO Employee/EmployeeDraft, BUS IEmployeeBUS/EmployeeBUS, hợp đồng IEmployeeRepository và DAO DemoEmployeeRepository; ghép qua dependency injection theo phiên, BUS không tham chiếu DAO cụ thể.
 - BUS giữ ArrayList, tìm trên danh sách đã nạp một lần theo mã, tên, điện thoại, email, địa chỉ; hỗ trợ tiếng Việt không dấu và lọc tình trạng làm việc.
 - Chặn mã trùng không phân biệt hoa/thường; kiểm tra dữ liệu ở form và BUS; giữ nguyên mã, ngày tạo khi sửa. Hủy form và lỗi ghi DAO không làm thay đổi dữ liệu đã lưu trong BUS.
 - Dùng lại DataTable, ValidatedForm, FormField, ModalDialog và kiểu trình bày hiện có. SearchText được dùng chung cho khách hàng và nhân viên.

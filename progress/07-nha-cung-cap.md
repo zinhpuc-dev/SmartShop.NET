@@ -17,7 +17,7 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 08/11/2026
 
-SupplierService → ISupplierRepository/SupplierDAO → NHA_CUNG_CAP. Đã đọc 10 NCC; form nhập hàng có dropdown NCC thật. SupplierPicker còn là component dùng lại, chưa nghiệm thu popup ba chấm tại phiếu nhập.
+SupplierBUS → ISupplierRepository/SupplierDAO → NHA_CUNG_CAP. Đã đọc 10 NCC; form nhập hàng có dropdown NCC thật. SupplierPicker còn là component dùng lại, chưa nghiệm thu popup ba chấm tại phiếu nhập.
 
 ### Mốc triển khai và kiểm chứng
 

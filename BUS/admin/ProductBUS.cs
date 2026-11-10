@@ -3,12 +3,12 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS
 {
-    public class ProductManageService
+    public class ProductBUS
     {
         private readonly IProductManage dao;
         public List<ProductManage> product = new();
 
-        public ProductManageService(IProductManage dao)
+        public ProductBUS(IProductManage dao)
         {
             this.dao = dao ?? throw new ArgumentNullException(nameof(dao));
         }
