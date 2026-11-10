@@ -64,6 +64,8 @@ Check(serviceA.Count == 1 && serviceB.Count == 0 && !ReferenceEquals(serviceA, s
     "DI scopes isolate customer session data");
 
 CatalogSearchChecks.Run();
+CatalogSearchChecks.RunAdvanced();
+CatalogSearchChecks.RunConstraints();
 Console.WriteLine("All smoke checks passed.");
 
 sealed class RejectingRepository : IShopRepository

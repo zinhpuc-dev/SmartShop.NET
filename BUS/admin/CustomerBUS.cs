@@ -18,10 +18,12 @@ public sealed class CustomerBUS : ICustomerBUS
 
     public void Reload() => customers = null;
 
-    public IReadOnlyList<Customer> Search(string query = "")
+    public IReadOnlyList<Customer> Search(string query = "", CatalogFilter? filter = null)
     {
+        var matches = AdvancedCatalogSearch.Customers(filter);
         var term = SearchText.Normalize((query ?? "").Trim());
         return GetCustomers()
+            .Where(matches)
             .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
                 .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -41,7 +43,7 @@ public sealed class CustomerBUS : ICustomerBUS
     public Customer Create(CustomerDraft draft)
     {
         var value = Validate(draft);
-        EnsureUnique(value.Code);
+        EnsureUnique(value.Code, value.Email);
         var saved = repository.Insert(new Customer(value.Code, value.Name, value.Phone, value.Email, value.Address));
         customers!.Add(saved);
         return saved;
@@ -53,7 +55,7 @@ public sealed class CustomerBUS : ICustomerBUS
         _ = GetCustomers();
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã khách hàng không được sửa.");
-        EnsureUnique(value.Code, existing.Code);
+        EnsureUnique(value.Code, value.Email, existing.Code);
         var saved = repository.Update(existing with
         {
             Name = value.Name, Phone = value.Phone, Email = value.Email, Address = value.Address
@@ -84,11 +86,15 @@ public sealed class CustomerBUS : ICustomerBUS
         else customers![index] = saved;
     }
 
-    private void EnsureUnique(string code, string? exceptCode = null)
+    private void EnsureUnique(string code, string email, string? exceptCode = null)
     {
-        if (GetCustomers().Any(c => !c.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)
-            && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException("Mã khách hàng đã tồn tại.");
+        foreach (var value in GetCustomers().Where(value => !value.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (value.Code.Equals(code, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Mã khách hàng đã tồn tại.");
+            if (email.Length > 0 && value.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Email đã được sử dụng cho khách hàng khác.");
+        }
     }
 
     private static CustomerDraft Validate(CustomerDraft draft)

@@ -5,7 +5,7 @@ using SmartShop.DTO;
 
 namespace SmartShop.UI.Shared;
 
-// Common presentation actions; business operations remain in the C# shop service.
+// Các thao tác giao diện dùng chung; nghiệp vụ do lớp BUS xử lý.
 public abstract class ShopPageBase : ComponentBase, IDisposable
 {
     [Inject] protected IShopService Shop { get; set; } = default!;

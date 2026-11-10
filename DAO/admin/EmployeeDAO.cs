@@ -58,7 +58,12 @@ public sealed class EmployeeDAO : IEmployeeRepository
         const string query = "UPDATE NHAN_VIEN SET TenNV=@TenNV, ChucVu=@ChucVu, SDT=@SDT, Email=@Email WHERE MaNV=@MaNV";
         using MySqlCommand command = new(query, connection);
         AddParameters(command, employee);
-        int affected = command.ExecuteNonQuery();
+        int affected;
+        try { affected = command.ExecuteNonQuery(); }
+        catch (MySqlException ex) when (ex.Number == 1062)
+        {
+            throw new InvalidOperationException("Mã nhân viên hoặc email đã được sử dụng.", ex);
+        }
         if (affected == 0 && GetByCode(employee.Code) is null)
             throw new InvalidOperationException("Không tìm thấy nhân viên.");
         return employee;

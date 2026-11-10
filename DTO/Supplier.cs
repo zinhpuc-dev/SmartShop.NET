@@ -4,7 +4,7 @@ namespace SmartShop.DTO;
 
 public sealed record Supplier(string Code, string Name, string Phone, string Email, string Address);
 
-/// <summary>An editable copy; cancelling a form never mutates the stored supplier.</summary>
+/// <summary>Bản sao dùng để chỉnh sửa; hủy form không làm đổi nhà cung cấp đã lưu.</summary>
 public sealed class SupplierDraft
 {
     [Required(ErrorMessage = "Vui lòng nhập mã nhà cung cấp.")]

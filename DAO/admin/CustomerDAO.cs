@@ -58,7 +58,12 @@ public sealed class CustomerDAO : ICustomerRepository
         const string query = "UPDATE KHACH_HANG SET HoTen=@HoTen, SDT=@SDT, DiaChi=@DiaChi, Email=@Email WHERE MaKH=@MaKH";
         using MySqlCommand command = new(query, connection);
         AddParameters(command, customer);
-        int affected = command.ExecuteNonQuery();
+        int affected;
+        try { affected = command.ExecuteNonQuery(); }
+        catch (MySqlException ex) when (ex.Number == 1062)
+        {
+            throw new InvalidOperationException("Mã khách hàng hoặc email đã được sử dụng.", ex);
+        }
         if (affected == 0 && GetByCode(customer.Code) is null)
             throw new InvalidOperationException("Không tìm thấy khách hàng.");
         return customer;

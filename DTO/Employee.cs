@@ -4,7 +4,7 @@ namespace SmartShop.DTO;
 
 public sealed record Employee(string Code, string Name, string Position, string Phone, string Email);
 
-/// <summary>An editable copy; cancelling a form never mutates the stored employee.</summary>
+/// <summary>Bản sao dùng để chỉnh sửa; hủy form không làm đổi nhân viên đã lưu.</summary>
 public sealed class EmployeeDraft
 {
     [Required(ErrorMessage = "Vui lòng nhập mã nhân viên.")]

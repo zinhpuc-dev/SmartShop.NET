@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SmartShop.UI.Shared;
 
-// Session UI state is scoped to a Blazor circuit, shared by the shell and routed pages.
+// Trạng thái giao diện theo phiên Blazor, dùng chung giữa bố cục và các trang.
 public sealed class ShopUiState
 {
     public event Action? Changed;

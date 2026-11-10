@@ -18,10 +18,12 @@ public sealed class EmployeeBUS : IEmployeeBUS
 
     public void Reload() => employees = null;
 
-    public IReadOnlyList<Employee> Search(string query = "")
+    public IReadOnlyList<Employee> Search(string query = "", CatalogFilter? filter = null)
     {
+        var matches = AdvancedCatalogSearch.Employees(filter);
         var term = SearchText.Normalize((query ?? "").Trim());
         return GetEmployees()
+            .Where(matches)
             .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Position, c.Phone, c.Email }
                 .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -41,7 +43,7 @@ public sealed class EmployeeBUS : IEmployeeBUS
     public Employee Create(EmployeeDraft draft)
     {
         var value = Validate(draft);
-        EnsureUnique(value.Code);
+        EnsureUnique(value.Code, value.Email);
         var saved = repository.Insert(new Employee(value.Code, value.Name, value.Position, value.Phone, value.Email));
         employees!.Add(saved);
         return saved;
@@ -53,7 +55,7 @@ public sealed class EmployeeBUS : IEmployeeBUS
         _ = GetEmployees();
         var value = Validate(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhân viên không được sửa.");
-        EnsureUnique(value.Code, existing.Code);
+        EnsureUnique(value.Code, value.Email, existing.Code);
         var saved = repository.Update(existing with
         {
             Name = value.Name, Position = value.Position, Phone = value.Phone, Email = value.Email
@@ -84,11 +86,15 @@ public sealed class EmployeeBUS : IEmployeeBUS
         else employees![index] = saved;
     }
 
-    private void EnsureUnique(string code, string? exceptCode = null)
+    private void EnsureUnique(string code, string email, string? exceptCode = null)
     {
-        if (GetEmployees().Any(c => !c.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)
-            && c.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException("Mã nhân viên đã tồn tại.");
+        foreach (var value in GetEmployees().Where(value => !value.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (value.Code.Equals(code, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Mã nhân viên đã tồn tại.");
+            if (email.Length > 0 && value.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Email đã được sử dụng cho nhân viên khác.");
+        }
     }
 
     private static EmployeeDraft Validate(EmployeeDraft draft)

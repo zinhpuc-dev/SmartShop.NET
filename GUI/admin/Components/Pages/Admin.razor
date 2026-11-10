@@ -97,6 +97,7 @@
                 }
             </select>
         </div>
+        <AdvancedSearch Fields="AdvancedCatalogSearch.ProductFields" OnApply="ApplyAdvancedProductSearch" Error="@productFilterError" AppliedFilter="advancedProductFilter" />
         <DataTable TItem="ProductManage" Items="FilteredProducts" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Không có sản phẩm phù hợp.">
             <Header>
                 <th scope="col">Sản phẩm</th><th scope="col">Mã danh mục</th><th scope="col">Giá bán</th><th scope="col">Giá niêm yết</th><th scope="col">Tồn</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th>
@@ -215,11 +216,25 @@
         _ => "Tổng quan cửa hàng"
     };
     private string? loadedPage;
+    private CatalogFilter? advancedProductFilter;
+    private string productFilterError = "";
+
+    private void ApplyAdvancedProductSearch(CatalogFilter? filter)
+    {
+        try
+        {
+            _ = ProductService.Search(productSearch, productCategoryFilter, filter);
+            advancedProductFilter = filter;
+            productFilterError = "";
+        }
+        catch (ArgumentException ex) { productFilterError = ex.Message; }
+    }
+
     private List<ProductManage> products = [];
     private string productSearch = "", orderSearch = "", orderFilter = "";
     private string productCategoryFilter = "";
     private IEnumerable<ProductManage> FilteredProducts => productLoaded
-        ? ProductService.Search(productSearch, productCategoryFilter)
+        ? ProductService.Search(productSearch, productCategoryFilter, advancedProductFilter)
         : Enumerable.Empty<ProductManage>();
     private IEnumerable<ManagedOrder> FilteredOrders => orders.Where(o => (string.IsNullOrEmpty(orderFilter) || o.Status == orderFilter)
         && (string.IsNullOrWhiteSpace(orderSearch) || o.Code.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)

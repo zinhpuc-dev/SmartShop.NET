@@ -33,6 +33,7 @@
         <div class="customer-search"><input aria-label="Tìm nhân viên" placeholder="Tìm mã, họ tên, điện thoại, email..." @bind="query" @bind:event="oninput" /></div>
         <button type="button" class="text-button" @onclick='() => query = ""'>Xóa tìm kiếm</button>
     </div>
+    <AdvancedSearch Fields="AdvancedCatalogSearch.EmployeeFields" OnApply="ApplyAdvancedSearch" Error="@filterError" AppliedFilter="advancedFilter" />
     <EmployeeSelector @bind-Value="selectedLookup" />
     @if (selectedLookup is not null)
     {
@@ -82,12 +83,26 @@
     </ModalDialog>
 }
 @code {
+    private CatalogFilter? advancedFilter;
+    private string filterError = "";
+
+    private void ApplyAdvancedSearch(CatalogFilter? filter)
+    {
+        try
+        {
+            _ = EmployeeBUS.Search(query, filter);
+            advancedFilter = filter;
+            filterError = "";
+        }
+        catch (ArgumentException ex) { filterError = ex.Message; }
+    }
+
     private string query = "", message = "", formError = "", loadError = "";
     private bool editorOpen, failed, loading = true;
     private string? editingCode;
     private EmployeeDraft draft = new();
     private Employee? profile, deleting, selectedLookup;
-    private IReadOnlyList<Employee> Rows => string.IsNullOrEmpty(loadError) ? EmployeeBUS.Search(query) : Array.Empty<Employee>();
+    private IReadOnlyList<Employee> Rows => string.IsNullOrEmpty(loadError) ? EmployeeBUS.Search(query, advancedFilter) : Array.Empty<Employee>();
 
     protected override void OnInitialized() => Load();
 

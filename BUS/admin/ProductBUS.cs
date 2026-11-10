@@ -29,11 +29,13 @@ namespace SmartShop.BUS
             return Search(keyword, null);
         }
 
-        public List<ProductManage> Search(string? keyword, string? category)
+        public List<ProductManage> Search(string? keyword, string? category, CatalogFilter? filter = null)
         {
+            var matches = AdvancedCatalogSearch.Products(filter);
             if (products is null) Read();
             var term = SearchText.Normalize((keyword ?? "").Trim());
             return products!.Cast<ProductManage>()
+                .Where(matches)
                 .Where(value => (string.IsNullOrEmpty(category) || value.MaLoai == category)
                     && (term.Length == 0
                         || SearchText.Normalize(value.MaSP).Contains(term, StringComparison.OrdinalIgnoreCase)

@@ -18,11 +18,13 @@ public sealed class SupplierBUS : ISupplierBUS
 
     public void Reload() => suppliers = null;
 
-    public IReadOnlyList<Supplier> Search(string query = "")
+    public IReadOnlyList<Supplier> Search(string query = "", CatalogFilter? filter = null)
     {
+        var matches = AdvancedCatalogSearch.Suppliers(filter);
         var term = SearchText.Normalize((query ?? "").Trim());
-        // Search the BUS cache, never re-query storage while typing.
+        // Tìm trên danh sách BUS đã nạp, không truy vấn lại CSDL khi gõ.
         return GetSuppliers()
+            .Where(matches)
             .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
                     .Any(value => SearchText.Normalize(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();

@@ -5,7 +5,7 @@ namespace SmartShop.BUS;
 public interface ICustomerBUS
 {
     void Reload();
-    IReadOnlyList<Customer> Search(string query = "");
+    IReadOnlyList<Customer> Search(string query = "", CatalogFilter? filter = null);
     Customer Get(string code);
     string SuggestCode();
     Customer Create(CustomerDraft draft);

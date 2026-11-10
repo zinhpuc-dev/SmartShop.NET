@@ -33,6 +33,7 @@
         <div class="customer-search"><input aria-label="Tìm khách hàng" placeholder="Tìm mã, họ tên, điện thoại, email..." @bind="query" @bind:event="oninput" /></div>
         <button type="button" class="text-button" @onclick='() => query = ""'>Xóa tìm kiếm</button>
     </div>
+    <AdvancedSearch Fields="AdvancedCatalogSearch.CustomerFields" OnApply="ApplyAdvancedSearch" Error="@filterError" AppliedFilter="advancedFilter" />
     <CustomerSelector @bind-Value="selectedLookup" />
     @if (selectedLookup is not null)
     {
@@ -82,13 +83,27 @@
     </ModalDialog>
 }
 @code {
+    private CatalogFilter? advancedFilter;
+    private string filterError = "";
+
+    private void ApplyAdvancedSearch(CatalogFilter? filter)
+    {
+        try
+        {
+            _ = CustomerBUS.Search(query, filter);
+            advancedFilter = filter;
+            filterError = "";
+        }
+        catch (ArgumentException ex) { filterError = ex.Message; }
+    }
+
     private string query = "", message = "", formError = "", loadError = "";
     private string? editingCode;
     private bool editorOpen, failed, loading = true;
     private CustomerDraft draft = new();
     private Customer? profile, deleting, selectedLookup;
     private IReadOnlyList<Customer> All => string.IsNullOrEmpty(loadError) ? CustomerBUS.Search() : Array.Empty<Customer>();
-    private IReadOnlyList<Customer> Rows => string.IsNullOrEmpty(loadError) ? CustomerBUS.Search(query) : Array.Empty<Customer>();
+    private IReadOnlyList<Customer> Rows => string.IsNullOrEmpty(loadError) ? CustomerBUS.Search(query, advancedFilter) : Array.Empty<Customer>();
 
     protected override void OnInitialized() => Load();
 
