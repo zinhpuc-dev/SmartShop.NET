@@ -212,8 +212,15 @@ namespace SmartShop.DAO
                 connection.Open();
                 using MySqlCommand command = new MySqlCommand("DELETE FROM SAN_PHAM WHERE MaSP=@MaSP", connection);
                 command.Parameters.AddWithValue("@MaSP", maSP);
-                if (command.ExecuteNonQuery() == 0)
-                    throw new InvalidOperationException("Không tìm thấy sản phẩm hoặc sản phẩm đang được tham chiếu.");
+                try
+                {
+                    if (command.ExecuteNonQuery() == 0)
+                        throw new InvalidOperationException("Không tìm thấy sản phẩm.");
+                }
+                catch (MySqlException ex) when (ex.Number == 1451)
+                {
+                    throw new InvalidOperationException("Sản phẩm đang liên kết với dữ liệu khác nên không thể xóa. Bạn có thể chọn Ngừng bán.", ex);
+                }
             }
         }
 
