@@ -30,24 +30,37 @@
     @if (!string.IsNullOrEmpty(successMessage)) { <p class="customer-feedback" role="status">@successMessage</p> }
     @if (page == "admin/products")
     {
-        <div class="section-heading"><h2>Quản lý sản phẩm</h2><button type="button" class="primary" @onclick="OpenNewProduct" disabled="@(!productLoaded)">+ Thêm sản phẩm</button></div>
-        @if (!string.IsNullOrEmpty(productActionError)) { <div class="customer-feedback error" role="alert">@productActionError</div> }
-        <div class="form-grid">
-            <label>Mã loại<input @bind="categoryDraft.MaLoai" maxlength="6" disabled="@categoryEditing" /></label>
-            <label>Trạng thái loại<select @bind="categoryDraft.TrangThai"><option value="true">Đang hoạt động</option><option value="false">Ngừng hoạt động</option></select></label>
-            <button type="button" @onclick="SaveCategory" disabled="@(!productLoaded)">@(categoryEditing ? "Cập nhật loại" : "Thêm loại")</button>
+        <div class="section-heading customer-heading">
+            <h2>Danh sách sản phẩm</h2>
+            <div class="customer-row-actions">
+                <button type="button" class="secondary" @onclick="OpenCategories" disabled="@(!productLoaded)">Quản lý loại</button>
+                <button type="button" class="primary" @onclick="OpenNewProduct" disabled="@(!productLoaded)">+ Thêm sản phẩm</button>
+            </div>
         </div>
+        @if (!categoryDialogOpen && !string.IsNullOrEmpty(productActionError)) { <div class="customer-feedback error" role="alert">@productActionError</div> }
         @if (productLoading) { <p role="status">Đang tải sản phẩm...</p> }
         else if (!productLoaded) { <div class="customer-feedback error" role="alert">@productError <button type="button" @onclick="LoadProducts">Thử lại</button></div> }
         else
         {
-        <DataTable TItem="ProductCategory" Items="productCategories" Label="Danh sách loại sản phẩm" ColumnCount="3" EmptyText="Chưa có loại sản phẩm.">
-            <Header><th scope="col">Mã loại</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></Header>
-            <RowTemplate Context="category">
-                <td>@category.MaLoai</td><td>@(category.TrangThai ? "Đang hoạt động" : "Ngừng hoạt động")</td>
-                <td><button type="button" @onclick="() => EditCategory(category)">Sửa</button><button type="button" @onclick="() => DeactivateCategory(category)">Ngừng</button></td>
-            </RowTemplate>
-        </DataTable>
+        @if (categoryDialogOpen)
+        {
+            <ModalDialog Label="Quản lý loại sản phẩm" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="CloseCategories">
+                <h2>Quản lý loại sản phẩm</h2>
+                @if (!string.IsNullOrEmpty(productActionError)) { <div class="customer-feedback error" role="alert">@productActionError</div> }
+                <div class="form-grid">
+                    <label>Mã loại<input @bind="categoryDraft.MaLoai" maxlength="6" disabled="@categoryEditing" /></label>
+                    <label>Trạng thái loại<select @bind="categoryDraft.TrangThai"><option value="true">Đang hoạt động</option><option value="false">Ngừng hoạt động</option></select></label>
+                    <button type="button" @onclick="SaveCategory" disabled="@(!productLoaded)">@(categoryEditing ? "Cập nhật loại" : "Thêm loại")</button>
+                </div>
+                <DataTable TItem="ProductCategory" Items="productCategories" Label="Danh sách loại sản phẩm" ColumnCount="3" EmptyText="Chưa có loại sản phẩm.">
+                    <Header><th scope="col">Mã loại</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></Header>
+                    <RowTemplate Context="category">
+                        <td>@category.MaLoai</td><td>@(category.TrangThai ? "Đang hoạt động" : "Ngừng hoạt động")</td>
+                        <td><button type="button" @onclick="() => EditCategory(category)">Sửa</button><button type="button" @onclick="() => SetCategoryActive(category)">@(category.TrangThai ? "Ngừng" : "Khôi phục")</button></td>
+                    </RowTemplate>
+                </DataTable>
+            </ModalDialog>
+        }
         @if (productEditorOpen)
         {
             <ModalDialog Label="@ProductEditorTitle" CssClass="customer-editor-modal customer-editor" CloseOnBackdrop="false" OnClose="ResetProduct">
@@ -72,8 +85,19 @@
                 </div>
             </ModalDialog>
         }
-        <label>Tìm sản phẩm<input placeholder="Mã hoặc tên sản phẩm" @bind="productSearch" @bind:event="oninput" /></label>
-        <DataTable TItem="ProductManage" Items="FilteredProducts" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Chưa có sản phẩm.">
+        <div class="customer-toolbar">
+            <div class="customer-search">
+                <input aria-label="Tìm sản phẩm" placeholder="Tìm theo mã hoặc tên sản phẩm" @bind="productSearch" @bind:event="oninput" />
+            </div>
+            <select aria-label="Lọc theo loại sản phẩm" @bind="productCategoryFilter">
+                <option value="">Tất cả loại sản phẩm</option>
+                @foreach (var category in productCategories)
+                {
+                    <option value="@category.MaLoai">@category.MaLoai</option>
+                }
+            </select>
+        </div>
+        <DataTable TItem="ProductManage" Items="FilteredProducts" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Không có sản phẩm phù hợp.">
             <Header>
                 <th scope="col">Sản phẩm</th><th scope="col">Mã danh mục</th><th scope="col">Giá bán</th><th scope="col">Giá niêm yết</th><th scope="col">Tồn</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th>
             </Header>
@@ -84,18 +108,20 @@
                 <td>@MoneyFormatter.Format(product.GiaNiemYet)</td>
                 <td>@product.TongSoLuongTon</td>
                 <td><span class="status @(product.TrangThai == "1" ? "" : "warning")">@(product.TrangThai == "1" ? "Đang bán" : "Ngừng bán")</span></td>
-                <td><button type="button" @onclick="() => EditProduct(product)">Sửa</button><button type="button" @onclick="() => ShowStock(product)">Tồn kho</button><button type="button" @onclick="() => DeactivateProduct(product)">Ngừng</button></td>
+                <td><button type="button" @onclick="() => EditProduct(product)">Sửa</button><button type="button" @onclick="() => ShowStock(product)">Tồn kho</button><button type="button" @onclick='() => SetProductActive(product, product.TrangThai != "1")'>@(product.TrangThai == "1" ? "Ngừng bán" : "Khôi phục")</button></td>
             </RowTemplate>
         </DataTable>
         @if (selectedProduct is not null)
         {
-            <h3>Tồn kho @selectedProduct.TenSP</h3>
-            @if (stockLoading) { <p role="status">Đang tải tồn kho...</p> }
-            else if (!stockLoaded) { <div class="customer-feedback error" role="alert">@stockError <button type="button" @onclick="() => ShowStock(selectedProduct)">Thử lại</button></div> }
-            else { <DataTable TItem="ProductStock" Items="selectedStock" Label="Tồn kho theo kho" ColumnCount="3" EmptyText="Chưa có dữ liệu tồn kho.">
-                <Header><th scope="col">Mã kho</th><th scope="col">Kho</th><th scope="col">Số lượng</th></Header>
-                <RowTemplate Context="stock"><td>@stock.MaKho</td><td>@stock.TenKho</td><td>@stock.SoLuongTon</td></RowTemplate>
-            </DataTable> }
+            <ModalDialog Label="Tồn kho sản phẩm" CssClass="customer-editor-modal" OnClose="() => selectedProduct = null">
+                <h3>Tồn kho @selectedProduct.TenSP</h3>
+                @if (stockLoading) { <p role="status">Đang tải tồn kho...</p> }
+                else if (!stockLoaded) { <div class="customer-feedback error" role="alert">@stockError <button type="button" @onclick="() => ShowStock(selectedProduct)">Thử lại</button></div> }
+                else { <DataTable TItem="ProductStock" Items="selectedStock" Label="Tồn kho theo kho" ColumnCount="3" EmptyText="Chưa có dữ liệu tồn kho.">
+                    <Header><th scope="col">Mã kho</th><th scope="col">Kho</th><th scope="col">Số lượng</th></Header>
+                    <RowTemplate Context="stock"><td>@stock.MaKho</td><td>@stock.TenKho</td><td>@stock.SoLuongTon</td></RowTemplate>
+                </DataTable> }
+            </ModalDialog>
         }
         }
     }
@@ -176,8 +202,12 @@
     private string? loadedPage;
     private List<ProductManage> products = [];
     private string productSearch = "", orderSearch = "", orderFilter = "";
-    private IEnumerable<ProductManage> FilteredProducts => products.Where(p => string.IsNullOrWhiteSpace(productSearch)
-        || p.MaSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase) || p.TenSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase));
+    private string productCategoryFilter = "";
+    private IEnumerable<ProductManage> FilteredProducts => products.Where(p =>
+        (string.IsNullOrEmpty(productCategoryFilter) || p.MaLoai == productCategoryFilter)
+        && (string.IsNullOrWhiteSpace(productSearch)
+            || p.MaSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+            || p.TenSP.Contains(productSearch.Trim(), StringComparison.OrdinalIgnoreCase)));
     private IEnumerable<ManagedOrder> FilteredOrders => orders.Where(o => (string.IsNullOrEmpty(orderFilter) || o.Status == orderFilter)
         && (string.IsNullOrWhiteSpace(orderSearch) || o.Code.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)
             || o.CustomerName.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)));
@@ -193,6 +223,7 @@
     private string productFormError = "";
     private string ProductEditorTitle => productEditing ? "Sửa sản phẩm" : "Thêm sản phẩm";
     private bool categoryEditing;
+    private bool categoryDialogOpen;
     private string productError = "Không thể tải danh sách sản phẩm. Vui lòng kiểm tra kết nối và thử lại.";
     private string productActionError = "";
     private string successMessage = "";
@@ -225,6 +256,8 @@
     {
         if (loadedPage == page) return;
         loadedPage = page;
+        CloseCategories();
+        selectedProduct = null;
         ResetProduct();
         successMessage = "";
 
@@ -426,16 +459,30 @@
         productEditorOpen = false;
     }
 
-    private void DeactivateProduct(ProductManage item)
+    private void SetProductActive(ProductManage item, bool active)
     {
-        try { ProductService.Delete(item.MaSP); products = ProductService.Read(); productError = ""; productActionError = ""; }
+        try { ProductService.SetActive(item.MaSP, active); products = ProductService.Read(); productError = ""; productActionError = ""; successMessage = active ? "Đã khôi phục sản phẩm." : "Đã ngừng bán sản phẩm."; }
         catch (ArgumentException ex) { productActionError = ex.Message; }
         catch (InvalidOperationException ex) { productActionError = ex.Message; }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to deactivate Admin product {ProductCode}.", item.MaSP);
+            Logger.LogError(ex, "Failed to change status of Admin product {ProductCode}.", item.MaSP);
             productActionError = "Không thể cập nhật sản phẩm. Vui lòng thử lại.";
         }
+    }
+
+    private void OpenCategories()
+    {
+        CloseCategories();
+        categoryDialogOpen = true;
+    }
+
+    private void CloseCategories()
+    {
+        categoryDialogOpen = false;
+        categoryDraft = new ProductCategory { TrangThai = true };
+        categoryEditing = false;
+        productActionError = "";
     }
 
     private void SaveCategory()
@@ -464,11 +511,11 @@
         categoryEditing = true;
     }
 
-    private void DeactivateCategory(ProductCategory category)
+    private void SetCategoryActive(ProductCategory category)
     {
         try
         {
-            ProductService.SaveCategory(new ProductCategory { MaLoai = category.MaLoai, TrangThai = false });
+            ProductService.SaveCategory(new ProductCategory { MaLoai = category.MaLoai, TrangThai = !category.TrangThai });
             productCategories = ProductService.ReadCategories();
             productError = "";
             productActionError = "";
@@ -477,7 +524,7 @@
         catch (InvalidOperationException ex) { productActionError = ex.Message; }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to deactivate Admin product category {CategoryCode}.", category.MaLoai);
+            Logger.LogError(ex, "Failed to change status of Admin product category {CategoryCode}.", category.MaLoai);
             productActionError = "Không thể cập nhật loại sản phẩm. Vui lòng thử lại.";
         }
     }

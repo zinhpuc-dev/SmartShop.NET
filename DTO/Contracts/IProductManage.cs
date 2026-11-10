@@ -17,4 +17,5 @@ public interface IProductManage
     void Insert(ProductManage product);
     void Update(ProductManage product);
     void Delete(string maSP);
+    void SetActive(string maSP, bool active);
 }

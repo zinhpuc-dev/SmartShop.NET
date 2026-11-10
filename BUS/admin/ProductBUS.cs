@@ -77,6 +77,13 @@ namespace SmartShop.BUS
             product = dao.ReadData();
         }
 
+        public void SetActive(string maSP, bool active)
+        {
+            string code = NormalizeCode(maSP, 8, "Mã sản phẩm");
+            if (!dao.CheckProduct(code)) throw new InvalidOperationException("Không tìm thấy sản phẩm.");
+            dao.SetActive(code, active);
+        }
+
         private static void Validate(ProductManage pm)
         {
             ArgumentNullException.ThrowIfNull(pm);

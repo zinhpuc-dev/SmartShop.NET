@@ -195,6 +195,16 @@ namespace SmartShop.DAO
             }
         }
 
+        public void SetActive(string maSP, bool active)
+        {
+            using MySqlConnection connection = CreateConnection();
+            connection.Open();
+            using MySqlCommand command = new("UPDATE SAN_PHAM SET TrangThai=@TrangThai WHERE MaSP=@MaSP", connection);
+            command.Parameters.AddWithValue("@TrangThai", active);
+            command.Parameters.AddWithValue("@MaSP", maSP);
+            command.ExecuteNonQuery();
+        }
+
         public void Delete(string maSP)
         {
             using (MySqlConnection connection = CreateConnection())
