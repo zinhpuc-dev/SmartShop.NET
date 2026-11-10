@@ -108,9 +108,24 @@
                 <td>@MoneyFormatter.Format(product.GiaNiemYet)</td>
                 <td>@product.TongSoLuongTon</td>
                 <td><span class="status @(product.TrangThai == "1" ? "" : "warning")">@(product.TrangThai == "1" ? "Đang bán" : "Ngừng bán")</span></td>
-                <td><button type="button" @onclick="() => EditProduct(product)">Sửa</button><button type="button" @onclick="() => ShowStock(product)">Tồn kho</button><button type="button" @onclick='() => SetProductActive(product, product.TrangThai != "1")'>@(product.TrangThai == "1" ? "Ngừng bán" : "Khôi phục")</button></td>
+                <td><button type="button" @onclick="() => EditProduct(product)">Sửa</button><button type="button" @onclick="() => ShowStock(product)">Tồn kho</button><button type="button" @onclick='() => SetProductActive(product, product.TrangThai != "1")'>@(product.TrangThai == "1" ? "Ngừng bán" : "Khôi phục")</button><button type="button" class="text-button customer-danger" @onclick="() => ConfirmProductDeletion(product)">Xóa</button></td>
             </RowTemplate>
         </DataTable>
+        @if (productToDelete is not null)
+        {
+            <ModalDialog Label="Xác nhận xóa sản phẩm" CssClass="narrow" CloseOnBackdrop="false" OnClose="CloseProductDeletion">
+                <h2>Xóa sản phẩm?</h2>
+                <p>Bạn đang xóa vĩnh viễn <strong>@productToDelete.MaSP — @productToDelete.TenSP</strong>.</p>
+                @if (!string.IsNullOrEmpty(productDeleteError))
+                {
+                    <p class="customer-feedback error" role="alert">@productDeleteError</p>
+                }
+                <div class="customer-actions">
+                    <button type="button" class="primary" @onclick="DeleteProduct">Xác nhận xóa</button>
+                    <button type="button" class="secondary" @onclick="CloseProductDeletion">Hủy</button>
+                </div>
+            </ModalDialog>
+        }
         @if (selectedProduct is not null)
         {
             <ModalDialog Label="Tồn kho sản phẩm" CssClass="customer-editor-modal" OnClose="() => selectedProduct = null">
@@ -214,6 +229,8 @@
     private ProductCategory categoryDraft = new();
     private List<ProductStock> selectedStock = [];
     private ProductManage? selectedProduct;
+    private ProductManage? productToDelete;
+    private string productDeleteError = "";
     private bool stockLoading, stockLoaded;
     private string stockError = "Không thể tải tồn kho sản phẩm. Vui lòng thử lại.";
     private bool productEditing;
@@ -254,6 +271,7 @@
     {
         if (loadedPage == page) return;
         loadedPage = page;
+        CloseProductDeletion();
         CloseCategories();
         selectedProduct = null;
         ResetProduct();
@@ -455,6 +473,37 @@
         productEditing = false;
         productFormError = "";
         productEditorOpen = false;
+    }
+
+    private void ConfirmProductDeletion(ProductManage product)
+    {
+        successMessage = "";
+        productDeleteError = "";
+        productToDelete = product;
+    }
+
+    private void CloseProductDeletion()
+    {
+        productToDelete = null;
+        productDeleteError = "";
+    }
+
+    private void DeleteProduct()
+    {
+        if (productToDelete is not { } product) return;
+        try
+        {
+            ProductService.Delete(product.MaSP);
+            CloseProductDeletion();
+            LoadProducts();
+            successMessage = "Đã xóa sản phẩm.";
+        }
+        catch (InvalidOperationException ex) { productDeleteError = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to delete Admin product {ProductCode}.", product.MaSP);
+            productDeleteError = "Không thể xóa sản phẩm. Vui lòng thử lại.";
+        }
     }
 
     private void SetProductActive(ProductManage item, bool active)

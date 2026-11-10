@@ -86,11 +86,7 @@ namespace SmartShop.BUS
         public void Delete(string maSP)
         {
             string code = NormalizeCode(maSP, 8, "Mã sản phẩm");
-            ProductManage? existing = dao.GetByCode(code);
-            if (existing is null)
-                throw new InvalidOperationException("Không tìm thấy sản phẩm.");
-            existing.TrangThai = "0";
-            dao.Update(existing);
+            dao.Delete(code);
             Read();
         }
 
