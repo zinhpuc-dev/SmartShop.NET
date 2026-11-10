@@ -1,5 +1,7 @@
 @attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin"
+@page "/admin/products"
+@page "/admin/orders"
 @layout SmartShop.Admin.Components.Layout.AdminLayout
 @inherits ShopPageBase
 @inject ProductBUS ProductService
@@ -8,27 +10,27 @@
 @inject IEmployeeBUS EmployeeBUS
 @inject IJSRuntime JavaScript
 @inject ILogger<Admin> Logger
-<PageTitle>@PageName — SmartShop</PageTitle>
+<PageTitle>@Heading — SmartShop</PageTitle>
 <div class="section-heading">
     <div>
         <div class="eyebrow red">SMARTSHOP / ADMIN</div>
-        <h1>Tổng quan cửa hàng</h1>
-        <p class="subtitle">Một góc nhìn, mọi hoạt động.</p>
+        <h1>@Heading</h1>
     </div>
-    <span class="status">● Tổng quan cửa hàng</span>
 </div>
+@if (page == "admin")
+{
 <div class="metrics">
-    <div class="panel"><span>Doanh thu 30 ngày</span><h2>@(reportLoaded ? MoneyFormatter.Format(summary!.Revenue) : "—")</h2><small class="green">Chỉ tính hóa đơn đã thanh toán</small>@if (!reportLoaded && !reportLoading) { <small>@reportError <button type="button" @onclick="LoadReportData">Thử lại</button></small> }</div>
+    <div class="panel"><span>Doanh thu theo kỳ</span><h2>@(reportLoaded ? MoneyFormatter.Format(summary!.Revenue) : "—")</h2><small class="green">Chỉ tính hóa đơn đã thanh toán</small>@if (!reportLoaded && !reportLoading) { <small>@reportError <button type="button" @onclick="LoadReportData">Thử lại</button></small> }</div>
     <div class="panel"><span>Đơn hàng</span><h2>@(ordersLoaded ? orders.Count : "—")</h2><small>Đơn hàng trong hệ thống</small>@if (!ordersLoaded && !ordersLoading) { <small>@ordersError <button type="button" @onclick="LoadOrderData">Thử lại</button></small> }</div>
     <div class="panel"><span>Sản phẩm</span><h2>@(productsLoaded ? products.Count : "—")</h2><small>Danh mục sản phẩm</small>@if (!productsLoaded && !productLoading) { <small>@productError <button type="button" @onclick="LoadProducts">Thử lại</button></small> }</div>
     <div class="panel"><span>Tồn kho</span><h2>@(productsLoaded ? products.Sum(p => p.TongSoLuongTon) : "—")</h2><small>Tổng số lượng trong các kho</small>@if (!productsLoaded && !productLoading) { <small>Chưa thể tải số lượng tồn kho.</small> }</div>
 </div>
-<ChoiceTabs Items="AdminTabs" @bind-Value="adminTab" CssClass="admin-tabs" />
+}
 <section class="panel">
     @if (!string.IsNullOrEmpty(successMessage)) { <p class="customer-feedback" role="status">@successMessage</p> }
-    @if (adminTab == "Sản phẩm")
+    @if (page == "admin/products")
     {
-        <div class="section-heading"><h2>Quản lý sản phẩm</h2><span class="muted">Sản phẩm và tồn kho theo kho</span></div>
+        <div class="section-heading"><h2>Quản lý sản phẩm</h2><button type="button" class="primary" @onclick="OpenNewProduct" disabled="@(!productLoaded)">+ Thêm sản phẩm</button></div>
         @if (!string.IsNullOrEmpty(productActionError)) { <div class="customer-feedback error" role="alert">@productActionError</div> }
         <div class="form-grid">
             <label>Mã loại<input @bind="categoryDraft.MaLoai" maxlength="6" disabled="@categoryEditing" /></label>
@@ -46,18 +48,30 @@
                 <td><button type="button" @onclick="() => EditCategory(category)">Sửa</button><button type="button" @onclick="() => DeactivateCategory(category)">Ngừng</button></td>
             </RowTemplate>
         </DataTable>
-        <div class="form-grid">
-            <label>Mã sản phẩm<input @bind="productDraft.MaSP" maxlength="8" disabled="@productEditing" /></label>
-            <label>Loại sản phẩm<select @bind="productDraft.MaLoai"><option value="">Chọn loại</option>@foreach (var category in productCategories.Where(c => c.TrangThai || c.MaLoai == productDraft.MaLoai)){<option value="@category.MaLoai">@category.MaLoai</option>}</select></label>
-            <label>Tên sản phẩm<input @bind="productDraft.TenSP" maxlength="200" /></label>
-            <label>Đơn vị tính<input @bind="productDraft.DonViTinh" maxlength="30" /></label>
-            <label>Giá niêm yết<input type="number" min="0" step="0.01" @bind="productDraft.GiaNiemYet" /></label>
-            <label>Giá bán<input type="number" min="0" step="0.01" @bind="productDraft.GiaBan" /></label>
-            <label>Trạng thái<select @bind="productDraft.TrangThai"><option value="1">Đang bán</option><option value="0">Ngừng bán</option></select></label>
-            <label>Mô tả<textarea @bind="productDraft.MoTa" maxlength="65535"></textarea></label>
-            <button type="button" @onclick="SaveManagedProduct" disabled="@(!productLoaded)">@(productEditing ? "Cập nhật sản phẩm" : "Thêm sản phẩm")</button>
-            @if (productEditing){<button type="button" @onclick="ResetProduct">Hủy</button>}
-        </div>
+        @if (productEditorOpen)
+        {
+            <ModalDialog Label="@ProductEditorTitle" CssClass="customer-editor-modal customer-editor" CloseOnBackdrop="false" OnClose="ResetProduct">
+                <h2>@ProductEditorTitle</h2>
+                @if (!string.IsNullOrEmpty(productFormError))
+                {
+                    <p class="customer-feedback error" role="alert">@productFormError</p>
+                }
+                <div class="customer-form-grid">
+                    <label>Mã sản phẩm<input @bind="productDraft.MaSP" maxlength="8" disabled="@productEditing" /></label>
+                    <label>Loại sản phẩm<select @bind="productDraft.MaLoai"><option value="">Chọn loại</option>@foreach (var category in productCategories.Where(c => c.TrangThai || c.MaLoai == productDraft.MaLoai)){<option value="@category.MaLoai">@category.MaLoai</option>}</select></label>
+                    <label>Tên sản phẩm<input @bind="productDraft.TenSP" maxlength="200" /></label>
+                    <label>Đơn vị tính<input @bind="productDraft.DonViTinh" maxlength="30" /></label>
+                    <label>Giá niêm yết<input type="number" min="0" step="0.01" @bind="productDraft.GiaNiemYet" /></label>
+                    <label>Giá bán<input type="number" min="0" step="0.01" @bind="productDraft.GiaBan" /></label>
+                    <label>Trạng thái<select @bind="productDraft.TrangThai"><option value="1">Đang bán</option><option value="0">Ngừng bán</option></select></label>
+                    <label class="customer-span-all">Mô tả<textarea @bind="productDraft.MoTa" maxlength="65535"></textarea></label>
+                </div>
+                <div class="customer-actions">
+                    <button type="button" class="primary" @onclick="SaveManagedProduct">@(productEditing ? "Cập nhật sản phẩm" : "Lưu sản phẩm")</button>
+                    <button type="button" class="secondary" @onclick="ResetProduct">Hủy</button>
+                </div>
+            </ModalDialog>
+        }
         <label>Tìm sản phẩm<input placeholder="Mã hoặc tên sản phẩm" @bind="productSearch" @bind:event="oninput" /></label>
         <DataTable TItem="ProductManage" Items="FilteredProducts" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Chưa có sản phẩm.">
             <Header>
@@ -85,7 +99,7 @@
         }
         }
     }
-    else if (adminTab == "Đơn hàng")
+    else if (page == "admin/orders")
     {
         <h2>Quản lý đơn hàng</h2>
         <div class="form-grid">
@@ -112,10 +126,7 @@
             </RowTemplate>
         </DataTable>
         }
-    }
-    else
-    {
-        <h2>Báo cáo doanh thu và hóa đơn</h2>
+        <h2>Hóa đơn</h2>
         <h3>Lập hóa đơn</h3>
         <div class="form-grid">
             <label>Đơn đã giao<select @bind="invoiceOrder"><option value="">Chọn đơn hàng</option>
@@ -130,15 +141,6 @@
         </div>
         @if (!invoiceEmployeesLoaded) { <p class="customer-feedback error">Chưa tải được nhân viên lập hóa đơn. <button @onclick="LoadInvoiceEmployees">Thử lại</button></p> }
         @if (!string.IsNullOrEmpty(invoiceActionError)) { <p class="customer-feedback error" role="alert">@invoiceActionError</p> }
-        <div class="form-grid">
-            <label>Từ ngày<input type="date" @bind="reportFrom" /></label>
-            <label>Đến ngày<input type="date" @bind="reportTo" /></label>
-            <button type="button" @onclick="LoadReportData">Xem báo cáo</button>
-        </div>
-        @if (reportLoaded) { <p>@summary!.From.ToString("yyyy-MM-dd") — @summary.To.ToString("yyyy-MM-dd") · @summary.OrderCount đơn có hóa đơn đã thanh toán · @summary.InvoiceCount hóa đơn đã thanh toán · @summary.ProductsSold sản phẩm bán</p> }
-        else if (reportLoading) { <p role="status">Đang tải báo cáo...</p> }
-        else { <div class="customer-feedback error" role="alert">@reportError <button type="button" @onclick="LoadReportData">Thử lại</button></div> }
-        @if (reportLoaded) { <strong>Doanh thu: @MoneyFormatter.Format(summary!.Revenue)</strong> }
         @if (invoicesLoading) { <p role="status">Đang tải hóa đơn...</p> }
         else if (!invoicesLoaded) { <div class="customer-feedback error" role="alert">@invoiceError <button type="button" @onclick="LoadInvoiceData">Thử lại</button></div> }
         else
@@ -149,10 +151,29 @@
         </DataTable>
         }
     }
+    else
+    {
+        <h2>Thống kê bán hàng</h2>
+        <div class="form-grid">
+            <label>Từ ngày<input type="date" @bind="reportFrom" /></label>
+            <label>Đến ngày<input type="date" @bind="reportTo" /></label>
+            <button type="button" @onclick="LoadReportData">Xem báo cáo</button>
+        </div>
+        @if (reportLoaded) { <p>@summary!.From.ToString("yyyy-MM-dd") — @summary.To.AddDays(-1).ToString("yyyy-MM-dd") · @summary.OrderCount đơn có hóa đơn đã thanh toán · @summary.InvoiceCount hóa đơn đã thanh toán · @summary.ProductsSold sản phẩm bán</p> }
+        else if (reportLoading) { <p role="status">Đang tải báo cáo...</p> }
+        else { <div class="customer-feedback error" role="alert">@reportError <button type="button" @onclick="LoadReportData">Thử lại</button></div> }
+        @if (reportLoaded) { <strong>Doanh thu: @MoneyFormatter.Format(summary!.Revenue)</strong> }
+    }
 </section>
 
 @code {
-    private static readonly string[] AdminTabs = ["Sản phẩm", "Đơn hàng", "Thống kê"];
+    private string Heading => page switch
+    {
+        "admin/products" => "Sản phẩm",
+        "admin/orders" => "Đơn hàng",
+        _ => "Tổng quan cửa hàng"
+    };
+    private string? loadedPage;
     private List<ProductManage> products = [];
     private string productSearch = "", orderSearch = "", orderFilter = "";
     private IEnumerable<ProductManage> FilteredProducts => products.Where(p => string.IsNullOrWhiteSpace(productSearch)
@@ -168,6 +189,9 @@
     private bool stockLoading, stockLoaded;
     private string stockError = "Không thể tải tồn kho sản phẩm. Vui lòng thử lại.";
     private bool productEditing;
+    private bool productEditorOpen;
+    private string productFormError = "";
+    private string ProductEditorTitle => productEditing ? "Sửa sản phẩm" : "Thêm sản phẩm";
     private bool categoryEditing;
     private string productError = "Không thể tải danh sách sản phẩm. Vui lòng kiểm tra kết nối và thử lại.";
     private string productActionError = "";
@@ -197,14 +221,21 @@
     private bool reportLoaded;
     private bool reportLoading = true;
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        base.OnInitialized();
-        LoadProducts();
-        LoadOrderData();
-        LoadInvoiceData();
-        LoadInvoiceEmployees();
-        LoadReportData();
+        if (loadedPage == page) return;
+        loadedPage = page;
+        ResetProduct();
+        successMessage = "";
+
+        if (page is "admin" or "admin/products") LoadProducts();
+        if (page is "admin" or "admin/orders") LoadOrderData();
+        if (page == "admin/orders")
+        {
+            LoadInvoiceData();
+            LoadInvoiceEmployees();
+        }
+        if (page == "admin") LoadReportData();
     }
 
     private void LoadProducts()
@@ -274,7 +305,7 @@
         {
             InvoiceService.CreateInvoice(invoiceOrder, invoiceEmployee, invoiceMethod);
             invoiceOrder = "";
-            LoadInvoiceData(); LoadOrderData(); LoadReportData();
+            LoadInvoiceData(); LoadOrderData();
             successMessage = "Đã lập hóa đơn chờ thanh toán.";
         }
         catch (ArgumentException ex) { invoiceActionError = ex.Message; }
@@ -289,7 +320,7 @@
         try
         {
             InvoiceService.MarkPaid(invoice.Code);
-            LoadInvoiceData(); LoadReportData();
+            LoadInvoiceData();
             successMessage = "Đã xác nhận thanh toán hóa đơn.";
         }
         catch (InvalidOperationException ex) { invoiceActionError = ex.Message; }
@@ -368,20 +399,31 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to save Admin product.");
-            productActionError = "Không thể lưu sản phẩm. Vui lòng kiểm tra thông tin và thử lại.";
+            productFormError = ex is ArgumentException or InvalidOperationException
+                ? ex.Message : "Không thể lưu sản phẩm. Vui lòng kiểm tra thông tin và thử lại.";
         }
+    }
+
+    private void OpenNewProduct()
+    {
+        ResetProduct();
+        productEditorOpen = true;
     }
 
     private void EditProduct(ProductManage item)
     {
         productDraft = new ProductManage(item.MaSP, item.MaLoai, item.TenSP, item.MoTa, item.DonViTinh, item.GiaNiemYet, item.GiaBan, item.TrangThai);
         productEditing = true;
+        productFormError = "";
+        productEditorOpen = true;
     }
 
     private void ResetProduct()
     {
         productDraft = new ProductManage { TrangThai = "1" };
         productEditing = false;
+        productFormError = "";
+        productEditorOpen = false;
     }
 
     private void DeactivateProduct(ProductManage item)

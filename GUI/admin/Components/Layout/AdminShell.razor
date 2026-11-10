@@ -11,6 +11,8 @@
     <aside>
         <div class="nav-caption">QUẢN TRỊ CỬA HÀNG</div>
         <button class="nav-item @(page == "admin" ? "active" : "")" @onclick='() => Go("admin")'><span>◫</span>Tổng quan</button>
+        <button class="nav-item @(page == "admin/products" ? "active" : "")" @onclick='() => Go("admin/products")'><span>□</span>Sản phẩm</button>
+        <button class="nav-item @(page == "admin/orders" ? "active" : "")" @onclick='() => Go("admin/orders")'><span>≡</span>Đơn hàng</button>
         <button class="nav-item @(page == "admin/customers" ? "active" : "")" @onclick='() => Go("admin/customers")'><span>♙</span>Khách hàng</button>
         <button class="nav-item @(page == "admin/employees" ? "active" : "")" @onclick='() => Go("admin/employees")'><span>♟</span>Nhân viên</button>
         <button class="nav-item @(page == "admin/suppliers" ? "active" : "")" @onclick='() => Go("admin/suppliers")'><span>▦</span>Nhà cung cấp</button>
@@ -22,13 +24,15 @@
         </div>
     </aside>
     <main>
-        <div class="breadcrumbs">Quản trị <span>/</span> @(page == "admin" ? "Tổng quan" : PageName)</div>
+        <div class="breadcrumbs">Quản trị <span>/</span> @SectionName</div>
         @ChildContent
         <footer><span class="brand-small">S <b>SmartShop Admin</b></span><small>Quản lý cửa hàng</small></footer>
     </main>
 </div>
-<nav class="mobile-nav">
+<nav class="mobile-nav admin-mobile-nav" aria-label="Menu quản trị">
     <button @onclick='() => Go("admin")'>◫<span>Tổng quan</span></button>
+    <button class="@(page == "admin/products" ? "active" : "")" @onclick='() => Go("admin/products")'>□<span>Sản phẩm</span></button>
+    <button class="@(page == "admin/orders" ? "active" : "")" @onclick='() => Go("admin/orders")'>≡<span>Đơn hàng</span></button>
     <button @onclick='() => Go("admin/customers")'>♙<span>Khách hàng</span></button>
     <button @onclick='() => Go("admin/employees")'>♟<span>Nhân viên</span></button>
     <button @onclick='() => Go("admin/suppliers")'>▦<span>Nhà cung cấp</span></button>
@@ -39,5 +43,13 @@
 <ShopOverlays />
 
 @code {
+    private string SectionName => page switch
+    {
+        "admin" => "Tổng quan",
+        "admin/products" => "Sản phẩm",
+        "admin/orders" => "Đơn hàng",
+        _ => PageName
+    };
+
     [Parameter] public RenderFragment? ChildContent { get; set; }
 }

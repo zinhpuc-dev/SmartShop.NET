@@ -1,0 +1,6 @@
+
+@media (max-width: 800px) {
+    .admin-mobile-nav { justify-content: flex-start; overflow-x: auto; }
+    .admin-mobile-nav button { flex: 1 0 auto; min-width: 64px; }
+    .admin-mobile-nav button.active { color: var(--red); }
+}
