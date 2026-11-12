@@ -194,11 +194,7 @@
     else
     {
         <h2>Thống kê bán hàng</h2>
-        <div class="form-grid">
-            <label>Từ ngày<input type="date" @bind="reportFrom" /></label>
-            <label>Đến ngày<input type="date" @bind="reportTo" /></label>
-            <button type="button" @onclick="TaiBaoCao">Xem báo cáo</button>
-        </div>
+        <BoLocThoiGian Value="boLocBaoCao" OnApplied="ApDungThoiGianThongKe" Disabled="reportLoading" />
         @if (reportLoaded) { <p>@summary!.From.ToString("yyyy-MM-dd") — @summary.To.AddDays(-1).ToString("yyyy-MM-dd") · @summary.OrderCount đơn có hóa đơn đã thanh toán · @summary.InvoiceCount hóa đơn đã thanh toán · @summary.ProductsSold sản phẩm bán</p> }
         else if (reportLoading) { <p role="status">Đang tải báo cáo...</p> }
         else { <div class="customer-feedback error" role="alert">@reportError <button type="button" @onclick="TaiBaoCao">Thử lại</button></div> }
@@ -267,7 +263,7 @@
     private bool invoiceEmployeesLoaded;
     private string invoiceOrder = "", invoiceMethod = "Tiền mặt", invoiceActionError = "";
     private ThongKeBanHangDTO? summary;
-    private DateTime reportFrom = DateTime.Today.AddDays(-29), reportTo = DateTime.Today;
+    private BoLocThoiGianThongKe boLocBaoCao = new();
     private string ordersError = "Không thể tải danh sách đơn hàng. Vui lòng thử lại.";
     private string warehouseError = "";
     private string orderActionError = "";
@@ -415,6 +411,12 @@
         finally { invoicesLoading = false; }
     }
 
+    private void ApDungThoiGianThongKe(BoLocThoiGianThongKe boLoc)
+    {
+        boLocBaoCao = boLoc;
+        TaiBaoCao();
+    }
+
     private void TaiBaoCao()
     {
         reportLoading = true;
@@ -422,8 +424,7 @@
         reportError = "Không thể tải báo cáo doanh thu. Vui lòng thử lại.";
         try
         {
-            if (reportFrom.Date > reportTo.Date) throw new ArgumentException("Ngày bắt đầu không được sau ngày kết thúc.");
-            summary = OrderService.ThongKeBanHang(reportFrom.Date, reportTo.Date.AddDays(1));
+            summary = OrderService.ThongKeBanHang(boLocBaoCao);
             reportLoaded = true;
             reportError = "";
         }

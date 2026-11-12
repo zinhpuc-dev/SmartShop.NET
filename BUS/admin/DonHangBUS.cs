@@ -22,6 +22,12 @@ public sealed class DonHangBUS(IDonHangDAO repository)
         repository.CapNhatTrangThai(code, normalizedStatus, warehouse);
     }
 
+    public ThongKeBanHangDTO ThongKeBanHang(BoLocThoiGianThongKe boLoc)
+    {
+        var khoang = XuLyKyThongKe.ChuyenThanhKhoang(boLoc);
+        return ThongKeBanHang(khoang.TuNgay, khoang.DenTruocNgay);
+    }
+
     public ThongKeBanHangDTO ThongKeBanHang(DateTime from, DateTime to)
     {
         if (from >= to) throw new ArgumentException("Khoảng thời gian báo cáo không hợp lệ.");
