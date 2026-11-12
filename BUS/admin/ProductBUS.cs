@@ -24,22 +24,22 @@ namespace SmartShop.BUS
             return loaded;
         }
 
-        public List<ProductManage> Search(string keyword)
+        public List<ProductManage> TimKiem(string keyword)
         {
-            return Search(keyword, null);
+            return TimKiem(keyword, null);
         }
 
-        public List<ProductManage> Search(string? keyword, string? category, CatalogFilter? filter = null)
+        public List<ProductManage> TimKiem(string? keyword, string? category, BoLocDanhMuc? filter = null)
         {
-            var matches = AdvancedCatalogSearch.Products(filter);
+            var matches = TimKiemDanhMucNangCao.LocSanPham(filter);
             if (products is null) Read();
-            var term = SearchText.Normalize((keyword ?? "").Trim());
+            var term = XuLyChuoiTimKiem.ChuanHoa((keyword ?? "").Trim());
             return products!.Cast<ProductManage>()
                 .Where(matches)
                 .Where(value => (string.IsNullOrEmpty(category) || value.MaLoai == category)
                     && (term.Length == 0
-                        || SearchText.Normalize(value.MaSP).Contains(term, StringComparison.OrdinalIgnoreCase)
-                        || SearchText.Normalize(value.TenSP).Contains(term, StringComparison.OrdinalIgnoreCase)))
+                        || XuLyChuoiTimKiem.ChuanHoa(value.MaSP).Contains(term, StringComparison.OrdinalIgnoreCase)
+                        || XuLyChuoiTimKiem.ChuanHoa(value.TenSP).Contains(term, StringComparison.OrdinalIgnoreCase)))
                 .Select(value => value with { }).ToList();
         }
 

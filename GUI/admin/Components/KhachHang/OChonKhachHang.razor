@@ -1,0 +1,18 @@
+<div class="customer-selector">
+    <FormField Label="Khách hàng đã chọn">
+        <input readonly value="@Display" aria-label="Khách hàng đã chọn" />
+    </FormField>
+    <button type="button" class="secondary" aria-label="Tìm và chọn khách hàng" @onclick="() => open = true">… Chọn khách hàng</button>
+</div>
+@if (open)
+{
+    <TimChonKhachHang OnSelected="Chon" OnClose="() => open = false" />
+}
+
+@code {
+    [Parameter] public KhachHangDTO? Value { get; set; }
+    [Parameter] public EventCallback<KhachHangDTO?> ValueChanged { get; set; }
+    private bool open;
+    private string Display => Value is null ? "Chưa chọn khách hàng" : $"{Value.Code} — {Value.Name} — {Value.Phone}";
+    private Task Chon(KhachHangDTO customer) => ValueChanged.InvokeAsync(customer);
+}

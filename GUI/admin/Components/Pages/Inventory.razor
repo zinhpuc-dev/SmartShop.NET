@@ -1,8 +1,8 @@
 @attribute [Authorize(Policy = AdminLoginService.Policy)]
 @page "/admin/inventory"
-@layout SmartShop.Admin.Components.Layout.AdminLayout
+@layout SmartShop.Admin.Components.Layout.BoCucQuanTri
 @inject WarehouseBUS WarehouseBUS
-@inject ISupplierBUS SupplierBUS
+@inject INhaCungCapBUS NhaCungCapBUS
 @inject ProductBUS ProductService
 @inject ILogger<Inventory> Logger
 
@@ -79,7 +79,7 @@ else if (!loaded)
 
 @code {
     private List<Warehouse> warehouses = [];
-    private List<Supplier> suppliers = [];
+    private List<NhaCungCapDTO> suppliers = [];
     private List<ProductManage> products = [];
     private IReadOnlyList<ReceivingRecord> receivings = [];
     private IReadOnlyList<ReceivingDetail> receiptDetails = [];
@@ -100,7 +100,7 @@ else if (!loaded)
         try
         {
             warehouses = WarehouseBUS.GetAll().ToList();
-            suppliers = SupplierBUS.Search().ToList();
+            suppliers = NhaCungCapBUS.TimKiem().ToList();
             products = ProductService.Read();
             receivings = WarehouseBUS.GetReceivings();
             stockRows = WarehouseBUS.GetStock();

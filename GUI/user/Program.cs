@@ -17,12 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 // The composition root selects storage; pages and BUS depend only on contracts.
 builder.Services.AddScoped<IShopRepository, DemoShopDao>();
 builder.Services.AddScoped<IShopService, ShopState>();
-builder.Services.AddScoped<ICustomerRepository>(services => new CustomerDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<ICustomerBUS, CustomerBUS>();
-builder.Services.AddScoped<IEmployeeRepository>(services => new EmployeeDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<IEmployeeBUS, EmployeeBUS>();
-builder.Services.AddScoped<ISupplierRepository>(services => new SupplierDAO(GetSmartShopConnectionString(services)));
-builder.Services.AddScoped<ISupplierBUS, SupplierBUS>();
+builder.Services.AddScoped<IKhachHangDAO>(services => new KhachHangDAO(GetSmartShopConnectionString(services)));
+builder.Services.AddScoped<IKhachHangBUS, KhachHangBUS>();
+builder.Services.AddScoped<INhanVienDAO>(services => new NhanVienDAO(GetSmartShopConnectionString(services)));
+builder.Services.AddScoped<INhanVienBUS, NhanVienBUS>();
+builder.Services.AddScoped<INhaCungCapDAO>(services => new NhaCungCapDAO(GetSmartShopConnectionString(services)));
+builder.Services.AddScoped<INhaCungCapBUS, NhaCungCapBUS>();
 builder.Services.AddScoped<IProductManage>(services =>
 {
     string? connectionString = services.GetRequiredService<IConfiguration>().GetConnectionString("SmartShop");

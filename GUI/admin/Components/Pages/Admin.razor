@@ -2,12 +2,12 @@
 @page "/admin"
 @page "/admin/products"
 @page "/admin/orders"
-@layout SmartShop.Admin.Components.Layout.AdminLayout
+@layout SmartShop.Admin.Components.Layout.BoCucQuanTri
 @inherits ShopPageBase
 @inject ProductBUS ProductService
 @inject OrderBUS OrderService
 @inject InvoiceBUS InvoiceService
-@inject IEmployeeBUS EmployeeBUS
+@inject INhanVienBUS NhanVienBUS
 @inject IJSRuntime JavaScript
 @inject ILogger<Admin> Logger
 <PageTitle>@Heading — SmartShop</PageTitle>
@@ -97,7 +97,7 @@
                 }
             </select>
         </div>
-        <AdvancedSearch Fields="AdvancedCatalogSearch.ProductFields" OnApply="ApplyAdvancedProductSearch" Error="@productFilterError" AppliedFilter="advancedProductFilter" />
+        <TimKiemNangCao Fields="TimKiemDanhMucNangCao.TruongSanPham" OnApply="ApDungTimKiemSanPhamNangCao" Error="@productFilterError" AppliedFilter="advancedProductFilter" />
         <DataTable TItem="ProductManage" Items="FilteredProducts" Label="Danh sách sản phẩm" ColumnCount="7" EmptyText="Không có sản phẩm phù hợp.">
             <Header>
                 <th scope="col">Sản phẩm</th><th scope="col">Mã danh mục</th><th scope="col">Giá bán</th><th scope="col">Giá niêm yết</th><th scope="col">Tồn</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th>
@@ -216,14 +216,14 @@
         _ => "Tổng quan cửa hàng"
     };
     private string? loadedPage;
-    private CatalogFilter? advancedProductFilter;
+    private BoLocDanhMuc? advancedProductFilter;
     private string productFilterError = "";
 
-    private void ApplyAdvancedProductSearch(CatalogFilter? filter)
+    private void ApDungTimKiemSanPhamNangCao(BoLocDanhMuc? filter)
     {
         try
         {
-            _ = ProductService.Search(productSearch, productCategoryFilter, filter);
+            _ = ProductService.TimKiem(productSearch, productCategoryFilter, filter);
             advancedProductFilter = filter;
             productFilterError = "";
         }
@@ -234,7 +234,7 @@
     private string productSearch = "", orderSearch = "", orderFilter = "";
     private string productCategoryFilter = "";
     private IEnumerable<ProductManage> FilteredProducts => productLoaded
-        ? ProductService.Search(productSearch, productCategoryFilter, advancedProductFilter)
+        ? ProductService.TimKiem(productSearch, productCategoryFilter, advancedProductFilter)
         : Enumerable.Empty<ProductManage>();
     private IEnumerable<ManagedOrder> FilteredOrders => orders.Where(o => (string.IsNullOrEmpty(orderFilter) || o.Status == orderFilter)
         && (string.IsNullOrWhiteSpace(orderSearch) || o.Code.Contains(orderSearch.Trim(), StringComparison.OrdinalIgnoreCase)
@@ -265,7 +265,7 @@
     private IReadOnlyList<ManagedInvoice> invoices = [];
     private Dictionary<string, string> statusSelection = [];
     private Dictionary<string, string> warehouseSelection = [];
-    private IReadOnlyList<Employee> invoiceEmployees = [];
+    private IReadOnlyList<NhanVienDTO> invoiceEmployees = [];
     private bool invoiceEmployeesLoaded;
     private string invoiceOrder = "", invoiceEmployee = "", invoiceMethod = "Tiền mặt", invoiceActionError = "";
     private SalesSummary? summary;
@@ -358,7 +358,7 @@
 
     private void LoadInvoiceEmployees()
     {
-        try { invoiceEmployees = EmployeeBUS.Search(); invoiceEmployeesLoaded = true; }
+        try { invoiceEmployees = NhanVienBUS.TimKiem(); invoiceEmployeesLoaded = true; }
         catch (Exception ex) { Logger.LogError(ex, "Failed to load invoice employees."); invoiceEmployees = []; invoiceEmployeesLoaded = false; }
     }
 

@@ -3,7 +3,7 @@ using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class WarehouseBUS(IWarehouseRepository dao, ISupplierRepository suppliers, IProductManage products)
+public sealed class WarehouseBUS(IWarehouseRepository dao, INhaCungCapDAO suppliers, IProductManage products)
 {
     public IReadOnlyList<Warehouse> GetAll() => dao.GetAll();
     public IReadOnlyList<ReceivingRecord> GetReceivings() => dao.GetReceivings();
@@ -51,7 +51,7 @@ public sealed class WarehouseBUS(IWarehouseRepository dao, ISupplierRepository s
             decimal total = checked(line.UnitCost * line.Quantity);
             if (total > 9999999999999999.99m) throw new ArgumentException("Thành tiền dòng nhập vượt giới hạn lưu trữ.");
         }
-        if (suppliers.GetByCode(draft.SupplierCode) is null) throw new InvalidOperationException("Không tìm thấy nhà cung cấp.");
+        if (suppliers.DocTheoMa(draft.SupplierCode) is null) throw new InvalidOperationException("Không tìm thấy nhà cung cấp.");
         if (dao.GetByCode(draft.WarehouseCode) is null) throw new InvalidOperationException("Không tìm thấy kho.");
         dao.CreateReceiving(draft);
     }

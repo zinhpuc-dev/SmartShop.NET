@@ -23,7 +23,7 @@ Check(shop.Count == 2 && shop.Total == first.Price * 2, "Quantity and total are 
 Rejected(() => shop.UpdateProduct(first.Id, first.Price, 1), "Stock cannot fall below cart quantity");
 Rejected(() => shop.Checkout(" ", "0900000000", "123 Demo Street"), "Invalid delivery input is rejected by BUS");
 Check(shop.Count == 2 && shop.Orders.Count == 0 && shop.Products[0].Stock == first.Stock, "Failed checkout leaves cart and stock unchanged");
-var order = shop.Checkout("Demo Customer", "0900000000", "123 Demo Street");
+var order = shop.Checkout("Demo KhachHangDTO", "0900000000", "123 Demo Street");
 Check(order.Total == first.Price * 2 && order.Items[0].Quantity == 2, "Order snapshot has correct totals");
 Check(shop.Products[0].Stock == first.Stock - 2 && shop.Count == 0 && shop.Orders.Count == 1, "Checkout updates stock and empties cart");
 shop.UpdateProduct(first.Id, first.Price + 1000, first.Stock - 2);
@@ -31,7 +31,7 @@ Check(order.Total == first.Price * 2 && order.Items[0].Product.Price == first.Pr
 shop.UpdateOrderStatus(order.Code, "Đã xác nhận");
 Check(shop.Orders[0].Status == "Đã xác nhận", "Admin updates order status through BUS");
 Rejected(() => shop.UpdateOrderStatus(order.Code, "unknown"), "Invalid order status is rejected");
-Rejected(() => shop.Checkout("Demo Customer", "0900000000", "123 Demo Street"), "Empty cart checkout is rejected");
+Rejected(() => shop.Checkout("Demo KhachHangDTO", "0900000000", "123 Demo Street"), "Empty cart checkout is rejected");
 var secondSession = new ShopState(new DemoShopDao());
 Check(secondSession.Orders.Count == 0 && secondSession.Products[0].Stock == first.Stock, "Demo sessions are isolated");
 var lastProduct = shop.Products[^1];
@@ -41,7 +41,7 @@ Check(shop.Add(lastProduct) && !shop.Add(lastProduct), "Cart cannot exceed avail
 var rejectingRepository = new RejectingRepository();
 IShopService substitutedService = new ShopState(rejectingRepository);
 substitutedService.Add(rejectingRepository.GetProducts()[0]);
-Rejected(() => substitutedService.Checkout("Demo Customer", "0900000000", "123 Demo Street"),
+Rejected(() => substitutedService.Checkout("Demo KhachHangDTO", "0900000000", "123 Demo Street"),
     "A substituted repository can reject persistence");
 Check(rejectingRepository.CommitAttempts == 1 && substitutedService.Count == 1
     && substitutedService.Orders.Count == 0 && substitutedService.Products[0].Stock == 3,
@@ -63,9 +63,9 @@ serviceA.Add(serviceA.Products[0]);
 Check(serviceA.Count == 1 && serviceB.Count == 0 && !ReferenceEquals(serviceA, serviceB),
     "DI scopes isolate customer session data");
 
-CatalogSearchChecks.Run();
-CatalogSearchChecks.RunAdvanced();
-CatalogSearchChecks.RunConstraints();
+KiemTraTimKiemDanhMuc.Chay();
+KiemTraTimKiemDanhMuc.ChayTimKiemNangCao();
+KiemTraTimKiemDanhMuc.ChayKiemTraRangBuoc();
 Console.WriteLine("All smoke checks passed.");
 
 sealed class RejectingRepository : IShopRepository

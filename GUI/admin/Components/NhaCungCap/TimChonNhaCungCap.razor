@@ -1,0 +1,41 @@
+@inject INhaCungCapBUS Suppliers
+
+<ModalDialog Label="Tìm và chọn nhà cung cấp" CssClass="customer-modal" OnClose="OnClose">
+    <h2>Tìm và chọn nhà cung cấp</h2>
+    <p class="customer-help">Tìm theo mã, tên, số điện thoại, email hoặc địa chỉ.</p>
+    <div class="customer-search">
+        <input aria-label="Tìm nhà cung cấp trong popup" placeholder="Nhập mã, tên, số điện thoại..."
+               @bind="query" @bind:event="oninput" />
+    </div>
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="customer-feedback error" role="alert">@error</div>
+    }
+    <DataTable TItem="NhaCungCapDTO" Items="Results" Label="Kết quả chọn nhà cung cấp" ColumnCount="3" EmptyText="Không tìm thấy nhà cung cấp phù hợp.">
+        <Header><th scope="col">Nhà cung cấp</th><th scope="col">Liên hệ</th><th scope="col">Chọn</th></Header>
+        <RowTemplate Context="supplier">
+            <td><strong>@supplier.Name</strong><small>@supplier.Code</small></td>
+            <td>@supplier.Phone<small>@supplier.Email</small></td>
+            <td><button type="button" class="text-button" aria-label="Chọn @supplier.Code" @onclick="() => Chon(supplier.Code)">Chọn →</button></td>
+        </RowTemplate>
+    </DataTable>
+    <div class="customer-actions"><button type="button" class="secondary" @onclick="OnClose">Đóng tìm kiếm</button></div>
+</ModalDialog>
+
+@code {
+    [Parameter] public EventCallback<NhaCungCapDTO> OnSelected { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    private string query = "", error = "";
+    private IReadOnlyList<NhaCungCapDTO> Results => Suppliers.TimKiem(query);
+
+    private async Task Chon(string code)
+    {
+        try
+        {
+            var value = Suppliers.LayTheoMa(code);
+            await OnSelected.InvokeAsync(value);
+            await OnClose.InvokeAsync();
+        }
+        catch (InvalidOperationException ex) { error = ex.Message; }
+    }
+}
