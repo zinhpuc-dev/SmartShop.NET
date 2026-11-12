@@ -1,0 +1,25 @@
+@page "/"
+@page "/products"
+@page "/favorites"
+@inherits TrangCoSo
+<PageTitle>@PageName — SmartShop</PageTitle>
+@if(page=="home"&&string.IsNullOrWhiteSpace(query)){
+<section class="hero"><div class="hero-copy"><div class="eyebrow"><span></span> THẾ HỆ MỚI. TRẢI NGHIỆM MỚI.</div><h1>iPhone 16 Series</h1><p>Đỉnh cao công nghệ.<br/>Khẳng định chất riêng.</p><div class="hero-price">Chỉ từ <strong>21.990.000 ₫</strong></div><button class="primary" @onclick="()=>MoChiTiet(Shop.Products[1])">Khám phá ngay <span>↗</span></button><div class="hero-dots"><b></b><i></i><i></i></div></div><div class="hero-art"><div class="hero-glow"></div><MinhHoaThietBi Color="blue"/><span class="hero-word">16</span></div><span class="hero-note">APPLE COLLECTION / 2026</span></section>
+<div class="benefits"><div><b>◇</b><span><strong>100% chính hãng</strong><small>An tâm trong từng lựa chọn</small></span></div><div><b>♧</b><span><strong>Giao hàng nhanh</strong><small>Miễn phí từ 2.000.000 ₫</small></span></div><div><b>↻</b><span><strong>Đổi trả dễ dàng</strong><small>Trong 7 ngày đầu tiên</small></span></div><div><b>◉</b><span><strong>Hỗ trợ tận tâm</strong><small>Đồng hành cùng bạn 24/7</small></span></div></div>
+}
+<section class="catalog"><div class="section-heading"><div><div class="eyebrow red">ĐƯỢC CHỌN NHIỀU NHẤT</div><h2>@(page=="favorites"?"Sản phẩm yêu thích":page=="products"?"Khám phá sản phẩm":"Sản phẩm nổi bật")<span class="tiny-tag">HOT</span></h2></div><button class="text-button" @onclick='()=>DieuHuong("products")'>Xem tất cả ↗</button></div>
+<BoLocSanPham Categories="categories" @bind-Category="category" @bind-Sort="sort" />
+<div class="product-grid">
+    @foreach (var product in Filtered)
+    {
+        <TheSanPham @key="product.Id" SanPhamDTO="product" IsFavorite="favorites.Contains(product.Id)"
+                     OnOpen="MoChiTiet" OnFavorite="DoiYeuThich" OnAdd="product => { ThemVaoGio(product); }" />
+    }
+</div>
+@if (!Filtered.Any())
+{
+    <TrangThaiRong Title="Chưa có sản phẩm" Message="Thử từ khóa khác hoặc thêm sản phẩm vào yêu thích."
+                ActionText="Khám phá sản phẩm" OnAction='() => DieuHuong("products")' />
+}
+</section>
+@if(page=="home"){<section class="promo"><div><span class="eyebrow">LÀM VIỆC THÔNG MINH HƠN</span><h2>Một bước nâng cấp.<br/>Vạn điều cảm hứng.</h2><button class="text-button" @onclick='()=>LocDanhMuc("Laptop")'>Khám phá bộ sưu tập MacBook ↗</button></div><MinhHoaThietBi Category="Laptop" Color="purple"/></section>}

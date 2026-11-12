@@ -1,20 +1,20 @@
-@inherits ShopPageBase
+@inherits TrangCoSo
 <div class="announcement">Giao hàng miễn phí cho đơn từ 2 triệu <span>•</span> Bảo hành chính hãng <span>•</span> Trả góp 0%</div>
 <header>
 <a class="brand" href="/"><span class="brand-icon">S</span>Smart<span>Shop</span><small>TECHNOLOGY STORE</small></a>
 <div class="search"><span>⌕</span><input aria-label="Tìm sản phẩm" placeholder="Bạn đang tìm sản phẩm gì?" @bind="query" @bind:event="oninput"/><kbd>⌕</kbd></div>
-<button class="header-link" @onclick='()=>Go("account")'>♙ <span>Tài khoản</span></button><button class="cart-button" @onclick='()=>Go("cart")'>♧ <span>Giỏ hàng</span><b>@Shop.Count</b></button>
+<button class="header-link" @onclick='()=>DieuHuong("account")'>♙ <span>Tài khoản</span></button><button class="cart-button" @onclick='()=>DieuHuong("cart")'>♧ <span>Giỏ hàng</span><b>@Shop.Count</b></button>
 </header>
 <div class="shell"><aside><div class="nav-caption">KHÁM PHÁ</div>
-@foreach(var n in new[]{("home","⌂","Trang chủ"),("products","▦","Sản phẩm"),("orders","▤","Đơn hàng của tôi"),("favorites","♡","Yêu thích")}){<button class="nav-item @(page==n.Item1?"active":"")" @onclick="()=>Go(n.Item1)"><span>@n.Item2</span>@n.Item3</button>}
+@foreach(var n in new[]{("home","⌂","Trang chủ"),("products","▦","Sản phẩm"),("orders","▤","Đơn hàng của tôi"),("favorites","♡","Yêu thích")}){<button class="nav-item @(page==n.Item1?"active":"")" @onclick="()=>DieuHuong(n.Item1)"><span>@n.Item2</span>@n.Item3</button>}
 <div class="nav-caption">DANH MỤC SẢN PHẨM</div>
-@foreach(var c in categories.Skip(1)){<button class="nav-item @(category==c&&page=="products"?"active":"")" @onclick="()=>Filter(c)"><span>@CategoryIcon(c)</span>@c<em>›</em></button>}
-<div class="sidebar-bottom"><div class="help-card"><span>✧</span><strong>Cần tư vấn thêm?</strong><p>Mình luôn sẵn sàng hỗ trợ bạn.</p><button @onclick='()=>Go("support")'>Trung tâm hỗ trợ ↗</button></div><button class="nav-item" @onclick='()=>Go("admin")'><span>◫</span>Quản trị cửa hàng <em>↗</em></button><small>© 2026 SmartShop</small></div></aside>
+@foreach(var c in categories.Skip(1)){<button class="nav-item @(category==c&&page=="products"?"active":"")" @onclick="()=>LocDanhMuc(c)"><span>@BieuTuongDanhMuc(c)</span>@c<em>›</em></button>}
+<div class="sidebar-bottom"><div class="help-card"><span>✧</span><strong>Cần tư vấn thêm?</strong><p>Mình luôn sẵn sàng hỗ trợ bạn.</p><button @onclick='()=>DieuHuong("support")'>Trung tâm hỗ trợ ↗</button></div><button class="nav-item" @onclick='()=>DieuHuong("admin")'><span>◫</span>Quản trị cửa hàng <em>↗</em></button><small>© 2026 SmartShop</small></div></aside>
 <main><div class="breadcrumbs">SmartShop <span>/</span> @(page=="home"?"Trang chủ":PageName)</div>
 @ChildContent
 <footer><span class="brand-small">S <b>SmartShop</b></span><span>Công nghệ trong tầm tay.</span><small>Giao diện demo · C# / Blazor</small></footer></main></div>
-<nav class="mobile-nav"><button @onclick='()=>Go("home")'>⌂<span>Trang chủ</span></button><button @onclick='()=>Go("products")'>▦<span>Sản phẩm</span></button><button @onclick='()=>Go("cart")'>♧<span>Giỏ hàng (@Shop.Count)</span></button><button @onclick='()=>Go("orders")'>▤<span>Đơn hàng</span></button><button @onclick='()=>Go("admin")'>◫<span>Admin</span></button></nav>
-<ShopOverlays />
+<nav class="mobile-nav"><button @onclick='()=>DieuHuong("home")'>⌂<span>Trang chủ</span></button><button @onclick='()=>DieuHuong("products")'>▦<span>Sản phẩm</span></button><button @onclick='()=>DieuHuong("cart")'>♧<span>Giỏ hàng (@Shop.Count)</span></button><button @onclick='()=>DieuHuong("orders")'>▤<span>Đơn hàng</span></button><button @onclick='()=>DieuHuong("admin")'>◫<span>Admin</span></button></nav>
+<CacHopThoaiCuaHang />
 
 @code {
  [Parameter] public RenderFragment? ChildContent { get; set; }

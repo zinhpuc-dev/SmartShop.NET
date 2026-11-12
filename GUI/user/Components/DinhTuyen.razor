@@ -1,0 +1,8 @@
+<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.KhongTimThay)" AdditionalAssemblies="new[] { typeof(SmartShop.Admin.Components.Pages.QuanTri).Assembly }">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.BoCucChinh)">
+            <NotAuthorized><SmartShop.Admin.Components.Layout.ChuyenHuongQuanTri /></NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

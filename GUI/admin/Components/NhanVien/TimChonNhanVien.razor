@@ -1,6 +1,6 @@
 @inject INhanVienBUS Employees
 
-<ModalDialog Label="Tìm và chọn nhân viên" CssClass="customer-modal" OnClose="OnClose">
+<HopThoai Label="Tìm và chọn nhân viên" CssClass="customer-modal" OnClose="OnClose">
     <h2>Tìm và chọn nhân viên</h2>
     <p class="customer-help">Tìm theo mã, tên, chức vụ, số điện thoại hoặc email.</p>
     <div class="customer-search">
@@ -11,16 +11,16 @@
     {
         <div class="customer-feedback error" role="alert">@error</div>
     }
-    <DataTable TItem="NhanVienDTO" Items="Results" Label="Kết quả chọn nhân viên" ColumnCount="3" EmptyText="Không tìm thấy nhân viên phù hợp.">
+    <BangDuLieu TItem="NhanVienDTO" Items="Results" Label="Kết quả chọn nhân viên" ColumnCount="3" EmptyText="Không tìm thấy nhân viên phù hợp.">
         <Header><th scope="col">Nhân viên</th><th scope="col">Liên hệ</th><th scope="col">Chọn</th></Header>
         <RowTemplate Context="employee">
             <td><strong>@employee.Name</strong><small>@employee.Code</small></td>
             <td>@employee.Phone<small>@employee.Email</small></td>
             <td><button type="button" class="text-button" aria-label="Chọn @employee.Code" @onclick="() => Chon(employee.Code)">Chọn →</button></td>
         </RowTemplate>
-    </DataTable>
+    </BangDuLieu>
     <div class="customer-actions"><button type="button" class="secondary" @onclick="OnClose">Đóng tìm kiếm</button></div>
-</ModalDialog>
+</HopThoai>
 
 @code {
     [Parameter] public EventCallback<NhanVienDTO> OnSelected { get; set; }

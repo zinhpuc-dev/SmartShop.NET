@@ -3,15 +3,15 @@
     {
         <div class="customer-feedback error" role="alert">@Error</div>
     }
-    <ValidatedForm Model="Model" OnValidSubmit="OnSave">
+    <BieuMauKiemTra Model="Model" OnValidSubmit="OnSave">
         <div class="customer-form-grid">
-            <FormField Label="Mã nhân viên">
+            <TruongNhapLieu Label="Mã nhân viên">
                 <InputText @bind-Value="Model.Code" readonly="@IsEditing" aria-readonly="@IsEditing" maxlength="8" />
-            </FormField>
-            <FormField Label="Họ và tên"><InputText @bind-Value="Model.Name" maxlength="150" /></FormField>
-            <FormField Label="Chức vụ"><InputText @bind-Value="Model.Position" maxlength="100" /></FormField>
-            <FormField Label="Số điện thoại (không bắt buộc)"><InputText @bind-Value="Model.Phone" maxlength="20" inputmode="tel" /></FormField>
-            <FormField Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="255" inputmode="email" /></FormField>
+            </TruongNhapLieu>
+            <TruongNhapLieu Label="Họ và tên"><InputText @bind-Value="Model.Name" maxlength="150" /></TruongNhapLieu>
+            <TruongNhapLieu Label="Chức vụ"><InputText @bind-Value="Model.Position" maxlength="100" /></TruongNhapLieu>
+            <TruongNhapLieu Label="Số điện thoại (không bắt buộc)"><InputText @bind-Value="Model.Phone" maxlength="20" inputmode="tel" /></TruongNhapLieu>
+            <TruongNhapLieu Label="Email (không bắt buộc)"><InputText @bind-Value="Model.Email" maxlength="255" inputmode="email" /></TruongNhapLieu>
         </div>
         @if (IsEditing)
         {
@@ -21,7 +21,7 @@
             <button type="submit" class="primary">Lưu nhân viên</button>
             <button type="button" class="secondary" @onclick="OnCancel">Hủy</button>
         </div>
-    </ValidatedForm>
+    </BieuMauKiemTra>
 </div>
 
 @code {

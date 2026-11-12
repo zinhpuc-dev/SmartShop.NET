@@ -1,0 +1,40 @@
+<article class="product-card">
+    <div class="product-visual">
+        @if (DiscountPercent > 0)
+        {
+            <span class="discount">-@DiscountPercent%</span>
+        }
+        <button type="button" class="favorite @(IsFavorite ? "liked" : "")"
+                aria-label="Yêu thích @SanPhamDTO.Name" aria-pressed="@IsFavorite"
+                @onclick="() => OnFavorite.InvokeAsync(SanPhamDTO.Id)">@(IsFavorite ? "♥" : "♡")</button>
+        <button type="button" class="image-button" aria-label="Xem @SanPhamDTO.Name"
+                @onclick="() => OnOpen.InvokeAsync(SanPhamDTO)">
+            <MinhHoaThietBi Color="@SanPhamDTO.Color" Category="@SanPhamDTO.Category" />
+        </button>
+    </div>
+    <div class="product-info">
+        <span class="product-category">@SanPhamDTO.Category.ToUpperInvariant()</span>
+        <button type="button" class="product-name" @onclick="() => OnOpen.InvokeAsync(SanPhamDTO)">@SanPhamDTO.Name</button>
+        <p>@SanPhamDTO.Spec</p>
+        <div class="rating">★★★★★ <span>(@((SanPhamDTO.Id * 37) + 12))</span></div>
+        <div class="price-row">
+            <div>
+                <strong>@DinhDangTienTe.DinhDang(SanPhamDTO.Price)</strong>
+                <del>@DinhDangTienTe.DinhDang(SanPhamDTO.Original)</del>
+            </div>
+            <button type="button" class="add-button" aria-label="Thêm @SanPhamDTO.Name vào giỏ"
+                    @onclick="() => OnAdd.InvokeAsync(SanPhamDTO)">+</button>
+        </div>
+        <div class="stock"><i></i> Còn @SanPhamDTO.Stock sản phẩm <span>Chính hãng</span></div>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public SanPhamDTO SanPhamDTO { get; set; } = default!;
+    [Parameter] public bool IsFavorite { get; set; }
+    [Parameter] public EventCallback<SanPhamDTO> OnOpen { get; set; }
+    [Parameter] public EventCallback<SanPhamDTO> OnAdd { get; set; }
+    [Parameter] public EventCallback<int> OnFavorite { get; set; }
+    private int DiscountPercent => SanPhamDTO.Original <= 0 ? 0
+        : Math.Max(0, (int)((1 - SanPhamDTO.Price / SanPhamDTO.Original) * 100));
+}

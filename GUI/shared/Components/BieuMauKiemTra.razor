@@ -1,0 +1,12 @@
+<EditForm Model="@Model" OnValidSubmit="XuLyGuiForm" Context="formContext">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @ChildContent
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired] public object Model { get; set; } = default!;
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    private Task XuLyGuiForm(EditContext _) => OnValidSubmit.InvokeAsync();
+}

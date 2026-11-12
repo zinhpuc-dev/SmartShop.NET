@@ -1,0 +1,31 @@
+@page "/checkout"
+@inherits TrangCoSo
+<PageTitle>@PageName — SmartShop</PageTitle>
+<h1>Thanh toán</h1>
+<p class="subtitle">Hoàn tất thông tin để đặt đơn hàng demo.</p>
+<div class="two-column">
+    <section class="panel">
+        <h2>Thông tin nhận hàng</h2>
+        <BieuMauKiemTra Model="checkout" OnValidSubmit="DatHang">
+            <TruongNhapLieu Label="Họ và tên"><InputText @bind-Value="checkout.Name" /></TruongNhapLieu>
+            <TruongNhapLieu Label="Số điện thoại"><InputText @bind-Value="checkout.Phone" /></TruongNhapLieu>
+            <TruongNhapLieu Label="Địa chỉ nhận hàng"><InputTextArea @bind-Value="checkout.Address" /></TruongNhapLieu>
+            <h3>Phương thức thanh toán</h3>
+            <div class="payment">◉ Thanh toán khi nhận hàng (COD)</div>
+            <p class="muted">Bản demo không thu tiền hoặc gửi đơn đến cửa hàng.</p>
+            <button class="primary wide" type="submit" disabled="@(Shop.Count == 0)">
+                Đặt hàng · @DinhDangTienTe.DinhDang(Shop.Total)
+            </button>
+        </BieuMauKiemTra>
+    </section>
+    <section class="panel summary">
+        <h2>Đơn hàng của bạn</h2>
+        @foreach (var line in Shop.Cart)
+        {
+            var product = Shop.Products.Single(x => x.Id == line.Key);
+            <p>@product.Name × @line.Value <strong>@DinhDangTienTe.DinhDang(product.Price * line.Value)</strong></p>
+        }
+        <hr />
+        <p>Tổng thanh toán <strong class="red">@DinhDangTienTe.DinhDang(Shop.Total)</strong></p>
+    </section>
+</div>

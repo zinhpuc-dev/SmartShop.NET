@@ -1,4 +1,4 @@
-@attribute [Authorize(Policy = AdminLoginService.Policy)]
+@attribute [Authorize(Policy = DangNhapQuanTri.Policy)]
 @page "/admin/employees"
 @layout SmartShop.Admin.Components.Layout.BoCucQuanTri
 @inject INhanVienBUS NhanVienBUS
@@ -40,7 +40,7 @@
         <button type="button" class="text-button" @onclick="() => profile = selectedLookup">Xem hồ sơ đã chọn ↗</button>
     }
     <p class="customer-help">@Rows.Count kết quả · Có thể cuộn ngang bảng trên điện thoại.</p>
-    <DataTable TItem="NhanVienDTO" Items="Rows" Label="Danh sách nhân viên" ColumnCount="5" EmptyText="Không tìm thấy nhân viên phù hợp.">
+    <BangDuLieu TItem="NhanVienDTO" Items="Rows" Label="Danh sách nhân viên" ColumnCount="5" EmptyText="Không tìm thấy nhân viên phù hợp.">
         <Header><th scope="col">Mã</th><th scope="col">Nhân viên</th><th scope="col">Chức vụ</th><th scope="col">Điện thoại</th><th scope="col">Thao tác</th></Header>
         <RowTemplate Context="employee">
             <td>@employee.Code</td>
@@ -53,34 +53,34 @@
                 <button type="button" class="text-button customer-danger" aria-label="Xóa @employee.Code" @onclick="() => deleting = employee">Xóa</button>
             </div></td>
         </RowTemplate>
-    </DataTable>
+    </BangDuLieu>
     }
 </section>
 
 @if (editorOpen)
 {
-    <ModalDialog Label="@(editingCode is null ? "Thêm nhân viên" : "Sửa nhân viên")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="DongForm">
+    <HopThoai Label="@(editingCode is null ? "Thêm nhân viên" : "Sửa nhân viên")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="DongForm">
         <h2>@(editingCode is null ? "Thêm nhân viên" : "Sửa nhân viên")</h2>
         <FormNhanVien Model="draft" IsEditing="@(editingCode is not null)" Error="@formError" OnSave="Luu" OnCancel="DongForm" />
-    </ModalDialog>
+    </HopThoai>
 }
 @if (profile is not null)
 {
-    <ModalDialog Label="Hồ sơ nhân viên" CssClass="customer-editor-modal" OnClose="() => profile = null">
+    <HopThoai Label="Hồ sơ nhân viên" CssClass="customer-editor-modal" OnClose="() => profile = null">
         <h2>Hồ sơ nhân viên</h2>
         <HoSoNhanVien Value="profile" />
-    </ModalDialog>
+    </HopThoai>
 }
 @if (deleting is not null)
 {
-    <ModalDialog Label="Xác nhận xóa nhân viên" CssClass="narrow" OnClose="() => deleting = null">
+    <HopThoai Label="Xác nhận xóa nhân viên" CssClass="narrow" OnClose="() => deleting = null">
         <h2>Xóa nhân viên?</h2>
         <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong>. Không thể xóa nhân viên đang được liên kết với hóa đơn.</p>
         <div class="customer-actions">
             <button type="button" class="primary" @onclick="Xoa">Xác nhận xóa</button>
             <button type="button" class="secondary" @onclick="() => deleting = null">Giữ lại</button>
         </div>
-    </ModalDialog>
+    </HopThoai>
 }
 @code {
     private BoLocDanhMuc? advancedFilter;

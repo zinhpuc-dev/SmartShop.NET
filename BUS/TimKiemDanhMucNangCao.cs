@@ -30,16 +30,16 @@ public static class TimKiemDanhMucNangCao
         VanBan<NhaCungCapDTO>("Email", "Email", value => value.Email),
         VanBan<NhaCungCapDTO>("Address", "Địa chỉ", value => value.Address)
     ];
-    private static readonly CotTimKiem<ProductManage>[] productColumns =
+    private static readonly CotTimKiem<SanPhamQuanTriDTO>[] productColumns =
     [
-        VanBan<ProductManage>("Code", "Mã sản phẩm", value => value.MaSP),
-        VanBan<ProductManage>("Name", "Tên sản phẩm", value => value.TenSP),
-        VanBan<ProductManage>("Category", "Mã loại", value => value.MaLoai),
-        VanBan<ProductManage>("Unit", "Đơn vị tính", value => value.DonViTinh),
-        So<ProductManage>("Price", "Giá bán", value => value.GiaBan),
-        So<ProductManage>("ListPrice", "Giá niêm yết", value => value.GiaNiemYet),
-        So<ProductManage>("Stock", "Tồn kho", value => value.TongSoLuongTon),
-        VanBan<ProductManage>("Status", "Trạng thái", value => value.TrangThai == "1" ? "Đang bán" : "Ngừng bán")
+        VanBan<SanPhamQuanTriDTO>("Code", "Mã sản phẩm", value => value.MaSP),
+        VanBan<SanPhamQuanTriDTO>("Name", "Tên sản phẩm", value => value.TenSP),
+        VanBan<SanPhamQuanTriDTO>("Category", "Mã loại", value => value.MaLoai),
+        VanBan<SanPhamQuanTriDTO>("Unit", "Đơn vị tính", value => value.DonViTinh),
+        So<SanPhamQuanTriDTO>("Price", "Giá bán", value => value.GiaBan),
+        So<SanPhamQuanTriDTO>("ListPrice", "Giá niêm yết", value => value.GiaNiemYet),
+        So<SanPhamQuanTriDTO>("Stock", "Tồn kho", value => value.TongSoLuongTon),
+        VanBan<SanPhamQuanTriDTO>("Status", "Trạng thái", value => value.TrangThai == "1" ? "Đang bán" : "Ngừng bán")
     ];
 
     public static IReadOnlyList<TruongTimKiem> TruongKhachHang { get; } = LayCacTruong(customerColumns);
@@ -50,7 +50,7 @@ public static class TimKiemDanhMucNangCao
     internal static Func<KhachHangDTO, bool> LocKhachHang(BoLocDanhMuc? filter) => TaoBoLoc(filter, customerColumns);
     internal static Func<NhanVienDTO, bool> LocNhanVien(BoLocDanhMuc? filter) => TaoBoLoc(filter, employeeColumns);
     internal static Func<NhaCungCapDTO, bool> LocNhaCungCap(BoLocDanhMuc? filter) => TaoBoLoc(filter, supplierColumns);
-    internal static Func<ProductManage, bool> LocSanPham(BoLocDanhMuc? filter) => TaoBoLoc(filter, productColumns);
+    internal static Func<SanPhamQuanTriDTO, bool> LocSanPham(BoLocDanhMuc? filter) => TaoBoLoc(filter, productColumns);
 
     private static IReadOnlyList<TruongTimKiem> LayCacTruong<T>(CotTimKiem<T>[] columns) =>
         Array.AsReadOnly(columns.Select(column => column.Field).ToArray());

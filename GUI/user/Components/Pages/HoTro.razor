@@ -1,0 +1,4 @@
+@page "/support"
+@inherits TrangCoSo
+<PageTitle>@PageName — SmartShop</PageTitle>
+<h1>Trung tâm hỗ trợ</h1><p class="subtitle">Thông tin bạn cần, ngay tại đây.</p><section class="panel">@foreach(var faq in new[]{("Làm sao để đặt hàng?","Chọn sản phẩm, thêm vào giỏ hàng và điền thông tin nhận hàng. Đây là luồng demo, không phát sinh thanh toán thực tế."),("Dữ liệu được lưu trong bao lâu?","Dữ liệu demo được giữ trong phiên kết nối hiện tại. Khi khởi động lại hoặc mở phiên mới, dữ liệu có thể được đặt lại."),("Có thể sử dụng trên điện thoại không?","Có. Mở website trong trình duyệt điện thoại cùng mạng với máy chủ. Giao diện tự điều chỉnh theo màn hình.")}){<details><summary>@faq.Item1</summary><p>@faq.Item2</p></details>}</section>

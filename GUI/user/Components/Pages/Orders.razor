@@ -1,8 +1,0 @@
-@page "/orders"
-@inherits ShopPageBase
-<PageTitle>@PageName — SmartShop</PageTitle>
-<h1>Đơn hàng của tôi</h1><p class="subtitle">Theo dõi từng bước, an tâm chờ nhận hàng.</p>@if (Shop.Orders.Count == 0)
-{
-    <EmptyState Title="Bạn chưa có đơn hàng" ActionText="Mua sắm ngay" OnAction='() => Go("products")' />
-}
-@foreach(var o in Shop.Orders){<section class="panel order"><div class="section-heading"><h3>#@o.Code</h3><span class="status">@o.Status</span></div><p>@o.Customer · @o.Created.ToString("dd/MM/yyyy HH:mm")</p>@foreach(var l in o.Items){<p>@l.Product.Name × @l.Quantity <strong>@MoneyFormatter.Format(l.Product.Price*l.Quantity)</strong></p>}<hr/><p>@o.Address <strong class="red">@MoneyFormatter.Format(o.Total)</strong></p></section>}

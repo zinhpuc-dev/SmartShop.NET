@@ -1,0 +1,182 @@
+@attribute [Authorize(Policy = DangNhapQuanTri.Policy)]
+@page "/admin/inventory"
+@layout SmartShop.Admin.Components.Layout.BoCucQuanTri
+@inject KhoBUS KhoBUS
+@inject INhaCungCapBUS NhaCungCapBUS
+@inject SanPhamBUS ProductService
+@inject ILogger<QuanLyKho> Logger
+
+<PageTitle>Kho và nhập hàng — SmartShop</PageTitle>
+<div class="section-heading customer-heading">
+    <div><div class="eyebrow red">SMARTSHOP / KHO & NHẬP HÀNG</div><h1>Kho và phiếu nhập</h1><p class="subtitle">Lưu phiếu nhập, chi tiết và cập nhật tồn kho cùng lúc.</p></div>
+</div>
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="customer-feedback @(failed ? "error" : "")" role="status">@message</div>
+}
+@if (loading)
+{
+    <p role="status">Đang tải dữ liệu kho và phiếu nhập...</p>
+}
+else if (!loaded)
+{
+    <div class="customer-feedback error" role="alert">@loadError <button type="button" @onclick="TaiDuLieu">Thử lại</button></div>
+}
+<section class="panel">
+    <h2>Danh sách kho</h2>
+    <div class="form-grid">
+        <label>Mã kho<input @bind="warehouseDraft.Code" maxlength="6" disabled="@editingWarehouse" /></label>
+        <label>Tên kho<input @bind="warehouseDraft.Name" maxlength="150" /></label>
+        <button type="button" @onclick="LuuKho" disabled="@(!loaded)">@(editingWarehouse ? "Cập nhật kho" : "Thêm kho")</button>
+        @if (editingWarehouse) { <button type="button" @onclick="DatLaiKho" disabled="@(!loaded)">Hủy</button> }
+    </div>
+    @if (loaded) { <BangDuLieu TItem="KhoDTO" Items="warehouses" Label="Danh sách kho" ColumnCount="3" EmptyText="Chưa có kho.">
+        <Header><th scope="col">Mã kho</th><th scope="col">Tên kho</th><th scope="col">Thao tác</th></Header>
+        <RowTemplate Context="warehouse"><td>@warehouse.Code</td><td>@warehouse.Name</td><td><button type="button" @onclick="() => SuaKho(warehouse)">Sửa</button><button type="button" @onclick="() => XoaKho(warehouse)">Xóa</button></td></RowTemplate>
+    </BangDuLieu> }
+</section>
+<section class="panel">
+    <h2>Tồn kho</h2>
+    <label>Lọc kho<select @bind="stockFilter"><option value="">Tất cả kho</option>@foreach (var warehouse in warehouses){<option value="@warehouse.Code">@warehouse.Name</option>}</select></label>
+    @if (loaded) {
+        <BangDuLieu TItem="TonKhoDTO" Items="FilteredStock.ToList()" Label="Tồn kho" ColumnCount="3" EmptyText="Chưa có tồn kho.">
+            <Header><th>Kho</th><th>Sản phẩm</th><th>Số lượng</th></Header>
+            <RowTemplate Context="stock"><td>@stock.WarehouseName</td><td>@stock.ProductCode — @stock.ProductName</td><td>@stock.Quantity</td></RowTemplate>
+        </BangDuLieu>
+    }
+    <h2>Tạo phiếu nhập</h2>
+    <div class="form-grid">
+        <label>Mã phiếu<input @bind="receiving.Code" maxlength="8" /></label>
+        <label>Nhà cung cấp<select @bind="receiving.SupplierCode"><option value="">Chọn nhà cung cấp</option>@foreach (var supplier in suppliers){<option value="@supplier.Code">@supplier.Code — @supplier.Name</option>}</select></label>
+        <label>Kho<select @bind="receiving.WarehouseCode"><option value="">Chọn kho</option>@foreach (var warehouse in warehouses){<option value="@warehouse.Code">@warehouse.Code — @warehouse.Name</option>}</select></label>
+    </div>
+    @foreach (var line in receiving.Lines)
+    {
+        <div class="form-grid">
+            <label>Sản phẩm<select @bind="line.ProductCode"><option value="">Chọn sản phẩm</option>@foreach (var product in products){<option value="@product.MaSP">@product.MaSP — @product.TenSP</option>}</select></label>
+            <label>Số lượng<input type="number" min="1" @bind="line.Quantity" /></label>
+            <label>Đơn giá nhập<input type="number" min="0.01" step="0.01" @bind="line.UnitCost" /></label>
+            <button type="button" @onclick="() => XoaDong(line)">Bỏ dòng</button>
+        </div>
+    }
+    <div class="customer-actions"><button type="button" @onclick="ThemDong" disabled="@(!loaded)">Thêm dòng</button><button type="button" class="primary" @onclick="LapPhieuNhap" disabled="@(!loaded)">Lưu phiếu và cộng tồn</button></div>
+</section>
+<section class="panel">
+    <h2>Lịch sử phiếu nhập</h2>
+    @if (loaded) { <BangDuLieu TItem="PhieuNhapDTO" Items="receivings" Label="Lịch sử phiếu nhập" ColumnCount="7" EmptyText="Chưa có phiếu nhập.">
+        <Header><th scope="col">Mã phiếu</th><th scope="col">Nhà cung cấp</th><th scope="col">Kho</th><th scope="col">Ngày nhập</th><th scope="col">Số dòng</th><th scope="col">Tổng tiền</th><th scope="col">Mã NCC</th></Header>
+        <RowTemplate Context="record"><td><button type="button" @onclick="() => XemPhieuNhap(record.Code)">@record.Code</button></td><td>@record.SupplierName</td><td>@record.WarehouseName (@record.WarehouseCode)</td><td>@record.ReceivedAt.ToString("yyyy-MM-dd HH:mm")</td><td>@record.LineCount</td><td>@DinhDangTienTe.DinhDang(record.Total)</td><td>@record.SupplierCode</td></RowTemplate>
+    </BangDuLieu> }
+</section>
+
+@if (!string.IsNullOrEmpty(selectedReceipt)) {
+    <section class="panel"><h2>Chi tiết phiếu @selectedReceipt</h2><button type="button" @onclick='() => selectedReceipt = ""'>Đóng</button>
+    <BangDuLieu TItem="ChiTietPhieuNhapDTO" Items="receiptDetails" Label="Chi tiết phiếu nhập" ColumnCount="4" EmptyText="Phiếu chưa có chi tiết.">
+        <Header><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></Header>
+        <RowTemplate Context="line"><td>@line.ProductCode — @line.ProductName</td><td>@line.Quantity</td><td>@DinhDangTienTe.DinhDang(line.UnitCost)</td><td>@DinhDangTienTe.DinhDang(line.Total)</td></RowTemplate>
+    </BangDuLieu></section>
+}
+
+@code {
+    private List<KhoDTO> warehouses = [];
+    private List<NhaCungCapDTO> suppliers = [];
+    private List<SanPhamQuanTriDTO> products = [];
+    private IReadOnlyList<PhieuNhapDTO> receivings = [];
+    private IReadOnlyList<ChiTietPhieuNhapDTO> receiptDetails = [];
+    private IReadOnlyList<TonKhoDTO> stockRows = [];
+    private string selectedReceipt = "", stockFilter = "";
+    private IEnumerable<TonKhoDTO> FilteredStock => stockRows.Where(r => string.IsNullOrEmpty(stockFilter) || r.WarehouseCode == stockFilter);
+    private KhoDTO warehouseDraft = new();
+    private DuLieuPhieuNhap receiving = new() { Lines = [new DuLieuDongNhap()] };
+    private bool editingWarehouse, failed, loading = true, loaded;
+    private string message = "", loadError = "";
+
+    protected override void OnInitialized() => TaiDuLieu();
+
+    private void TaiDuLieu()
+    {
+        loading = true;
+        loaded = false;
+        try
+        {
+            warehouses = KhoBUS.DocDanhSach().ToList();
+            suppliers = NhaCungCapBUS.TimKiem().ToList();
+            products = ProductService.DocDanhSach();
+            receivings = KhoBUS.DocPhieuNhap();
+            stockRows = KhoBUS.DocTonKho();
+            if (string.IsNullOrWhiteSpace(warehouseDraft.Code)) warehouseDraft.Code = KhoBUS.GoiYMa();
+            if (string.IsNullOrWhiteSpace(receiving.Code)) receiving.Code = GoiYMaPhieuNhap();
+            loadError = "";
+            loaded = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load Admin warehouse and receiving data.");
+            warehouses = [];
+            suppliers = [];
+            products = [];
+            receivings = [];
+            loadError = "Không thể tải dữ liệu kho và phiếu nhập. Vui lòng thử lại.";
+        }
+        finally { loading = false; }
+    }
+
+    private void LuuKho()
+    {
+        try { KhoBUS.Luu(warehouseDraft, editingWarehouse); message = "Đã lưu kho."; failed = false; DatLaiKho(); TaiDuLieu(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
+        catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin warehouse."); message = "Không thể lưu kho. Vui lòng thử lại."; failed = true; }
+    }
+
+    private void SuaKho(KhoDTO value)
+    {
+        warehouseDraft = new KhoDTO { Code = value.Code, Name = value.Name };
+        editingWarehouse = true;
+    }
+
+    private void DatLaiKho()
+    {
+        warehouseDraft = new KhoDTO { Code = KhoBUS.GoiYMa() };
+        editingWarehouse = false;
+    }
+
+    private void XoaKho(KhoDTO value)
+    {
+        try { KhoBUS.Xoa(value.Code); message = "Đã xóa kho."; failed = false; TaiDuLieu(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
+        catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to delete Admin warehouse."); message = "Không thể xóa kho. Vui lòng thử lại."; failed = true; }
+    }
+
+    private void XemPhieuNhap(string code)
+    {
+        try { receiptDetails = KhoBUS.DocChiTietPhieuNhap(code); selectedReceipt = code; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to load receiving details."); message = "Không thể tải chi tiết phiếu nhập. Vui lòng thử lại."; failed = true; selectedReceipt = ""; }
+    }
+
+    private void ThemDong() => receiving.Lines.Add(new DuLieuDongNhap());
+    private void XoaDong(DuLieuDongNhap line) { if (receiving.Lines.Count > 1) receiving.Lines.Remove(line); }
+
+    private void LapPhieuNhap()
+    {
+        try
+        {
+            KhoBUS.LapPhieuNhap(receiving);
+            message = "Đã tạo phiếu nhập và cập nhật tồn kho.";
+            failed = false;
+            receiving = new DuLieuPhieuNhap { Code = GoiYMaPhieuNhap(), Lines = [new DuLieuDongNhap()] };
+            TaiDuLieu();
+        }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
+        catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to create Admin receiving record."); message = "Không thể lưu phiếu nhập. Vui lòng thử lại."; failed = true; }
+    }
+
+    private string GoiYMaPhieuNhap()
+    {
+        HashSet<string> existing = receivings.Select(item => item.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        for (int i = 1; i <= 99999; i++) { string code = $"PN{i:00000}"; if (!existing.Contains(code)) return code; }
+        return "";
+    }
+}

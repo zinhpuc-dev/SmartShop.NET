@@ -63,7 +63,7 @@ internal static class KiemTraTimKiemDanhMuc
         KiemTra(suppliers.TimKiem("").Count == 0, "Supplier delete updates cache");
 
         var productData = new KhoSanPhamGiaLap();
-        var products = new ProductBUS(productData);
+        var products = new SanPhamBUS(productData);
         KiemTra(products.TimKiem("dien thoai").Count == 1, "Product accentless search");
         KiemTra(products.TimKiem("SP000001", "L00001").Count == 1
             && products.TimKiem("SP000001", "L00002").Count == 0, "Product code and category filter");
@@ -72,10 +72,10 @@ internal static class KiemTraTimKiemDanhMuc
         var result = products.TimKiem("").Single();
         result.TenSP = "Changed result";
         KiemTra(products.TimKiem("dien thoai").Count == 1, "Mutable result cannot alter product cache");
-        products.SetActive("SP000001", false);
+        products.DoiTrangThai("SP000001", false);
         KiemTra(products.TimKiem("").Single().TrangThai == "0", "Product status refreshes cache");
         productData.Row = productData.Row with { TenSP = "Máy tính" };
-        products.Read();
+        products.DocDanhSach();
         KiemTra(products.TimKiem("may tinh").Count == 1, "Product explicit read refreshes cache");
     }
 
@@ -99,7 +99,7 @@ internal static class KiemTraTimKiemDanhMuc
                 new("SP000003", "L00002", "Máy tính Đông Nam", "", "Chiếc", 220, 200, "1") { TongSoLuongTon = 20 }
             ]
         };
-        var products = new ProductBUS(data);
+        var products = new SanPhamBUS(data);
         var comparisons = new[]
         {
             (PhepSoSanh.Bang, 1), (PhepSoSanh.Khac, 2), (PhepSoSanh.LonHon, 1),
@@ -136,7 +136,7 @@ internal static class KiemTraTimKiemDanhMuc
         KiemTraTuChoiBoLoc(() => products.TimKiem("", null, new BoLocDanhMuc([new NhomDieuKien([])])), "Reject empty AND group");
         KiemTra(data.Reads == 1 && data.Searches == 0, "Advanced search never rereads DAO while filtering");
 
-        var empty = new ProductBUS(new KhoSanPhamGiaLap { Rows = [] });
+        var empty = new SanPhamBUS(new KhoSanPhamGiaLap { Rows = [] });
         KiemTraTuChoiBoLoc(() => empty.TimKiem("", null, TaoBoLoc(new DieuKienTimKiem("Price", PhepSoSanh.Bang, "bad"))), "Validate filter even for empty catalog");
         KiemTra(empty.TimKiem("", null, combined).Count == 0, "Valid expression handles empty catalog");
 
@@ -252,25 +252,25 @@ internal static class KiemTraTimKiemDanhMuc
         public void Xoa(string code) => deleted = true;
     }
 
-    private sealed class KhoSanPhamGiaLap : IProductManage
+    private sealed class KhoSanPhamGiaLap : ISanPhamDAO
     {
-        public ProductManage Row = new("SP000001", "L00001", "Điện thoại", "", "Chiếc", 100, 90, "1");
+        public SanPhamQuanTriDTO Row = new("SP000001", "L00001", "Điện thoại", "", "Chiếc", 100, 90, "1");
         public int Reads { get; private set; }
         public int Searches { get; private set; }
-        public List<ProductManage>? Rows { get; init; }
-        public List<ProductManage> ReadData() { Reads++; return (Rows ?? [Row]).Select(value => value with { }).ToList(); }
-        public List<ProductManage> Search(string keyword) { Searches++; throw new Exception("DAO search must not run"); }
-        public ProductManage? GetByCode(string code) => Row with { };
-        public bool CheckProduct(string code) => code == Row.MaSP;
-        public void SetActive(string code, bool active) => Row.TrangThai = active ? "1" : "0";
-        public List<ProductCategory> ReadCategories() => [];
-        public bool CheckCategory(string code) => true;
-        public void InsertCategory(ProductCategory value) => throw new NotSupportedException();
-        public void UpdateCategory(ProductCategory value) => throw new NotSupportedException();
-        public void DeleteCategory(string code) => throw new NotSupportedException();
-        public List<ProductStock> ReadStockByProduct(string code) => [];
-        public void Insert(ProductManage value) => throw new NotSupportedException();
-        public void Update(ProductManage value) => Row = value with { };
-        public void Delete(string code) => throw new NotSupportedException();
+        public List<SanPhamQuanTriDTO>? Rows { get; init; }
+        public List<SanPhamQuanTriDTO> DocDanhSach() { Reads++; return (Rows ?? [Row]).Select(value => value with { }).ToList(); }
+        public List<SanPhamQuanTriDTO> TimKiem(string keyword) { Searches++; throw new Exception("DAO search must not run"); }
+        public SanPhamQuanTriDTO? DocTheoMa(string code) => Row with { };
+        public bool KiemTraSanPham(string code) => code == Row.MaSP;
+        public void DoiTrangThai(string code, bool active) => Row.TrangThai = active ? "1" : "0";
+        public List<LoaiSanPhamDTO> DocLoaiSanPham() => [];
+        public bool KiemTraLoaiSanPham(string code) => true;
+        public void ThemLoaiSanPham(LoaiSanPhamDTO value) => throw new NotSupportedException();
+        public void SuaLoaiSanPham(LoaiSanPhamDTO value) => throw new NotSupportedException();
+        public void XoaLoaiSanPham(string code) => throw new NotSupportedException();
+        public List<TonKhoSanPhamDTO> DocTonKhoTheoSanPham(string code) => [];
+        public void Them(SanPhamQuanTriDTO value) => throw new NotSupportedException();
+        public void Sua(SanPhamQuanTriDTO value) => Row = value with { };
+        public void Xoa(string code) => throw new NotSupportedException();
     }
 }

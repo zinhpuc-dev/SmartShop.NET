@@ -1,4 +1,4 @@
-@attribute [Authorize(Policy = AdminLoginService.Policy)]
+@attribute [Authorize(Policy = DangNhapQuanTri.Policy)]
 @page "/admin/suppliers"
 @layout SmartShop.Admin.Components.Layout.BoCucQuanTri
 @inject INhaCungCapBUS NhaCungCapBUS
@@ -36,7 +36,7 @@
     <TimKiemNangCao Fields="TimKiemDanhMucNangCao.TruongNhaCungCap" OnApply="ApDungTimKiemNangCao" Error="@filterError" AppliedFilter="advancedFilter" />
     <OChonNhaCungCap @bind-Value="selectedLookup" />
     <p class="customer-help">@Rows.Count kết quả · Có thể cuộn ngang bảng trên điện thoại.</p>
-    <DataTable TItem="NhaCungCapDTO" Items="Rows" Label="Danh sách nhà cung cấp" ColumnCount="5" EmptyText="Không tìm thấy nhà cung cấp phù hợp.">
+    <BangDuLieu TItem="NhaCungCapDTO" Items="Rows" Label="Danh sách nhà cung cấp" ColumnCount="5" EmptyText="Không tìm thấy nhà cung cấp phù hợp.">
         <Header><th scope="col">Mã</th><th scope="col">Nhà cung cấp</th><th scope="col">Điện thoại</th><th scope="col">Địa chỉ</th><th scope="col">Thao tác</th></Header>
         <RowTemplate Context="supplier">
             <td>@supplier.Code</td>
@@ -48,27 +48,27 @@
                 <button type="button" class="text-button customer-danger" aria-label="Xóa @supplier.Code" @onclick="() => deleting = supplier">Xóa</button>
             </div></td>
         </RowTemplate>
-    </DataTable>
+    </BangDuLieu>
     }
 </section>
 
 @if (editorOpen)
 {
-    <ModalDialog Label="@(editingCode is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="DongForm">
+    <HopThoai Label="@(editingCode is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="DongForm">
         <h2>@(editingCode is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp")</h2>
         <FormNhaCungCap Model="draft" IsEditing="@(editingCode is not null)" Error="@formError" OnSave="Luu" OnCancel="DongForm" />
-    </ModalDialog>
+    </HopThoai>
 }
 @if (deleting is not null)
 {
-    <ModalDialog Label="Xác nhận xóa nhà cung cấp" CssClass="narrow" OnClose="() => deleting = null">
+    <HopThoai Label="Xác nhận xóa nhà cung cấp" CssClass="narrow" OnClose="() => deleting = null">
         <h2>Xóa nhà cung cấp?</h2>
         <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong>. Không thể xóa nhà cung cấp đang được liên kết với phiếu nhập.</p>
         <div class="customer-actions">
             <button type="button" class="primary" @onclick="Xoa">Xác nhận xóa</button>
             <button type="button" class="secondary" @onclick="() => deleting = null">Giữ lại</button>
         </div>
-    </ModalDialog>
+    </HopThoai>
 }
 @code {
     private BoLocDanhMuc? advancedFilter;

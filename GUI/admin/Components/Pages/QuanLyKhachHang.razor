@@ -1,4 +1,4 @@
-@attribute [Authorize(Policy = AdminLoginService.Policy)]
+@attribute [Authorize(Policy = DangNhapQuanTri.Policy)]
 @page "/admin/customers"
 @layout SmartShop.Admin.Components.Layout.BoCucQuanTri
 @inject IKhachHangBUS KhachHangBUS
@@ -40,7 +40,7 @@
         <button type="button" class="text-button" @onclick="() => profile = selectedLookup">Xem hồ sơ đã chọn ↗</button>
     }
     <p class="customer-help">@All.Count bản ghi · @Rows.Count kết quả · Có thể cuộn ngang bảng trên điện thoại.</p>
-    <DataTable TItem="KhachHangDTO" Items="Rows" Label="Danh sách khách hàng" ColumnCount="5" EmptyText="Không tìm thấy khách hàng phù hợp.">
+    <BangDuLieu TItem="KhachHangDTO" Items="Rows" Label="Danh sách khách hàng" ColumnCount="5" EmptyText="Không tìm thấy khách hàng phù hợp.">
         <Header><th scope="col">Mã</th><th scope="col">Khách hàng</th><th scope="col">Điện thoại</th><th scope="col">Địa chỉ</th><th scope="col">Thao tác</th></Header>
         <RowTemplate Context="customer">
             <td>@customer.Code</td>
@@ -53,34 +53,34 @@
                 <button type="button" class="text-button customer-danger" aria-label="Xóa @customer.Code" @onclick="() => deleting = customer">Xóa</button>
             </div></td>
         </RowTemplate>
-    </DataTable>
+    </BangDuLieu>
     }
 </section>
 
 @if (editorOpen)
 {
-    <ModalDialog Label="@(editingCode is null ? "Thêm khách hàng" : "Sửa khách hàng")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="DongForm">
+    <HopThoai Label="@(editingCode is null ? "Thêm khách hàng" : "Sửa khách hàng")" CssClass="customer-editor-modal" CloseOnBackdrop="false" OnClose="DongForm">
         <h2>@(editingCode is null ? "Thêm khách hàng" : "Sửa khách hàng")</h2>
         <FormKhachHang Model="draft" IsEditing="@(editingCode is not null)" Error="@formError" OnSave="Luu" OnCancel="DongForm" />
-    </ModalDialog>
+    </HopThoai>
 }
 @if (profile is not null)
 {
-    <ModalDialog Label="Hồ sơ khách hàng" CssClass="customer-editor-modal" OnClose="() => profile = null">
+    <HopThoai Label="Hồ sơ khách hàng" CssClass="customer-editor-modal" OnClose="() => profile = null">
         <h2>Hồ sơ khách hàng</h2>
         <HoSoKhachHang Value="profile" />
-    </ModalDialog>
+    </HopThoai>
 }
 @if (deleting is not null)
 {
-    <ModalDialog Label="Xác nhận xóa khách hàng" CssClass="narrow" OnClose="() => deleting = null">
+    <HopThoai Label="Xác nhận xóa khách hàng" CssClass="narrow" OnClose="() => deleting = null">
         <h2>Xóa khách hàng?</h2>
         <p>Bạn đang xóa <strong>@deleting.Code — @deleting.Name</strong>. Không thể xóa khách hàng đang được liên kết với đơn hàng.</p>
         <div class="customer-actions">
             <button type="button" class="primary" @onclick="Xoa">Xác nhận xóa</button>
             <button type="button" class="secondary" @onclick="() => deleting = null">Giữ lại</button>
         </div>
-    </ModalDialog>
+    </HopThoai>
 }
 @code {
     private BoLocDanhMuc? advancedFilter;

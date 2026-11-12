@@ -1,4 +1,4 @@
-@inherits ShopPageBase
+@inherits TrangCoSo
 <header class="admin-header">
     <a class="brand" href="/admin"><span class="brand-icon">S</span>Smart<span>Shop</span><small>ADMINISTRATION</small></a>
     <span class="admin-mode">Không gian quản trị</span>
@@ -10,17 +10,17 @@
 <div class="shell admin-shell">
     <aside>
         <div class="nav-caption">QUẢN TRỊ CỬA HÀNG</div>
-        <button class="nav-item @(page == "admin" ? "active" : "")" @onclick='() => Go("admin")'><span>◫</span>Tổng quan</button>
-        <button class="nav-item @(page == "admin/products" ? "active" : "")" @onclick='() => Go("admin/products")'><span>□</span>Sản phẩm</button>
-        <button class="nav-item @(page == "admin/orders" ? "active" : "")" @onclick='() => Go("admin/orders")'><span>≡</span>Đơn hàng</button>
-        <button class="nav-item @(page == "admin/customers" ? "active" : "")" @onclick='() => Go("admin/customers")'><span>♙</span>Khách hàng</button>
-        <button class="nav-item @(page == "admin/employees" ? "active" : "")" @onclick='() => Go("admin/employees")'><span>♟</span>Nhân viên</button>
-        <button class="nav-item @(page == "admin/suppliers" ? "active" : "")" @onclick='() => Go("admin/suppliers")'><span>▦</span>Nhà cung cấp</button>
-        <button class="nav-item @(page == "admin/inventory" ? "active" : "")" @onclick='() => Go("admin/inventory")'><span>▤</span>Kho & nhập hàng</button>
-        <button class="nav-item @(page == "admin/promotions" ? "active" : "")" @onclick='() => Go("admin/promotions")'><span>%</span>Khuyến mại</button>
+        <button class="nav-item @(page == "admin" ? "active" : "")" @onclick='() => DieuHuong("admin")'><span>◫</span>Tổng quan</button>
+        <button class="nav-item @(page == "admin/products" ? "active" : "")" @onclick='() => DieuHuong("admin/products")'><span>□</span>Sản phẩm</button>
+        <button class="nav-item @(page == "admin/orders" ? "active" : "")" @onclick='() => DieuHuong("admin/orders")'><span>≡</span>Đơn hàng</button>
+        <button class="nav-item @(page == "admin/customers" ? "active" : "")" @onclick='() => DieuHuong("admin/customers")'><span>♙</span>Khách hàng</button>
+        <button class="nav-item @(page == "admin/employees" ? "active" : "")" @onclick='() => DieuHuong("admin/employees")'><span>♟</span>Nhân viên</button>
+        <button class="nav-item @(page == "admin/suppliers" ? "active" : "")" @onclick='() => DieuHuong("admin/suppliers")'><span>▦</span>Nhà cung cấp</button>
+        <button class="nav-item @(page == "admin/inventory" ? "active" : "")" @onclick='() => DieuHuong("admin/inventory")'><span>▤</span>Kho & nhập hàng</button>
+        <button class="nav-item @(page == "admin/promotions" ? "active" : "")" @onclick='() => DieuHuong("admin/promotions")'><span>%</span>Khuyến mại</button>
         <div class="sidebar-bottom">
             <div class="help-card"><strong>SmartShop Admin</strong><p>Quản lý dữ liệu cửa hàng trong không gian riêng.</p></div>
-            <button class="nav-item" @onclick='() => Go("home")'><span>↗</span>Xem cửa hàng</button>
+            <button class="nav-item" @onclick='() => DieuHuong("home")'><span>↗</span>Xem cửa hàng</button>
         </div>
     </aside>
     <main>
@@ -30,17 +30,17 @@
     </main>
 </div>
 <nav class="mobile-nav admin-mobile-nav" aria-label="Menu quản trị">
-    <button @onclick='() => Go("admin")'>◫<span>Tổng quan</span></button>
-    <button class="@(page == "admin/products" ? "active" : "")" @onclick='() => Go("admin/products")'>□<span>Sản phẩm</span></button>
-    <button class="@(page == "admin/orders" ? "active" : "")" @onclick='() => Go("admin/orders")'>≡<span>Đơn hàng</span></button>
-    <button @onclick='() => Go("admin/customers")'>♙<span>Khách hàng</span></button>
-    <button @onclick='() => Go("admin/employees")'>♟<span>Nhân viên</span></button>
-    <button @onclick='() => Go("admin/suppliers")'>▦<span>Nhà cung cấp</span></button>
-    <button @onclick='() => Go("admin/inventory")'>▤<span>Kho</span></button>
-    <button @onclick='() => Go("admin/promotions")'>%<span>Khuyến mại</span></button>
-    <button @onclick='() => Go("home")'>↗<span>Cửa hàng</span></button>
+    <button @onclick='() => DieuHuong("admin")'>◫<span>Tổng quan</span></button>
+    <button class="@(page == "admin/products" ? "active" : "")" @onclick='() => DieuHuong("admin/products")'>□<span>Sản phẩm</span></button>
+    <button class="@(page == "admin/orders" ? "active" : "")" @onclick='() => DieuHuong("admin/orders")'>≡<span>Đơn hàng</span></button>
+    <button @onclick='() => DieuHuong("admin/customers")'>♙<span>Khách hàng</span></button>
+    <button @onclick='() => DieuHuong("admin/employees")'>♟<span>Nhân viên</span></button>
+    <button @onclick='() => DieuHuong("admin/suppliers")'>▦<span>Nhà cung cấp</span></button>
+    <button @onclick='() => DieuHuong("admin/inventory")'>▤<span>Kho</span></button>
+    <button @onclick='() => DieuHuong("admin/promotions")'>%<span>Khuyến mại</span></button>
+    <button @onclick='() => DieuHuong("home")'>↗<span>Cửa hàng</span></button>
 </nav>
-<ShopOverlays />
+<CacHopThoaiCuaHang />
 
 @code {
     private string SectionName => page switch
