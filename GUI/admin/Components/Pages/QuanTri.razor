@@ -175,9 +175,7 @@
                 @foreach (var order in orders.Where(o => o.InvoiceCode is null && (o.Status == "Đã giao" || o.Status == "Hoàn thành")))
                 { <option value="@order.Code">@order.Code — @order.CustomerName</option> }
             </select></label>
-            <label>Nhân viên<select @bind="invoiceEmployee"><option value="">Chọn nhân viên</option>
-                @foreach (var employee in invoiceEmployees) { <option value="@employee.Code">@employee.Code — @employee.Name</option> }
-            </select></label>
+            <OChonNhanVien @bind-Value="nhanVienLapHoaDon" Disabled="@(!invoiceEmployeesLoaded)" />
             <label>Thanh toán<select @bind="invoiceMethod"><option>Tiền mặt</option><option>Chuyển khoản</option><option>COD</option></select></label>
             <button type="button" @onclick="LapHoaDon" disabled="@(!ordersLoaded || !invoiceEmployeesLoaded)">Lập hóa đơn</button>
         </div>
@@ -265,9 +263,9 @@
     private IReadOnlyList<HoaDonDTO> invoices = [];
     private Dictionary<string, string> statusSelection = [];
     private Dictionary<string, string> warehouseSelection = [];
-    private IReadOnlyList<NhanVienDTO> invoiceEmployees = [];
+    private NhanVienDTO? nhanVienLapHoaDon;
     private bool invoiceEmployeesLoaded;
-    private string invoiceOrder = "", invoiceEmployee = "", invoiceMethod = "Tiền mặt", invoiceActionError = "";
+    private string invoiceOrder = "", invoiceMethod = "Tiền mặt", invoiceActionError = "";
     private ThongKeBanHangDTO? summary;
     private DateTime reportFrom = DateTime.Today.AddDays(-29), reportTo = DateTime.Today;
     private string ordersError = "Không thể tải danh sách đơn hàng. Vui lòng thử lại.";
@@ -358,8 +356,14 @@
 
     private void TaiNhanVienLapHoaDon()
     {
-        try { invoiceEmployees = NhanVienBUS.TimKiem(); invoiceEmployeesLoaded = true; }
-        catch (Exception ex) { Logger.LogError(ex, "Failed to load invoice employees."); invoiceEmployees = []; invoiceEmployeesLoaded = false; }
+        try
+        {
+            var employees = NhanVienBUS.TimKiem();
+            if (nhanVienLapHoaDon is not null)
+                nhanVienLapHoaDon = employees.SingleOrDefault(employee => employee.Code == nhanVienLapHoaDon.Code);
+            invoiceEmployeesLoaded = true;
+        }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to load invoice employees."); invoiceEmployeesLoaded = false; }
     }
 
     private void LapHoaDon()
@@ -367,7 +371,7 @@
         invoiceActionError = "";
         try
         {
-            InvoiceService.LapHoaDon(invoiceOrder, invoiceEmployee, invoiceMethod);
+            InvoiceService.LapHoaDon(invoiceOrder, nhanVienLapHoaDon?.Code ?? "", invoiceMethod);
             invoiceOrder = "";
             TaiHoaDon(); TaiDonHang();
             successMessage = "Đã lập hóa đơn chờ thanh toán.";

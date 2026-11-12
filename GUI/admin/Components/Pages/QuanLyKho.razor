@@ -47,7 +47,7 @@ else if (!loaded)
     <h2>Tạo phiếu nhập</h2>
     <div class="form-grid">
         <label>Mã phiếu<input @bind="receiving.Code" maxlength="8" /></label>
-        <label>Nhà cung cấp<select @bind="receiving.SupplierCode"><option value="">Chọn nhà cung cấp</option>@foreach (var supplier in suppliers){<option value="@supplier.Code">@supplier.Code — @supplier.Name</option>}</select></label>
+        <OChonNhaCungCap Value="nhaCungCapDaChon" ValueChanged="ChonNhaCungCap" Disabled="@(!loaded)" />
         <label>Kho<select @bind="receiving.WarehouseCode"><option value="">Chọn kho</option>@foreach (var warehouse in warehouses){<option value="@warehouse.Code">@warehouse.Code — @warehouse.Name</option>}</select></label>
     </div>
     @foreach (var line in receiving.Lines)
@@ -79,7 +79,7 @@ else if (!loaded)
 
 @code {
     private List<KhoDTO> warehouses = [];
-    private List<NhaCungCapDTO> suppliers = [];
+    private NhaCungCapDTO? nhaCungCapDaChon;
     private List<SanPhamQuanTriDTO> products = [];
     private IReadOnlyList<PhieuNhapDTO> receivings = [];
     private IReadOnlyList<ChiTietPhieuNhapDTO> receiptDetails = [];
@@ -100,7 +100,8 @@ else if (!loaded)
         try
         {
             warehouses = KhoBUS.DocDanhSach().ToList();
-            suppliers = NhaCungCapBUS.TimKiem().ToList();
+            var suppliers = NhaCungCapBUS.TimKiem();
+            ChonNhaCungCap(suppliers.SingleOrDefault(supplier => supplier.Code == receiving.SupplierCode));
             products = ProductService.DocDanhSach();
             receivings = KhoBUS.DocPhieuNhap();
             stockRows = KhoBUS.DocTonKho();
@@ -113,7 +114,6 @@ else if (!loaded)
         {
             Logger.LogError(ex, "Failed to load Admin warehouse and receiving data.");
             warehouses = [];
-            suppliers = [];
             products = [];
             receivings = [];
             loadError = "Không thể tải dữ liệu kho và phiếu nhập. Vui lòng thử lại.";
@@ -158,6 +158,12 @@ else if (!loaded)
     private void ThemDong() => receiving.Lines.Add(new DuLieuDongNhap());
     private void XoaDong(DuLieuDongNhap line) { if (receiving.Lines.Count > 1) receiving.Lines.Remove(line); }
 
+    private void ChonNhaCungCap(NhaCungCapDTO? value)
+    {
+        nhaCungCapDaChon = value;
+        receiving.SupplierCode = value?.Code ?? "";
+    }
+
     private void LapPhieuNhap()
     {
         try
@@ -166,6 +172,7 @@ else if (!loaded)
             message = "Đã tạo phiếu nhập và cập nhật tồn kho.";
             failed = false;
             receiving = new DuLieuPhieuNhap { Code = GoiYMaPhieuNhap(), Lines = [new DuLieuDongNhap()] };
+            ChonNhaCungCap(null);
             TaiDuLieu();
         }
         catch (ArgumentException ex) { message = ex.Message; failed = true; }

@@ -2,28 +2,30 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 08/11/2026
+**Cập nhật lần cuối:** 12/11/2026
 
 | Mục | Nội dung |
 |---|---|
 | Phối hợp | Vinh (UNIQUE) |
 | Yêu cầu / Use Case | Danh mục NCC |
 | Mức ưu tiên | 1 |
-| Nhánh Git | `develop` (local, chưa commit/push) |
+| Nhánh Git | `develop` |
 | Mục báo cáo | III (Triết) |
 | Ảnh form | `docs/images/07-nha-cung-cap/` |
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
 
-## Cập nhật hiện tại — 08/11/2026
+## Cập nhật hiện tại — 12/11/2026
 
-SupplierBUS → ISupplierRepository/SupplierDAO → NHA_CUNG_CAP. Đã đọc 10 NCC; form nhập hàng có dropdown NCC thật. SupplierPicker còn là component dùng lại, chưa nghiệm thu popup ba chấm tại phiếu nhập.
+NhaCungCapBUS → INhaCungCapDAO/NhaCungCapDAO → NHA_CUNG_CAP. Đã gắn OChonNhaCungCap và TimChonNhaCungCap vào form tạo phiếu nhập tại `/admin/inventory`, thay dropdown nhà cung cấp.
 
 ### Mốc triển khai và kiểm chứng
 
-- [x] Đọc được 10 nhà cung cấp MySQL.
-- [x] Có mã CRUD/tìm kiếm và dropdown dùng trong nhập hàng.
-- [ ] Kiểm thử ghi/xóa có liên kết, chụp ảnh mới và nghiệm thu popup.
+- [x] Đã đọc được 10 nhà cung cấp MySQL ở đợt kiểm tra trước.
+- [x] Có CRUD/tìm kiếm và tích hợp popup chọn nhà cung cấp vào phiếu nhập ở mức code.
+- [x] Callback điền SupplierCode và thông tin chỉ đọc; lưu phiếu thành công sẽ xóa lựa chọn cho phiếu mới. Có khóa nút khi tải dữ liệu lỗi và thông báo khi không đọc được hồ sơ đã chọn.
+- [x] Build solution: 0 lỗi, 0 cảnh báo; 78 smoke checks hiện có đạt. Các checks này không nghiệm thu tương tác popup hay ghi phiếu MySQL.
+- [ ] Kiểm thử thao tác popup trên trình duyệt, ghi/xóa có liên kết và chụp ảnh mới. Browser Use từ chối quyền mở địa chỉ cục bộ trong đợt này.
 
 > Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
 
@@ -31,7 +33,7 @@ SupplierBUS → ISupplierRepository/SupplierDAO → NHA_CUNG_CAP. Đã đọc 10
 
 - [x] CRUD Nhà cung cấp theo GUI-BUS-DAO (đã có DAO MySQL; thao tác ghi chưa nghiệm thu)
 - [x] Kiểm tra trùng mã, field bắt buộc
-- [ ] Form tìm nhà cung cấp cho nút "..." ở phiếu nhập (đã có popup dùng lại, chờ gắn vào phiếu nhập)
+- [x] Form tìm nhà cung cấp cho nút "..." ở phiếu nhập (đã gắn component và callback; còn nghiệm thu thao tác trực tiếp)
 - [ ] Chụp ảnh form cho báo cáo
 - [ ] Đã có ảnh form trong `docs/images/07-nha-cung-cap/`
 - [ ] Đã viết phần báo cáo tương ứng (III (Triết))
@@ -52,6 +54,7 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 12/11/2026 | Triết | Gắn popup tìm/chọn nhà cung cấp vào phiếu nhập; khóa nút khi tải lỗi, hiển thị thông tin chỉ đọc và bổ sung xử lý lỗi chọn | Codex | Build 0 lỗi/0 cảnh báo, 78 checks hiện có đạt. Chưa nghiệm thu UI/ghi MySQL; chưa có ảnh mới |
 | 04/11/2026 | Triết | Triển khai bản demo phần 07 với CRUD, tìm kiếm trên ArrayList, kiểm tra dữ liệu và popup chọn nhà cung cấp | Codex | Đang làm, 2/6 mục. Popup đã có trong Admin, chờ gắn vào phiếu nhập |
 
 | 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |

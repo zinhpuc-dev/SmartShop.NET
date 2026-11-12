@@ -2,9 +2,9 @@
     <TruongNhapLieu Label="Khách hàng đã chọn">
         <input readonly value="@Display" aria-label="Khách hàng đã chọn" />
     </TruongNhapLieu>
-    <button type="button" class="secondary" aria-label="Tìm và chọn khách hàng" @onclick="() => open = true">… Chọn khách hàng</button>
+    <button type="button" class="secondary" disabled="@Disabled" aria-label="Tìm và chọn khách hàng" @onclick="() => open = true">… Chọn khách hàng</button>
 </div>
-@if (open)
+@if (open && !Disabled)
 {
     <TimChonKhachHang OnSelected="Chon" OnClose="() => open = false" />
 }
@@ -12,6 +12,7 @@
 @code {
     [Parameter] public KhachHangDTO? Value { get; set; }
     [Parameter] public EventCallback<KhachHangDTO?> ValueChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
     private bool open;
     private string Display => Value is null ? "Chưa chọn khách hàng" : $"{Value.Code} — {Value.Name} — {Value.Phone}";
     private Task Chon(KhachHangDTO customer) => ValueChanged.InvokeAsync(customer);

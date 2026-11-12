@@ -1,4 +1,5 @@
 @inject INhaCungCapBUS Suppliers
+@inject ILogger<TimChonNhaCungCap> Logger
 
 <HopThoai Label="Tìm và chọn nhà cung cấp" CssClass="customer-modal" OnClose="OnClose">
     <h2>Tìm và chọn nhà cung cấp</h2>
@@ -37,5 +38,10 @@
             await OnClose.InvokeAsync();
         }
         catch (InvalidOperationException ex) { error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Không thể chọn nhà cung cấp từ popup.");
+            error = "Không thể tải nhà cung cấp đã chọn. Vui lòng thử lại.";
+        }
     }
 }

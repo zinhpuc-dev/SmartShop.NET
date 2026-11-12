@@ -1,4 +1,5 @@
 @inject INhanVienBUS Employees
+@inject ILogger<TimChonNhanVien> Logger
 
 <HopThoai Label="Tìm và chọn nhân viên" CssClass="customer-modal" OnClose="OnClose">
     <h2>Tìm và chọn nhân viên</h2>
@@ -37,5 +38,10 @@
             await OnClose.InvokeAsync();
         }
         catch (InvalidOperationException ex) { error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Không thể chọn nhân viên từ popup.");
+            error = "Không thể tải nhân viên đã chọn. Vui lòng thử lại.";
+        }
     }
 }
