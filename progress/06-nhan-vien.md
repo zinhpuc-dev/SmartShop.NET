@@ -17,6 +17,15 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 17/11/2026
 
+Bổ sung bộ kiểm tra tích hợp tools/SmartShop.MySqlChecks dùng MySQL thật trên database ngẫu nhiên riêng, dựng 19 bảng từ DDL gốc rồi tự dọn. Không ghi vào database ứng dụng hoặc chạy migration kho.
+
+- 54 checks MySQL toàn bộ đạt. Riêng NV đã kiểm tra thêm/sửa/xóa, lưu không đổi dữ liệu với UseAffectedRows=true, dữ liệu sai, khóa mã, UNIQUE email khi INSERT/UPDATE với cache cũ và giữ email chính mình.
+- FK hóa đơn chặn xóa NV bằng lỗi 1451 thật; lỗi ghi không đổi CSDL/cache. Hai phiên có cache cũ thêm trùng mã được PRIMARY KEY chặn và trả thông báo qua DAO.
+- 123 smoke checks đạt; build bộ kiểm tra và solution sau dọn: 0 lỗi/0 cảnh báo. Đã bổ sung bằng chứng vào bản nháp báo cáo III.
+- Còn liên kết tài khoản nếu yêu cầu, nghiệm thu thao tác web/mobile, ảnh mới và chốt báo cáo cuối. Không coi chức vụ hồ sơ là phân quyền đăng nhập nhiều vai trò.
+
+## Mốc trước — 17/11/2026
+
 Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. NhanVienBUS/NhanVienDAO dùng MyConnection chung ở DAO để tạo/mở kết nối; using giải phóng sau mỗi thao tác. LayTheoMa duyệt ArrayList tại BUS, không đọc DAO theo từng mã. Chỉ cập nhật cache sau khi DAO ghi thành công; TaiLai làm danh sách được nạp lại ở lần đọc tiếp theo.
 
 ### Bổ sung thêm–sửa–xóa theo mẫu — 17/11/2026
@@ -44,7 +53,8 @@ EmployeeBUS → IEmployeeRepository/EmployeeDAO → NHAN_VIEN; mapping Code/Name
 
 - [x] Đọc được 10 nhân viên MySQL, có ChucVu.
 - [x] Có mã CRUD, validation, khóa mã và Reload cache.
-- [ ] Kiểm thử ghi, ràng buộc hóa đơn và liên kết tài khoản nếu cần.
+- [x] Kiểm thử ghi và ràng buộc hóa đơn qua BUS/DAO trên MySQL riêng.
+- [ ] Liên kết tài khoản nhân viên nếu yêu cầu và nghiệm thu thao tác giao diện.
 
 > Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
 
@@ -55,7 +65,7 @@ EmployeeBUS → IEmployeeRepository/EmployeeDAO → NHAN_VIEN; mapping Code/Name
 - [x] Form tìm nhân viên cho nút "..." (popup web trong Admin)
 - [x] Chụp ảnh form cho báo cáo
 - [x] Đã có ảnh form trong `docs/images/06-nhan-vien/`
-- [ ] Đã viết phần báo cáo tương ứng (III (Triết))
+- [x] Đã viết phần báo cáo tương ứng (bản nháp III-triet.md đã có nội dung; còn review, ảnh mới và chốt bản cuối)
 
 ### Phạm vi trước 08/11/2026 (lịch sử)
 
@@ -77,6 +87,7 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Kiểm thử CRUD NV, UNIQUE email/mã, khóa mã và FK hóa đơn trên MySQL riêng; bổ sung báo cáo | Codex | 54 checks MySQL toàn bộ và 123 smoke checks đạt; DB thử đã dọn. Còn UI/ảnh và liên kết tài khoản nếu yêu cầu |
 | 17/11/2026 | Triết | Chỉnh thêm–sửa–xóa sát mẫu: GUI tách nhánh Luu; BUS tạo DTO rõ ràng, sửa ArrayList bằng IndexOf và xóa bằng Remove sau khi DAO thành công | Codex | Giữ web/mobile, validation, khóa mã, SQL tham số và hợp đồng lớp; build 0 lỗi/0 cảnh báo, 123 checks hiện có đạt. Chưa nghiệm thu ghi MySQL hoặc tương tác UI |
 | 17/11/2026 | Triết | Đối chiếu mẫu 3 lớp: NhanVienBUS/NhanVienDAO, kết nối MyConnection chung, tra cứu mã tại ArrayList BUS; đồng bộ nháp báo cáo | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 03/11/2026 | Triết | Hoàn thành bản demo web phần 06: CRUD, hồ sơ, tình trạng làm việc, tìm/lọc, popup chọn, kiểm tra dữ liệu; tái sử dụng component, lưu ảnh và nháp báo cáo | Codex | Local trên develop, chưa commit/push. Còn CSDL thật, liên kết tài khoản/giao dịch và báo cáo chính |

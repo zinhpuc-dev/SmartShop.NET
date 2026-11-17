@@ -17,6 +17,14 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 17/11/2026
 
+Đã soạn docs/HUONG_DAN_BAO_VE_TRIET.md: kịch bản trình bày 10 phút, luồng GUI–BUS–DAO–DTO, ví dụ foreach tìm mã trên danh sách BUS, tải cache/TaiLai, cập nhật cache sau ghi thành công và khác biệt static desktop với phiên web. Bổ sung mục tìm kiếm ArrayList vào bản nháp docs/bao-cao/III-triet.md.
+
+- 54 checks MySQL tích hợp bổ sung xác nhận cache giữ nguyên khi lỗi UNIQUE/FK, phiên thua thêm trùng mã không thêm cache, tải lại giúp thấy dữ liệu mới và loại hồ sơ bị phiên khác xóa.
+- 123 smoke checks hiện có đạt; build bộ kiểm tra và solution sau dọn: 0 lỗi/0 cảnh báo.
+- Đã chuẩn bị tài liệu giải thích; người trình bày vẫn cần tự luyện và hiểu code. Còn ảnh riêng phần 9, nghiệm thu tương tác tìm kiếm và review báo cáo cuối.
+
+## Mốc trước — 17/11/2026
+
 Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. LayTheoMa của ba BUS khách hàng, nhân viên, nhà cung cấp nay duyệt ArrayList đã nạp bằng vòng lặp, bỏ khoảng trắng đầu/cuối mã và so sánh không phân biệt hoa/thường. Không gọi DAO.DocTheoMa khi tra cứu mã; báo không tìm thấy tại BUS nếu mã vắng. TimKiem tiếp tục chạy trên danh sách BUS cho bốn danh mục.
 
 ### Phạm vi kiểm chứng đợt này
@@ -51,9 +59,9 @@ Tại thời điểm này, Admin dùng List<T>/SearchText và lọc danh sách t
 - [x] Nạp danh sách vào ArrayList trong BUS
 - [x] Viết hàm tìm kiếm trong BUS, không query lại CSDL
 - [x] Áp dụng cho Sản phẩm, Khách hàng, Nhân viên, Nhà cung cấp
-- [ ] Chuẩn bị giải thích cho kiểm tra giấy 10 phút
+- [x] Chuẩn bị giải thích cho kiểm tra giấy 10 phút (đã có HUONG_DAN_BAO_VE_TRIET.md; cần tự luyện trình bày)
 - [ ] Đã có ảnh form trong `docs/images/09-tim-kiem-arraylist/`
-- [ ] Đã viết phần báo cáo tương ứng (III (Triết))
+- [x] Đã viết phần báo cáo tương ứng (bản nháp III-triet.md đã có nội dung; còn review, ảnh mới và chốt bản cuối)
 
 ## Tiêu chí nghiệm thu
 
@@ -63,6 +71,7 @@ Tìm kiếm chạy trên ArrayList, code nằm ở BUS
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Soạn tài liệu ôn bảo vệ 10 phút và mục báo cáo ArrayList; bổ sung bằng chứng cache qua MySQL thật | Codex | Có tài liệu và ví dụ foreach; 123 smoke/54 MySQL checks đạt. Chưa thay việc tự luyện giải thích hoặc nghiệm thu UI/ảnh |
 | 17/11/2026 | Triết | Tra cứu mã bằng vòng lặp trên ArrayList, không gọi DAO đọc từng mã; kiểm tra cache/tải lại | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 10/11/2026 | Triết | Chuyển tìm kiếm cơ bản của bốn danh mục Admin sang ArrayList tại BUS, nối tìm sản phẩm từ GUI vào BUS và thêm kiểm tra cache/tìm kiếm | Codex | Đang làm, 3/6 mục. Build đạt, 40 checks qua với repository giả lập. Local develop, chưa commit/push |
 | 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |

@@ -17,6 +17,16 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 17/11/2026
 
+Bổ sung tools/SmartShop.MySqlChecks, kiểm thử MySQL thật trên database riêng được dựng từ 19 câu CREATE TABLE gốc và dọn trong finally. Không ghi vào database ứng dụng, không sửa schema đang dùng hoặc chạy migration kho.
+
+- 54 checks MySQL toàn bộ đạt. Riêng NCC đã kiểm tra CRUD, tiếng Việt/dấu nháy, lưu không đổi dữ liệu, chặn dữ liệu sai và khóa mã khi sửa.
+- FK phiếu nhập chặn xóa NCC bằng lỗi 1451 thật; PRIMARY KEY chặn trùng mã từ phiên có cache cũ. Sửa hồ sơ bị phiên khác xóa trả lỗi không tìm thấy, không tạo lại bản ghi/cache giả; tải lại loại hồ sơ cũ khỏi cache.
+- Schema hiện tại không có UNIQUE email NCC; không bổ sung yêu cầu này ngoài phân công.
+- 123 smoke checks đạt; build bộ kiểm tra và solution sau dọn: 0 lỗi/0 cảnh báo. Báo cáo đã bổ sung bằng chứng này, còn review bản cuối.
+- Còn nghiệm thu popup/thao tác giao diện, ảnh riêng phần 7 và các kiểu tranh chấp khác.
+
+## Mốc trước — 17/11/2026
+
 Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. NhaCungCapBUS/NhaCungCapDAO dùng MyConnection chung ở DAO để tạo/mở kết nối; using giải phóng sau mỗi thao tác. LayTheoMa duyệt ArrayList tại BUS, không đọc DAO theo từng mã. Chỉ cập nhật cache sau khi DAO ghi thành công; TaiLai làm danh sách được nạp lại ở lần đọc tiếp theo.
 
 ### Bổ sung thêm–sửa–xóa theo mẫu — 17/11/2026
@@ -57,7 +67,7 @@ NhaCungCapBUS → INhaCungCapDAO/NhaCungCapDAO → NHA_CUNG_CAP. Đã gắn OCho
 - [x] Form tìm nhà cung cấp cho nút "..." ở phiếu nhập (đã gắn component và callback; còn nghiệm thu thao tác trực tiếp)
 - [ ] Chụp ảnh form cho báo cáo
 - [ ] Đã có ảnh form trong `docs/images/07-nha-cung-cap/`
-- [ ] Đã viết phần báo cáo tương ứng (III (Triết))
+- [x] Đã viết phần báo cáo tương ứng (bản nháp III-triet.md đã có nội dung; còn review, ảnh mới và chốt bản cuối)
 
 ### Phạm vi trước 08/11/2026 (lịch sử)
 
@@ -75,6 +85,7 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Kiểm thử CRUD NCC, FK phiếu nhập, mã trùng và sửa hồ sơ đã bị phiên khác xóa; bổ sung báo cáo | Codex | 54 checks MySQL toàn bộ và 123 smoke checks đạt; DB thử đã dọn. Còn nghiệm thu popup/UI, ảnh mới và bản báo cáo cuối |
 | 17/11/2026 | Triết | Chỉnh thêm–sửa–xóa sát mẫu: GUI tách nhánh Luu; BUS tạo DTO rõ ràng, sửa ArrayList bằng IndexOf và xóa bằng Remove sau khi DAO thành công | Codex | Giữ web/mobile, validation, khóa mã, SQL tham số và hợp đồng lớp; build 0 lỗi/0 cảnh báo, 123 checks hiện có đạt. Chưa nghiệm thu ghi MySQL hoặc tương tác UI |
 | 17/11/2026 | Triết | Đối chiếu mẫu 3 lớp: NhaCungCapBUS/NhaCungCapDAO, kết nối MyConnection chung, tra cứu mã tại ArrayList BUS; đồng bộ nháp báo cáo | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 12/11/2026 | Triết | Gắn popup tìm/chọn nhà cung cấp vào phiếu nhập; khóa nút khi tải lỗi, hiển thị thông tin chỉ đọc và bổ sung xử lý lỗi chọn | Codex | Build 0 lỗi/0 cảnh báo, 78 checks hiện có đạt. Chưa nghiệm thu UI/ghi MySQL; chưa có ảnh mới |

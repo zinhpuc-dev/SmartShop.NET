@@ -1,6 +1,6 @@
 # III. Các chức năng chính — Triết
 
-Cập nhật 17/11/2026 theo mã nguồn hiện tại, đối chiếu mẫu c-3-layer. Giữ nền tảng Blazor web/mobile và phân công thành viên. Các thao tác ghi MySQL chưa được nghiệm thu đầy đủ; build và kiểm tra với DAO giả lập không thay thế kiểm thử ghi trên CSDL thật.
+Cập nhật 17/11/2026 theo mã nguồn hiện tại, đối chiếu mẫu c-3-layer. Giữ nền tảng Blazor web/mobile và phân công thành viên. Đã bổ sung kiểm tra ghi MySQL trên database riêng cho ba danh mục và ràng buộc; chưa nghiệm thu toàn bộ thao tác giao diện hoặc mọi kiểu tranh chấp. Build và kiểm tra với DAO giả lập không thay thế kiểm thử ghi trên CSDL thật.
 
 ## Cấu trúc ba lớp và DTO
 
@@ -36,7 +36,43 @@ Cập nhật 17/11/2026 theo mã nguồn hiện tại, đối chiếu mẫu c-3-
 3. **Công thức:** Không có phép tính tiền.
 4. **Đầu vào:** Thông tin phù hợp NHA_CUNG_CAP.
 5. **Đầu ra:** Danh sách hồ sơ và thông báo thao tác.
-6. **Xử lý:** NhaCungCapBUS nạp ArrayList qua NhaCungCapDAO; tra cứu mã và tìm đa trường trong BUS. Ghi thành công mới đổi cache; DAO chuyển lỗi khóa ngoại thành thông báo không thể xóa hồ sơ có phiếu nhập. Popup chọn NCC đã nối callback với SupplierCode của phiếu nhập. Đợt kiểm chứng trước đã đọc HTTP 10 hồ sơ; còn nghiệm thu ghi/xóa có liên kết, đồng thời nhiều phiên và tương tác popup trên trình duyệt.
+6. **Xử lý:** NhaCungCapBUS nạp ArrayList qua NhaCungCapDAO; tra cứu mã và tìm đa trường trong BUS. Ghi thành công mới đổi cache; DAO chuyển lỗi khóa ngoại thành thông báo không thể xóa hồ sơ có phiếu nhập. Popup chọn NCC đã nối callback với SupplierCode của phiếu nhập. Đã kiểm tra CRUD, xóa có liên kết, mã trùng từ phiên khác và sửa hồ sơ bị phiên khác xóa trên MySQL kiểm thử riêng; còn nghiệm thu thao tác popup trên trình duyệt.
+
+## Form chính và điều hướng — phần 4
+
+1. **Giới thiệu:** Bố cục quản trị web/mobile với menu và vùng hiển thị trang con.
+2. **Giao diện:** BoCucQuanTri/KhungQuanTri, menu trái trên desktop và thanh điều hướng mobile; ảnh cũ cần chụp lại theo bản hiện tại.
+3. **Công thức:** Không tính toán tiền; mục đang chọn xác định theo đường dẫn hiện tại.
+4. **Đầu vào:** URL, trạng thái đăng nhập và ChildContent.
+5. **Đầu ra:** Tên tài khoản, menu tương ứng và trang chức năng; khi không đủ quyền hiện lối đăng nhập lại.
+6. **Xử lý:** AuthorizeView dùng policy Admin hiện có để kiểm soát menu/nội dung; bảo vệ route phía server vẫn được giữ. Có kiểm tra render ẩn danh, thiếu quyền, Admin, đổi trạng thái phiên và encode tên tài khoản; chưa coi kiểm tra render là nghiệm thu cookie/phiên hết hạn thực tế.
+
+## Tìm kiếm trên ArrayList — phần 9
+
+1. **Giới thiệu:** Tìm danh mục tại BUS, không truy vấn lại CSDL mỗi lần gõ.
+2. **Giao diện:** Ô tìm cơ bản trên danh mục và trong popup chọn hồ sơ.
+3. **Công thức:** Chuẩn hóa chuỗi tiếng Việt; lấy bản ghi có ít nhất một trường chứa từ khóa. Tìm mã dùng so sánh bằng không phân biệt hoa/thường.
+4. **Đầu vào:** Từ khóa, mã hoặc loại sản phẩm; ArrayList đã nạp từ DAO.
+5. **Đầu ra:** Danh sách kết quả hoặc thông báo không tìm thấy mã.
+6. **Xử lý:** Nạp danh sách khi cache null, duyệt trong BUS, trả kết quả cho GUI; cập nhật ArrayList sau ghi thành công. TaiLai chỉ hủy cache, lần đọc kế tiếp nạp lại. Đã có tài liệu ôn bảo vệ 10 phút tại docs/HUONG_DAN_BAO_VE_TRIET.md; không thay việc người trình bày cần tự hiểu và luyện giải thích.
+
+## Tìm kiếm nâng cao — phần 10
+
+1. **Giới thiệu:** Lọc nhiều điều kiện trên bốn danh mục Admin.
+2. **Giao diện:** TimKiemNangCao dùng lại, thêm/bớt điều kiện và nhóm; bộ lọc chỉ áp dụng khi bấm nút.
+3. **Công thức:** Kết quả = OR của các nhóm; mỗi nhóm = AND các điều kiện. NOT đảo kết quả một điều kiện. Số hỗ trợ =, <>, >, >=, <, <=; văn bản hỗ trợ Chứa, =, <>.
+4. **Đầu vào:** BoLocDanhMuc, trường tìm kiếm và giá trị do người dùng nhập.
+5. **Đầu ra:** Danh sách thỏa điều kiện; điều kiện sai trả thông báo và giữ bộ lọc đã áp dụng.
+6. **Xử lý:** BUS kiểm tra trường, kiểu giá trị, toán tử và giới hạn nhóm trước khi lọc dữ liệu bộ nhớ. Không có phân tích biểu thức tự do hoặc ngoặc lồng tùy ý. Phần review BUS của Phúc và nghiệm thu cuối vẫn cần phối hợp.
+
+## Ràng buộc dữ liệu — phần 15
+
+1. **Giới thiệu:** Kiểm tra đầu vào, mã/email trùng, khóa mã khi sửa và ngăn xóa hồ sơ có liên kết.
+2. **Giao diện:** DataAnnotations trên form, ô mã readonly khi sửa và thông báo nghiệp vụ từ BUS/DAO.
+3. **Công thức:** Mã không trùng; email không rỗng của KH/NV không trùng sau chuẩn hóa tại BUS và theo UNIQUE MySQL. NCC không có UNIQUE email trong schema hiện tại.
+4. **Đầu vào:** Dữ liệu form, mã hồ sơ đang sửa/xóa và trạng thái dữ liệu MySQL.
+5. **Đầu ra:** Hồ sơ được lưu hoặc thông báo từ chối; lỗi ghi không thêm/sửa/xóa cache giả.
+6. **Xử lý:** BUS kiểm tra trước khi gọi DAO; MySQL PRIMARY KEY/UNIQUE/FK xử lý các xung đột chưa có trong cache. Đã kiểm tra lỗi 1062/1451 thật và một số tình huống hai phiên bằng bộ kiểm tra MySQL riêng. Mã gợi ý chưa phải cơ chế cấp mã tự động toàn hệ thống; chưa triển khai khóa phiên bản chống ghi đè mọi kiểu sửa đồng thời hoặc nghiệm thu toàn bộ trường tính toán của module khác.
 
 ## Tìm kiếm và bố cục
 
@@ -51,4 +87,11 @@ Cập nhật 17/11/2026 theo mã nguồn hiện tại, đối chiếu mẫu c-3-
 
 - Build solution: 0 lỗi, 0 cảnh báo. Toàn bộ 123 checks tự động đạt, gồm kiểm tra tra cứu mã qua danh sách BUS, không gọi DAO đọc từng mã, chuẩn hóa mã, cache sau tải lại và cấu hình kết nối dùng chung. Các kiểm tra cache/ghi lỗi dùng DAO giả lập.
 - Kiểm tra chỉ đọc MySQL thật qua MyConnection: bộ mã kết nối utf8mb4, đọc được 10 khách hàng, 10 nhân viên và 10 nhà cung cấp qua ba DAO đã chỉnh. Không chạy INSERT/UPDATE/DELETE hoặc sửa schema.
-- Chưa nghiệm thu CRUD MySQL, tranh chấp nhiều phiên hoặc tương tác web/mobile trong đợt này. Không coi số checks đạt là bằng chứng hoàn thành toàn bộ đồ án.
+- Đợt đối chiếu ban đầu chỉ đọc CSDL; việc kiểm tra ghi được bổ sung ở mục dưới. Không coi số checks đạt là bằng chứng hoàn thành toàn bộ đồ án.
+
+## Kiểm chứng bổ sung danh mục/ràng buộc — 17/11/2026
+
+- SmartShop.MySqlChecks: 54 checks tích hợp MySQL thật đạt trên database riêng, dựng 19 bảng từ DDL gốc. Bao gồm CRUD ba danh mục, tiếng Việt/dấu nháy, lưu không đổi nội dung, FK chặn xóa, UNIQUE email KH/NV khi INSERT/UPDATE từ cache cũ, khóa mã và giữ cache khi lỗi.
+- Đã thử hai BUS khách hàng cùng thêm một mã bằng hai tác vụ song song; đúng một lần ghi thành công. Có kiểm tra trùng mã NV/NCC qua hai phiên, tải lại đồng bộ dữ liệu và sửa NCC đã bị phiên khác xóa.
+- Database kiểm thử được dọn trong finally và kiểm tra lại là không còn trong information_schema. Không ghi vào database ứng dụng, không chạy migration kho hay phần DROP/USE/dữ liệu mẫu trong script gốc.
+- Các lỗi ghi là kiểm tra tính nguyên vẹn của từng câu lệnh, không nghiệm thu transaction nhiều bước, tải lớn, mọi kiểu tranh chấp hoặc giao diện web/mobile. Bộ kiểm tra nằm ngoài ứng dụng và không thay đổi sườn dự án.

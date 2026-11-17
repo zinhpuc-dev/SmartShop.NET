@@ -18,6 +18,15 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 17/11/2026
 
+Bổ sung tools/SmartShop.MySqlChecks, bộ kiểm tra tích hợp MySQL riêng cho các phần 5/6/7/15. Tạo database tên ngẫu nhiên smartshop_test_triet_<GUID>, dựng 19 bảng từ các câu CREATE TABLE gốc, chỉ ghi vào database kiểm thử và tự dọn trong finally. Không chạy phần USE/DROP/dữ liệu mẫu của script gốc, không thay đổi database ứng dụng hoặc migration kho.
+
+- Toàn bộ 54 checks MySQL đạt, gồm CRUD KH/NV/NCC, tiếng Việt/dấu nháy, lưu không đổi nội dung và chặn dữ liệu sai.
+- Riêng KH đã thử FK giỏ/đơn chặn xóa; UNIQUE email khi INSERT/UPDATE qua cache cũ; giữ email của chính hồ sơ; khóa mã khi sửa; hai BUS thêm cùng mã bằng hai tác vụ song song. Lỗi không làm cập nhật cache sai; tải lại giúp hai phiên thấy cùng dữ liệu đã lưu.
+- 123 smoke checks hiện có đạt; build bộ kiểm tra và build solution sau dọn file: 0 lỗi/0 cảnh báo.
+- Báo cáo mục III đã bổ sung bằng chứng ghi MySQL và giới hạn; vẫn cần review bản cuối/ảnh. Còn trạng thái tài khoản khách hàng, thao tác giao diện và mọi kiểu tranh chấp ngoài các ca đã thử.
+
+## Mốc trước — 17/11/2026
+
 Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. KhachHangBUS/KhachHangDAO dùng MyConnection chung ở DAO để tạo/mở kết nối; using giải phóng sau mỗi thao tác. LayTheoMa duyệt ArrayList tại BUS, không đọc DAO theo từng mã. Chỉ cập nhật cache sau khi DAO ghi thành công; TaiLai làm danh sách được nạp lại ở lần đọc tiếp theo.
 
 ### Bổ sung thêm–sửa–xóa theo mẫu — 17/11/2026
@@ -45,7 +54,7 @@ CustomerBUS → ICustomerRepository/CustomerDAO → KHACH_HANG; đã có CRUD, v
 
 - [x] Đọc được 10 khách hàng MySQL qua trang được bảo vệ.
 - [x] Có mã CRUD, khóa mã khi sửa, tìm không dấu và tải lại cache.
-- [ ] Kiểm thử ghi CRUD và chặn xóa có liên kết trên database riêng.
+- [x] Kiểm thử ghi CRUD và chặn xóa có liên kết qua BUS/DAO trên database MySQL riêng (còn nghiệm thu thao tác UI).
 
 > Các mô tả và số test ngày cũ bên dưới là lịch sử. Không đánh dấu hoàn tất các yêu cầu rộng hơn phần đã làm/kiểm chứng.
 
@@ -57,7 +66,7 @@ CustomerBUS → ICustomerRepository/CustomerDAO → KHACH_HANG; đã có CRUD, v
 - [x] Form tìm khách hàng cho nút "..." (popup web trong Admin)
 - [x] Chụp ảnh form cho báo cáo
 - [x] Đã có ảnh form trong `docs/images/05-khach-hang/`
-- [ ] Đã viết phần báo cáo tương ứng (III (Triết))
+- [x] Đã viết phần báo cáo tương ứng (bản nháp III-triet.md đã có nội dung; còn review, ảnh mới và chốt bản cuối)
 
 ### Phạm vi trước 08/11/2026 (lịch sử)
 
@@ -78,6 +87,7 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Kiểm thử CRUD KH, FK chặn xóa, UNIQUE email và thêm trùng mã giữa hai phiên trên MySQL riêng; bổ sung báo cáo | Codex | 54 checks MySQL toàn bộ và 123 smoke checks đạt; DB thử đã dọn. Còn UI/ảnh, liên kết trạng thái tài khoản và nghiệm thu cuối |
 | 17/11/2026 | Triết | Chỉnh thêm–sửa–xóa sát mẫu: GUI tách nhánh Luu; BUS tạo DTO rõ ràng, sửa ArrayList bằng IndexOf và xóa bằng Remove sau khi DAO thành công | Codex | Giữ web/mobile, validation, khóa mã, SQL tham số và hợp đồng lớp; build 0 lỗi/0 cảnh báo, 123 checks hiện có đạt. Chưa nghiệm thu ghi MySQL hoặc tương tác UI |
 | 17/11/2026 | Triết | Đối chiếu mẫu 3 lớp: KhachHangBUS/KhachHangDAO, kết nối MyConnection chung, tra cứu mã tại ArrayList BUS; đồng bộ nháp báo cáo | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 03/11/2026 | Triết | Hoàn thành bản demo web của phần 05: CRUD, hồ sơ, tìm/lọc, trạng thái demo, popup chọn và kiểm tra dữ liệu; tách bố cục Admin khỏi User, lưu ảnh và nháp báo cáo | Codex | Làm local trên develop, chưa commit/push. Còn SQL/MyConnection, xác thực và báo cáo chính |

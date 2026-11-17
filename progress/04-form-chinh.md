@@ -2,7 +2,7 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 12/11/2026
+**Cập nhật lần cuối:** 17/11/2026
 
 | Mục | Nội dung |
 |---|---|
@@ -15,7 +15,15 @@
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
 
-## Cập nhật hiện tại — 12/11/2026
+## Cập nhật hiện tại — 17/11/2026
+
+Bổ sung bản nháp phần Form chính vào docs/bao-cao/III-triet.md theo các mục giới thiệu, giao diện, đầu vào/đầu ra và xử lý. Xóa GUI/shared/Components/KhungQuanTri.razor vì file rỗng, không có tham chiếu sử dụng; giữ nguyên component thật GUI/admin/Components/Layout/KhungQuanTri.razor. Không đổi sườn web/mobile hoặc chức năng quản trị.
+
+- Dọn khoảng 427 MB đầu ra build cũ bằng dotnet clean; còn khoảng 633 KB cache cũ trong Admin/User do lệnh xóa trực tiếp bị chính sách công cụ chặn. Các file build bị bỏ qua bởi Git nên phần dọn này không phải thay đổi source được push.
+- Build solution sau dọn: 0 lỗi, 0 cảnh báo. Giữ source, các bộ kiểm tra, tài liệu có tham chiếu và dữ liệu MySQL.
+- Còn nghiệm thu giao diện thực tế/ảnh mới, cookie hết hạn và chốt báo cáo cuối; không đánh dấu toàn bộ phần 4 xong.
+
+## Mốc trước — 12/11/2026
 
 Menu Admin có tổng quan/sản phẩm/đơn/thống kê, khách hàng, nhân viên, NCC, kho và khuyến mại; đã bảo vệ route và thêm đăng xuất. KhungQuanTri hiển thị tên từ AuthenticationState và dùng AuthorizeView với policy SmartShopAdminOnly hiện có để kiểm soát cả menu lẫn vùng nội dung. Khi phiên không còn quyền Admin, giao diện quản trị được gỡ và hiện liên kết đăng nhập lại/về cửa hàng. Không thay đổi cơ chế đăng nhập hoặc tạo thêm vai trò mới.
 
@@ -39,7 +47,7 @@ Menu Admin có tổng quan/sản phẩm/đơn/thống kê, khách hàng, nhân v
 - [x] Gắn các form con vào menu theo từng giai đoạn (các trang hiện có; chưa đủ toàn bộ chức năng đồ án)
 - [x] Ẩn/hiện menu theo quyền (dùng policy Admin hiện có; chưa có phân quyền chi tiết từng chức năng)
 - [x] Đã có ảnh form trong `docs/images/04-form-chinh/`
-- [ ] Đã viết phần báo cáo tương ứng (III (Triết))
+- [x] Đã viết phần báo cáo tương ứng (bản nháp III-triet.md đã có nội dung; còn review, ảnh mới và chốt bản cuối)
 
 ### Phạm vi trước 12/11/2026 (lịch sử)
 
@@ -60,6 +68,7 @@ Form chính mở được đủ các form con theo mẫu giảng viên
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Bổ sung báo cáo Form chính; xóa component shared rỗng không dùng và dọn đầu ra build cũ | Codex | Build solution sau dọn 0 lỗi/0 cảnh báo; giữ component Admin thật. Còn ảnh/UI và bản báo cáo cuối |
 | 12/11/2026 | Triết | Hiển thị tên tài khoản từ phiên; dùng AuthorizeView/policy Admin để ẩn menu và nội dung khi không đủ quyền; thêm lối đăng nhập lại, đánh dấu mục menu mobile và chỉnh thanh tiêu đề | Codex | Build 0 lỗi/0 cảnh báo; 104 checks đạt, gồm 6 checks render khung với phiên giả lập. Chưa nghiệm thu trực tiếp trình duyệt, cookie hết hạn hay ảnh mới; còn báo cáo và tích hợp đủ chức năng |
 | 03/11/2026 | Triết | Rà soát phần 04 đã có: layout User/Admin riêng, menu trái, vùng nội dung, breadcrumb, điều hướng mobile và liên kết các trang đang triển khai; xác nhận đã có ảnh desktop/mobile | Codex | Đang làm, 3/6 mục. Còn tên người đăng nhập, phân quyền menu, tích hợp đủ trang và báo cáo chính. Chỉ cập nhật nhật ký, chưa commit/push |
 
