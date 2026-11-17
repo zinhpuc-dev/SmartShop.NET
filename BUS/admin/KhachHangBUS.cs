@@ -51,7 +51,8 @@ public sealed class KhachHangBUS : IKhachHangBUS
     {
         var value = KiemTraDuLieu(draft);
         KiemTraTrung(value.Code, value.Email);
-        var saved = repository.Them(new KhachHangDTO(value.Code, value.Name, value.Phone, value.Email, value.Address));
+        var dto = new KhachHangDTO(value.Code, value.Name, value.Phone, value.Email, value.Address);
+        var saved = repository.Them(dto);
         customers!.Add(saved);
         return saved;
     }
@@ -59,38 +60,27 @@ public sealed class KhachHangBUS : IKhachHangBUS
     public KhachHangDTO Sua(string code, DuLieuKhachHang draft)
     {
         var existing = LayTheoMa(code);
-        _ = LayDanhSachKhachHang();
+        var index = customers!.IndexOf(existing);
         var value = KiemTraDuLieu(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã khách hàng không được sửa.");
         KiemTraTrung(value.Code, value.Email, existing.Code);
-        var saved = repository.Sua(existing with
-        {
-            Name = value.Name, Phone = value.Phone, Email = value.Email, Address = value.Address
-        });
-        ThayTheTrongDanhSach(existing, saved);
+        var dto = new KhachHangDTO(existing.Code, value.Name, value.Phone, value.Email, value.Address);
+        var saved = repository.Sua(dto);
+        customers![index] = saved;
         return saved;
     }
 
     public void Xoa(string code)
     {
         var existing = LayTheoMa(code);
-        _ = LayDanhSachKhachHang();
         repository.Xoa(existing.Code);
-        customers!.Remove(LayDanhSachKhachHang().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase)));
+        customers!.Remove(existing);
     }
 
     private IEnumerable<KhachHangDTO> LayDanhSachKhachHang()
     {
         customers ??= new ArrayList(repository.DocDanhSach().ToArray());
         return customers.Cast<KhachHangDTO>();
-    }
-
-    private void ThayTheTrongDanhSach(KhachHangDTO existing, KhachHangDTO saved)
-    {
-        var cached = LayDanhSachKhachHang().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
-        var index = customers!.IndexOf(cached);
-        if (index < 0) customers!.Add(saved);
-        else customers![index] = saved;
     }
 
     private void KiemTraTrung(string code, string email, string? exceptCode = null)

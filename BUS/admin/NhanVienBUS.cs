@@ -51,7 +51,8 @@ public sealed class NhanVienBUS : INhanVienBUS
     {
         var value = KiemTraDuLieu(draft);
         KiemTraTrung(value.Code, value.Email);
-        var saved = repository.Them(new NhanVienDTO(value.Code, value.Name, value.Position, value.Phone, value.Email));
+        var dto = new NhanVienDTO(value.Code, value.Name, value.Position, value.Phone, value.Email);
+        var saved = repository.Them(dto);
         employees!.Add(saved);
         return saved;
     }
@@ -59,38 +60,27 @@ public sealed class NhanVienBUS : INhanVienBUS
     public NhanVienDTO Sua(string code, DuLieuNhanVien draft)
     {
         var existing = LayTheoMa(code);
-        _ = LayDanhSachNhanVien();
+        var index = employees!.IndexOf(existing);
         var value = KiemTraDuLieu(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhân viên không được sửa.");
         KiemTraTrung(value.Code, value.Email, existing.Code);
-        var saved = repository.Sua(existing with
-        {
-            Name = value.Name, Position = value.Position, Phone = value.Phone, Email = value.Email
-        });
-        ThayTheTrongDanhSach(existing, saved);
+        var dto = new NhanVienDTO(existing.Code, value.Name, value.Position, value.Phone, value.Email);
+        var saved = repository.Sua(dto);
+        employees![index] = saved;
         return saved;
     }
 
     public void Xoa(string code)
     {
         var existing = LayTheoMa(code);
-        _ = LayDanhSachNhanVien();
         repository.Xoa(existing.Code);
-        employees!.Remove(LayDanhSachNhanVien().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase)));
+        employees!.Remove(existing);
     }
 
     private IEnumerable<NhanVienDTO> LayDanhSachNhanVien()
     {
         employees ??= new ArrayList(repository.DocDanhSach().ToArray());
         return employees.Cast<NhanVienDTO>();
-    }
-
-    private void ThayTheTrongDanhSach(NhanVienDTO existing, NhanVienDTO saved)
-    {
-        var cached = LayDanhSachNhanVien().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
-        var index = employees!.IndexOf(cached);
-        if (index < 0) employees!.Add(saved);
-        else employees![index] = saved;
     }
 
     private void KiemTraTrung(string code, string email, string? exceptCode = null)

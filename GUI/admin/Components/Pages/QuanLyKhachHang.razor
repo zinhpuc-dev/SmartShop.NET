@@ -144,7 +144,11 @@
     {
         try
         {
-            var saved = editingCode is string code ? KhachHangBUS.Sua(code, draft) : KhachHangBUS.Them(draft);
+            KhachHangDTO saved;
+            if (editingCode is null)
+                saved = KhachHangBUS.Them(draft);
+            else
+                saved = KhachHangBUS.Sua(editingCode, draft);
             if (selectedLookup?.Code == saved.Code) selectedLookup = saved;
             DongForm();
             query = "";

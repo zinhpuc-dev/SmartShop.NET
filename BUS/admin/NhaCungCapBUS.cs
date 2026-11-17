@@ -52,7 +52,8 @@ public sealed class NhaCungCapBUS : INhaCungCapBUS
     {
         var value = KiemTraDuLieu(draft);
         KiemTraTrung(value.Code);
-        var saved = repository.Them(new NhaCungCapDTO(value.Code, value.Name, value.Phone, value.Email, value.Address));
+        var dto = new NhaCungCapDTO(value.Code, value.Name, value.Phone, value.Email, value.Address);
+        var saved = repository.Them(dto);
         suppliers!.Add(saved);
         return saved;
     }
@@ -60,27 +61,21 @@ public sealed class NhaCungCapBUS : INhaCungCapBUS
     public NhaCungCapDTO Sua(string code, DuLieuNhaCungCap draft)
     {
         var existing = LayTheoMa(code);
-        _ = LayDanhSachNhaCungCap();
+        var index = suppliers!.IndexOf(existing);
         var value = KiemTraDuLieu(draft);
         if (value.Code != existing.Code) throw new InvalidOperationException("Mã nhà cung cấp không được sửa.");
         KiemTraTrung(value.Code, existing.Code);
-        var saved = repository.Sua(existing with
-        {
-            Name = value.Name, Phone = value.Phone, Email = value.Email, Address = value.Address
-        });
-        var cached = LayDanhSachNhaCungCap().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase));
-        var index = suppliers!.IndexOf(cached);
-        if (index < 0) suppliers!.Add(saved);
-        else suppliers![index] = saved;
+        var dto = new NhaCungCapDTO(existing.Code, value.Name, value.Phone, value.Email, value.Address);
+        var saved = repository.Sua(dto);
+        suppliers![index] = saved;
         return saved;
     }
 
     public void Xoa(string code)
     {
         var existing = LayTheoMa(code);
-        _ = LayDanhSachNhaCungCap();
         repository.Xoa(existing.Code);
-        suppliers!.Remove(LayDanhSachNhaCungCap().SingleOrDefault(value => value.Code.Equals(existing.Code, StringComparison.OrdinalIgnoreCase)));
+        suppliers!.Remove(existing);
     }
 
     private IEnumerable<NhaCungCapDTO> LayDanhSachNhaCungCap()

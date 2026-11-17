@@ -20,6 +20,15 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. KhachHangBUS/KhachHangDAO dùng MyConnection chung ở DAO để tạo/mở kết nối; using giải phóng sau mỗi thao tác. LayTheoMa duyệt ArrayList tại BUS, không đọc DAO theo từng mã. Chỉ cập nhật cache sau khi DAO ghi thành công; TaiLai làm danh sách được nạp lại ở lần đọc tiếp theo.
 
+### Bổ sung thêm–sửa–xóa theo mẫu — 17/11/2026
+
+- GUI tách rõ nhánh Thêm/Sửa trong hàm Luu, giữ form/component Blazor dùng chung và các hợp đồng BUS hiện có.
+- Thêm: BUS kiểm tra dữ liệu và mã/email theo ràng buộc hiện có, tạo DTO riêng, gọi DAO.Them rồi mới thêm kết quả vào ArrayList.
+- Sửa: BUS lấy hồ sơ từ danh sách, xác định vị trí bằng IndexOf, kiểm tra mã bị khóa và dữ liệu, tạo DTO mới, gọi DAO.Sua rồi thay phần tử tại vị trí đó. Bỏ cách cập nhật bằng with/SingleOrDefault để luồng dễ đối chiếu mẫu.
+- Xóa: BUS tìm hồ sơ, gọi DAO.Xoa rồi mới Remove hồ sơ khỏi ArrayList. Nếu DAO báo lỗi, danh sách BUS được giữ nguyên.
+- Giữ SQL có tham số, lớp MyConnection và xử lý lỗi hiện có. Không đổi nền tảng web/mobile hoặc sườn GUI/BUS/DAO/DTO.
+- Kiểm tra lại sau chỉnh CRUD: build solution 0 lỗi/0 cảnh báo, toàn bộ 123 checks hiện có đạt. Đây là chỉnh cách viết/luồng gọi, không bổ sung checks mới trong đợt CRUD; chưa nghiệm thu ghi MySQL hoặc thao tác trình duyệt mới.
+
 ### Phạm vi kiểm chứng đợt này
 
 - Build solution: 0 lỗi, 0 cảnh báo; 123 checks tự động đạt. Bổ sung 14 checks về tra cứu mã/cache/không gọi DAO đọc từng mã và 5 checks cấu hình kết nối chung; các checks nghiệp vụ dùng DAO giả lập.
@@ -69,6 +78,7 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Chỉnh thêm–sửa–xóa sát mẫu: GUI tách nhánh Luu; BUS tạo DTO rõ ràng, sửa ArrayList bằng IndexOf và xóa bằng Remove sau khi DAO thành công | Codex | Giữ web/mobile, validation, khóa mã, SQL tham số và hợp đồng lớp; build 0 lỗi/0 cảnh báo, 123 checks hiện có đạt. Chưa nghiệm thu ghi MySQL hoặc tương tác UI |
 | 17/11/2026 | Triết | Đối chiếu mẫu 3 lớp: KhachHangBUS/KhachHangDAO, kết nối MyConnection chung, tra cứu mã tại ArrayList BUS; đồng bộ nháp báo cáo | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 03/11/2026 | Triết | Hoàn thành bản demo web của phần 05: CRUD, hồ sơ, tìm/lọc, trạng thái demo, popup chọn và kiểm tra dữ liệu; tách bố cục Admin khỏi User, lưu ảnh và nháp báo cáo | Codex | Làm local trên develop, chưa commit/push. Còn SQL/MyConnection, xác thực và báo cáo chính |
 
