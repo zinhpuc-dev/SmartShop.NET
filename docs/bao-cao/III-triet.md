@@ -5,11 +5,21 @@ Cập nhật 17/11/2026 theo mã nguồn hiện tại, đối chiếu mẫu c-3-
 ## Cấu trúc ba lớp và DTO
 
 - GUI: các trang và component Razor nhận đầu vào, hiển thị dữ liệu/thông báo, gọi BUS qua interface; không viết SQL hoặc mở kết nối MySQL trong màn hình danh mục.
-- BUS: KhachHangBUS, NhanVienBUS, NhaCungCapBUS giữ ArrayList theo phiên; kiểm tra dữ liệu hợp lệ, mã duy nhất, khóa mã khi sửa và xử lý tìm kiếm. Khách hàng/nhân viên còn kiểm tra trùng email không rỗng.
+- BUS: KhachHangBUS, NhanVienBUS, NhaCungCapBUS kế thừa DanhMucBUS<TDto,TForm>, dùng chung xử lý nghiệp vụ và giữ ArrayList riêng theo từng instance; kiểm tra dữ liệu hợp lệ, mã duy nhất, khóa mã khi sửa và xử lý tìm kiếm. Khách hàng/nhân viên còn kiểm tra trùng email không rỗng.
 - DAO: KhachHangDAO, NhanVienDAO, NhaCungCapDAO thực hiện đọc/thêm/sửa/xóa bằng SQL có tham số. Ba DAO dùng lớp MyConnection chung để tạo/mở kết nối; dùng using để giải phóng sau mỗi thao tác. Chuỗi kết nối nhận từ cấu hình ngoài mã nguồn, mặc định utf8mb4 nếu chưa chỉ định bộ mã.
 - DTO: KhachHangDTO, NhanVienDTO, NhaCungCapDTO truyền dữ liệu; các lớp DuLieuKhachHang/DuLieuNhanVien/DuLieuNhaCungCap chứa dữ liệu form và ràng buộc DataAnnotations. DTO không truy cập MySQL.
 - GUI → BUS → hợp đồng DAO → DAO MySQL là luồng nghiệp vụ. KhoiDong.cs chỉ ghép các implementation qua DI. BUS không tham chiếu assembly DAO cụ thể.
 - Tương ứng mẫu desktop: Razor/component thay form và ListView; dữ liệu BUS đóng gói theo phiên thay danh sách static dùng chung mọi người. ArrayList, tra cứu mã trong danh sách BUS và lớp MyConnection giữ cách phân chia trách nhiệm của mẫu.
+
+## Tái sử dụng và tối ưu BUS
+
+DanhMucBUS<TDto,TForm> là lớp cơ sở dùng chung cache ArrayList, tra mã, tìm đa trường, gợi ý mã, kiểm tra DataAnnotations, định dạng email và trùng mã/email. Các hàm Them/Sua/Xoa được viết rõ trong từng file BUS con, gọi lại helper chung qua protected. BUS con còn chuẩn hóa dữ liệu, tạo DTO, chỉ định trường riêng và bộ lọc nâng cao. Quy tắc NCC cho phép email trùng được override riêng; không áp dụng nhầm quy tắc email KH/NV cho NCC.
+
+IDanhMucDAO<TDto> gom hợp đồng CRUD, các interface DAO danh mục riêng kế thừa hợp đồng này. IHoSoLienHe cung cấp thuộc tính chung cho BUS; không đưa SQL vào DTO/BUS. Giao diện, đăng ký DI và chữ ký hàm gọi từ GUI được giữ nguyên.
+
+GoiYMa tạo HashSet mã hiện có một lần để tránh lặp quét ArrayList cho từng mã thử, vẫn trả khoảng trống nhỏ nhất và giữ tiền tố/độ dài mã riêng của từng danh mục. Cache không static và chỉ cập nhật sau khi DAO ghi thành công.
+
+Sau khi tách BUS chung: build solution 0 lỗi/0 cảnh báo; 129 smoke checks và 57 checks MySQL tích hợp đạt. Bổ sung kiểm tra khoảng trống mã, tiền tố/độ dài mã, cache riêng từng instance và quy tắc NCC cho phép email trùng nhưng vẫn từ chối email sai định dạng. Database thử đã được dọn. Đợt này không thay đổi GUI hoặc nghiệm thu lại thao tác trình duyệt.
 
 ## Quản lý khách hàng
 

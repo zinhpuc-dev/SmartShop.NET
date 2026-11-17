@@ -1,114 +1,54 @@
-using System.Collections;
-using System.ComponentModel.DataAnnotations;
 using SmartShop.DTO;
 using SmartShop.DTO.Contracts;
 
 namespace SmartShop.BUS;
 
-public sealed class KhachHangBUS : IKhachHangBUS
+public sealed class KhachHangBUS : DanhMucBUS<KhachHangDTO, DuLieuKhachHang>, IKhachHangBUS
 {
-    private readonly IKhachHangDAO repository;
-    private ArrayList? customers;
-
     public KhachHangBUS(IKhachHangDAO repository)
-    {
-        ArgumentNullException.ThrowIfNull(repository);
-        this.repository = repository;
-    }
-
-    public void TaiLai() => customers = null;
-
-    public IReadOnlyList<KhachHangDTO> TimKiem(string query = "", BoLocDanhMuc? filter = null)
-    {
-        var matches = TimKiemDanhMucNangCao.LocKhachHang(filter);
-        var term = XuLyChuoiTimKiem.ChuanHoa((query ?? "").Trim());
-        return LayDanhSachKhachHang()
-            .Where(matches)
-            .Where(c => term.Length == 0 || new[] { c.Code, c.Name, c.Phone, c.Email, c.Address }
-                .Any(value => XuLyChuoiTimKiem.ChuanHoa(value).Contains(term, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
-    }
-
-    public KhachHangDTO LayTheoMa(string code)
-    {
-        var ma = (code ?? string.Empty).Trim();
-        foreach (var value in LayDanhSachKhachHang())
-        {
-            if (value.Code.Equals(ma, StringComparison.OrdinalIgnoreCase)) return value;
-        }
-        throw new InvalidOperationException("Không tìm thấy khách hàng.");
-    }
-
-    public string GoiYMa()
-    {
-        var number = 1;
-        while (LayDanhSachKhachHang().Any(c => c.Code.Equals($"KH{number:000000}", StringComparison.OrdinalIgnoreCase))) number++;
-        if (number > 999999) throw new InvalidOperationException("Không còn mã khách hàng khả dụng.");
-        return $"KH{number:000000}";
-    }
+        : base(repository, "khách hàng", "KH", 6) { }
 
     public KhachHangDTO Them(DuLieuKhachHang draft)
     {
-        var value = KiemTraDuLieu(draft);
-        KiemTraTrung(value.Code, value.Email);
-        var dto = new KhachHangDTO(value.Code, value.Name, value.Phone, value.Email, value.Address);
-        var saved = repository.Them(dto);
-        customers!.Add(saved);
+        var dto = KiemTraDuLieu(draft);
+        KiemTraTrung(dto);
+        var saved = KhoDuLieu.Them(dto);
+        DanhSachDaNap.Add(saved);
         return saved;
     }
 
     public KhachHangDTO Sua(string code, DuLieuKhachHang draft)
     {
         var existing = LayTheoMa(code);
-        var index = customers!.IndexOf(existing);
-        var value = KiemTraDuLieu(draft);
-        if (value.Code != existing.Code) throw new InvalidOperationException("Mã khách hàng không được sửa.");
-        KiemTraTrung(value.Code, value.Email, existing.Code);
-        var dto = new KhachHangDTO(existing.Code, value.Name, value.Phone, value.Email, value.Address);
-        var saved = repository.Sua(dto);
-        customers![index] = saved;
+        int index = DanhSachDaNap.IndexOf(existing);
+        var dto = KiemTraDuLieu(draft);
+        if (dto.Code != existing.Code) throw new InvalidOperationException("Mã khách hàng không được sửa.");
+        KiemTraTrung(dto, existing.Code);
+        var saved = KhoDuLieu.Sua(dto);
+        DanhSachDaNap[index] = saved;
         return saved;
     }
 
     public void Xoa(string code)
     {
         var existing = LayTheoMa(code);
-        repository.Xoa(existing.Code);
-        customers!.Remove(existing);
+        KhoDuLieu.Xoa(existing.Code);
+        DanhSachDaNap.Remove(existing);
     }
 
-    private IEnumerable<KhachHangDTO> LayDanhSachKhachHang()
+    protected override DuLieuKhachHang ChuanHoa(DuLieuKhachHang value) => new()
     {
-        customers ??= new ArrayList(repository.DocDanhSach().ToArray());
-        return customers.Cast<KhachHangDTO>();
-    }
+        Code = ChuanHoaChuoi(value.Code).ToUpperInvariant(),
+        Name = ChuanHoaChuoi(value.Name),
+        Phone = ChuanHoaChuoi(value.Phone),
+        Email = ChuanHoaChuoi(value.Email),
+        Address = ChuanHoaChuoi(value.Address)
+    };
 
-    private void KiemTraTrung(string code, string email, string? exceptCode = null)
-    {
-        foreach (var value in LayDanhSachKhachHang().Where(value => !value.Code.Equals(exceptCode, StringComparison.OrdinalIgnoreCase)))
-        {
-            if (value.Code.Equals(code, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Mã khách hàng đã tồn tại.");
-            if (email.Length > 0 && value.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Email đã được sử dụng cho khách hàng khác.");
-        }
-    }
+    protected override KhachHangDTO TaoDTO(DuLieuKhachHang value) => new(value.Code, value.Name, value.Phone, value.Email, value.Address);
 
-    private static DuLieuKhachHang KiemTraDuLieu(DuLieuKhachHang draft)
-    {
-        ArgumentNullException.ThrowIfNull(draft);
-        var value = new DuLieuKhachHang
-        {
-            Code = (draft.Code ?? "").Trim().ToUpperInvariant(), Name = (draft.Name ?? "").Trim(),
-            Phone = (draft.Phone ?? "").Trim(), Email = (draft.Email ?? "").Trim(),
-            Address = (draft.Address ?? "").Trim()
-        };
-        var errors = new List<ValidationResult>();
-        if (!Validator.TryValidateObject(value, new ValidationContext(value), errors, validateAllProperties: true))
-            throw new InvalidOperationException(string.Join(" ", errors.Select(e => e.ErrorMessage)));
-        if (!string.IsNullOrEmpty(value.Email) && !new EmailAddressAttribute().IsValid(value.Email))
-            throw new InvalidOperationException("Email không đúng định dạng.");
-        return value;
-    }
+    protected override string LayTruongRieng(KhachHangDTO value) => value.Address;
 
+    protected override Func<KhachHangDTO, bool> TaoBoLoc(BoLocDanhMuc? filter) =>
+        TimKiemDanhMucNangCao.LocKhachHang(filter);
 }

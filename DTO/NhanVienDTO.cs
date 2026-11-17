@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DTO;
 
-public sealed record NhanVienDTO(string Code, string Name, string Position, string Phone, string Email);
+public sealed record NhanVienDTO(string Code, string Name, string Position, string Phone, string Email) : IHoSoLienHe;
 
 /// <summary>Bản sao dùng để chỉnh sửa; hủy form không làm đổi nhân viên đã lưu.</summary>
 public sealed class DuLieuNhanVien

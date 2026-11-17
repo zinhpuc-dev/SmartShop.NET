@@ -76,6 +76,7 @@ internal static class KiemTraMySql
                 nccDAO.DocTheoMa, nccBUS.LayTheoMa, value => value.Name);
 
             KiemTraLienKet(chuoiThu);
+            KiemTraQuyTacNhaCungCap(chuoiThu);
             KiemTraEmailKhachHang(chuoiThu);
             KiemTraEmailNhanVien(chuoiThu);
             await KiemTraHaiPhien(chuoiThu);
@@ -159,6 +160,21 @@ internal static class KiemTraMySql
         TuChoi(() => ncc.Sua(nccCu.Code, doiMa), "Không thể đổi mã NCC tại BUS");
         KiemTra(nccDAO.DocTheoMa(nccCu.Code) == nccCu && ncc.LayTheoMa(nccCu.Code) == nccCu,
             "Đổi mã NCC bị từ chối giữ nguyên dữ liệu/cache");
+    }
+
+    private static void KiemTraQuyTacNhaCungCap(string chuoi)
+    {
+        var dao = new NhaCungCapDAO(chuoi);
+        var bus = new NhaCungCapBUS(dao);
+        var a = TaoNhaCungCap("N60001", "NCC dùng chung email"); a.Email = "vendor@example.test";
+        var b = TaoNhaCungCap("N60002", "NCC thứ hai"); b.Email = a.Email;
+        bus.Them(a); bus.Them(b);
+        KiemTra(dao.DocTheoMa(a.Code)!.Email == dao.DocTheoMa(b.Code)!.Email,
+            "BUS dùng chung vẫn cho phép NCC trùng email theo schema riêng");
+        var sai = TaoNhaCungCap("N60003", "NCC email sai"); sai.Email = "khong-phai-email";
+        TuChoi(() => bus.Them(sai), "NCC vẫn kiểm tra định dạng email bằng validation dùng chung");
+        KiemTra(dao.DocTheoMa(sai.Code) is null && bus.TimKiem(sai.Code).Count == 0,
+            "Email NCC sai không được ghi hoặc thêm vào cache");
     }
 
     private static void KiemTraEmailKhachHang(string chuoi)

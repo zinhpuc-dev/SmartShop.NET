@@ -17,6 +17,16 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 17/11/2026
 
+Gom DataAnnotations, chuẩn hóa chuỗi hỗ trợ, định dạng email và kiểm tra trùng mã/email vào helper của DanhMucBUS<TDto,TForm>. Them/Sua/Xoa vẫn nằm đầy đủ trong từng BUS danh mục và gọi helper dùng chung; khóa mã khi sửa tiếp tục được kiểm tra tại BUS con.
+
+- KH/NV giữ quy tắc email duy nhất; NCC override EmailDuyNhat=false đúng schema, vẫn kiểm tra định dạng email khi nhập. Không thay đổi UNIQUE/FK hoặc database ứng dụng.
+- Bổ sung 3 checks MySQL xác nhận NCC được phép trùng email, từ chối email sai định dạng và giữ nguyên CSDL/cache khi từ chối.
+- 129 smoke checks, 57 MySQL checks đạt; build solution 0 lỗi/0 cảnh báo. Database thử đã được dọn. Các checks UNIQUE/FK, khóa mã và tranh chấp thêm cùng mã tiếp tục đạt sau khi tách helper chung.
+- Hợp đồng IDanhMucDAO<TDto> và IHoSoLienHe hỗ trợ tái sử dụng theo kiểu dữ liệu, không đưa SQL vào BUS/DTO. Báo cáo/tài liệu bảo vệ đã đồng bộ.
+- Còn nghiệm thu UI/ảnh, trường tính toán/tự sinh của các module phối hợp, transaction nhiều bước và các kiểu sửa đồng thời khác; chưa đánh dấu toàn bộ phần 15 xong.
+
+## Mốc trước — 17/11/2026
+
 Bổ sung tools/SmartShop.MySqlChecks và README hướng dẫn chạy bộ kiểm tra MySQL tích hợp trên database ngẫu nhiên riêng. Dựng 19 bảng từ DDL gốc, không chạy USE/DROP/dữ liệu mẫu hoặc migration kho; chỉ ghi vào CSDL thử. Cuối chạy xóa đúng database do lần chạy tạo và kiểm tra lại không còn trong information_schema.
 
 - 54 checks MySQL đạt: CRUD ba danh mục, dữ liệu sai, mã bị khóa, lỗi UNIQUE email KH/NV khi INSERT/UPDATE với cache cũ, giữ email của chính bản ghi, FK giỏ/đơn/hóa đơn/phiếu nhập chặn xóa, trùng mã từ phiên khác và giữ nguyên cache khi lỗi.
@@ -67,6 +77,7 @@ Không trùng mã; field khóa không sửa được
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Gom validation/trùng mã/email vào BUS cơ sở; giữ khóa mã trong CRUD từng BUS, quy tắc email riêng NCC; bổ sung 3 checks MySQL | Codex | Build 0 lỗi/0 cảnh báo; 129 smoke/57 MySQL checks đạt, DB thử đã dọn. Còn nghiệm thu UI/ảnh và các phạm vi chưa kiểm chứng |
 | 17/11/2026 | Triết | Bổ sung 54 checks MySQL thật cho CRUD, UNIQUE/FK, khóa mã và cache giữa hai phiên trên DB thử tự dọn; bổ sung báo cáo/tài liệu | Codex | 54 MySQL checks và 123 smoke checks đạt; không đổi DB ứng dụng. Chưa nghiệm thu transaction nhiều bước, tải lớn, UI hoặc mọi kiểu tranh chấp |
 | 10/11/2026 | Triết | Bổ sung chặn email trùng tại BUS khi thêm/sửa KH/NV, bắt lỗi UNIQUE khi sửa trong DAO và kiểm tra khóa mã/cache khi ghi lỗi | Codex | Đang làm, 2/6 mục checklist chính. 11 checks ràng buộc mới qua với repository giả lập, 78 checks toàn bộ đạt. Chờ nghiệm thu ghi MySQL, ảnh và báo cáo; local develop, chưa commit/push |
 | 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |

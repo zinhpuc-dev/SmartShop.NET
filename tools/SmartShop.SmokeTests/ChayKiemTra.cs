@@ -66,6 +66,7 @@ KiemTra(serviceA.Count == 1 && serviceB.Count == 0 && !ReferenceEquals(serviceA,
 KiemTraTimKiemDanhMuc.Chay();
 KiemTraTimKiemDanhMuc.ChayTimKiemNangCao();
 KiemTraTimKiemDanhMuc.ChayKiemTraRangBuoc();
+KiemTraTimKiemDanhMuc.ChayTaiSuDungBUS();
 KiemTraKyThongKe.Chay();
 await KiemTraKhungQuanTri.Chay();
 KiemTraKetNoi.Chay();

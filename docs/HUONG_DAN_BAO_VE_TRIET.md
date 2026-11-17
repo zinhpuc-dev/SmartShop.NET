@@ -7,8 +7,8 @@ Tài liệu ôn phần 4, 5, 6, 7, 9, 10, 15 và phần phối hợp 14, 16. Đ�
 | Thời gian | Nội dung cần nói | Mã nguồn để minh họa |
 |---|---|---|
 | 0–2 phút | GUI nhận dữ liệu, BUS xử lý nghiệp vụ, DAO thực hiện SQL, DTO truyền dữ liệu | QuanLyKhachHang, KhachHangBUS, KhachHangDAO, KhachHangDTO |
-| 2–4 phút | ArrayList tại BUS, nạp một lần, tìm mã/tên trong bộ nhớ, tải lại khi cần | LayDanhSachKhachHang, TimKiem, LayTheoMa, TaiLai |
-| 4–6 phút | Thêm/sửa/xóa; ghi DAO thành công mới đổi cache | Them, Sua, Xoa trong ba BUS danh mục |
+| 2–4 phút | ArrayList tại BUS, nạp một lần, tìm mã/tên trong bộ nhớ, tải lại khi cần | DanhMucBUS: LayDanhSach, TimKiem, LayTheoMa, TaiLai |
+| 4–6 phút | Thêm/sửa/xóa; ghi DAO thành công mới đổi cache | Them, Sua, Xoa tại từng BUS danh mục; helper dùng chung ở DanhMucBUS |
 | 6–8 phút | AND trong nhóm, OR giữa nhóm, NOT từng điều kiện; kiểm tra kiểu trường | TimKiemDanhMucNangCao và BoLocDanhMuc |
 | 8–9 phút | Trùng mã/email, khóa mã khi sửa, FK chặn xóa và lỗi khi hai phiên thao tác | KiemTraTrung, KiemTraDuLieu và catch MySqlException tại DAO |
 | 9–10 phút | Tái sử dụng và khác biệt giữa mẫu desktop với bản web/mobile | Component dùng chung, interface, DI scoped và MyConnection |
@@ -21,24 +21,24 @@ DTO và lớp dữ liệu form nằm trong project DTO. BUS chỉ tham chiếu h
 
 ## ArrayList và tìm kiếm
 
-`private ArrayList? customers` là dữ liệu đã nạp của một BUS. Lần đầu đọc, BUS gọi DAO.DocDanhSach và tạo ArrayList. Các lần TimKiem/LayTheoMa sau đó sử dụng danh sách này.
+`private ArrayList? danhSach` trong DanhMucBUS là dữ liệu đã nạp của một BUS; mỗi instance lớp con có cache riêng. Lần đầu đọc, BUS gọi DAO.DocDanhSach và tạo ArrayList. Các lần TimKiem/LayTheoMa sau đó sử dụng danh sách này.
 
 Mã rút gọn để viết trên giấy:
 
 ```csharp
-public KhachHangDTO LayTheoMa(string code)
+public TDto LayTheoMa(string code)
 {
     string ma = (code ?? "").Trim();
-    foreach (KhachHangDTO value in LayDanhSachKhachHang())
+    foreach (TDto value in LayDanhSach())
     {
         if (value.Code.Equals(ma, StringComparison.OrdinalIgnoreCase))
             return value;
     }
-    throw new InvalidOperationException("Không tìm thấy khách hàng.");
+    throw new InvalidOperationException($"Không tìm thấy {tenDanhMuc}.");
 }
 ```
 
-LayDanhSachKhachHang trả một chuỗi DTO được duyệt từ ArrayList. LINQ trong tìm kiếm đa trường cũng duyệt dữ liệu bộ nhớ; không có IQueryable hay câu SQL tìm kiếm phát sinh khi gõ. Chuỗi được chuẩn hóa tiếng Việt không dấu để tìm tên thuận tiện.
+LayDanhSach trong lớp cơ sở trả một chuỗi DTO được duyệt từ ArrayList. TDto là kiểu hồ sơ do lớp con chỉ định, ví dụ KhachHangDTO. LINQ trong tìm kiếm đa trường cũng duyệt dữ liệu bộ nhớ; không có IQueryable hay câu SQL tìm kiếm phát sinh khi gõ. Chuỗi được chuẩn hóa tiếng Việt không dấu để tìm tên thuận tiện.
 
 TaiLai đặt cache về null; lần đọc kế tiếp mới nạp lại DAO. Danh sách rỗng vẫn là dữ liệu đã nạp, không phải cứ rỗng là truy vấn lại. Thay đổi từ người dùng khác chỉ xuất hiện sau khi tải lại.
 
@@ -69,6 +69,12 @@ BUS kiểm tra trùng dựa vào cache nên có thể chưa thấy dữ liệu v
 Hai phiên cùng thêm một mã có thể đều vượt qua kiểm tra cache, nhưng chỉ một INSERT thành công. Phiên bị từ chối phải giữ cache cũ và tải lại nếu cần. Điều này không có nghĩa mọi loại xung đột sửa đồng thời đã được giải quyết; chưa có cơ chế khóa phiên bản để ngăn ghi đè thay đổi mới nhất.
 
 ## OOP, tái sử dụng và web/mobile
+
+Ba lớp KhachHangBUS, NhanVienBUS và NhaCungCapBUS kế thừa DanhMucBUS<TDto,TForm>. Các hàm Them/Sua/Xoa được khai báo và xử lý rõ trong từng file BUS danh mục để dễ đối chiếu mẫu. Cache, tìm mã/tìm đa trường, gợi ý mã, DataAnnotations, định dạng email và kiểm tra trùng được viết một lần trong lớp cơ sở rồi dùng lại qua các hàm/properties protected. Lớp con override chuẩn hóa dữ liệu, ánh xạ DTO, trường tìm kiếm riêng và bộ lọc tương ứng. NhaCungCapBUS override EmailDuyNhat=false để giữ đúng quy tắc NCC không có UNIQUE email; KH/NV vẫn kiểm tra email trùng.
+
+Đây là kế thừa kết hợp đa hình: các hàm Them/Sua/Xoa ở BUS con gọi helper kiểm tra dùng chung; helper đó gọi chuẩn hóa và ánh xạ DTO riêng được override ở lớp con. IDanhMucDAO<TDto> gom hợp đồng CRUD chung; các interface DAO riêng kế thừa nó, còn implementation SQL vẫn ở DAO. IHoSoLienHe mô tả các thuộc tính chung Code/Name/Phone/Email, không chứa nghiệp vụ hoặc SQL.
+
+GoiYMa lập HashSet mã một lần rồi tìm khoảng trống đầu tiên. Với n hồ sơ và k mã cần thử, chi phí kỳ vọng khoảng O(n+k), thay vì quét cả danh sách cho từng mã. Đây vẫn chỉ là gợi ý theo cache; ràng buộc MySQL mới bảo đảm duy nhất khi nhiều phiên cùng ghi.
 
 - Đóng gói: cache và kết nối nằm trong lớp, GUI gọi hành vi qua interface.
 - Thay thế implementation: BUS nhận hợp đồng DAO; kiểm tra thường dùng DAO giả lập, kiểm tra tích hợp dùng DAO MySQL thật.

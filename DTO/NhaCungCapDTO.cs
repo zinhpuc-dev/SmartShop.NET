@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DTO;
 
-public sealed record NhaCungCapDTO(string Code, string Name, string Phone, string Email, string Address);
+public sealed record NhaCungCapDTO(string Code, string Name, string Phone, string Email, string Address) : IHoSoLienHe;
 
 /// <summary>Bản sao dùng để chỉnh sửa; hủy form không làm đổi nhà cung cấp đã lưu.</summary>
 public sealed class DuLieuNhaCungCap

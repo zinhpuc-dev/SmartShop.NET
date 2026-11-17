@@ -97,6 +97,29 @@ internal static class KiemTraTimKiemDanhMuc
 
     private static BoLocDanhMuc TaoBoLoc(params DieuKienTimKiem[] conditions) => new([new NhomDieuKien(conditions)]);
 
+    public static void ChayTaiSuDungBUS()
+    {
+        var data = new KhoKhachHangGiaLap();
+        var a = new KhachHangBUS(data);
+        var b = new KhachHangBUS(data);
+        _ = a.TimKiem(); _ = b.TimKiem();
+        a.Them(new DuLieuKhachHang
+        {
+            Code = "KH000003", Name = "Hồ sơ thứ ba", Phone = "0900000003", Address = "Địa chỉ thử"
+        });
+        KiemTra(a.GoiYMa() == "KH000002", "Shared BUS suggests first gap instead of count plus one");
+        KiemTra(data.Reads == 2, "Code suggestion reuses loaded cache across repeated calls");
+        KiemTra(a.TimKiem("KH000003").Count == 1 && b.TimKiem("KH000003").Count == 0,
+            "Shared BUS implementation still isolates instance caches");
+        b.TaiLai();
+        KiemTra(b.LayTheoMa("KH000003") == a.LayTheoMa("KH000003") && data.Reads == 3,
+            "Reloading one inherited BUS instance refreshes only its own snapshot");
+        KiemTra(new NhanVienBUS(new KhoNhanVienGiaLap()).GoiYMa() == "NV000002",
+            "Shared code suggestion preserves employee prefix and width");
+        KiemTra(new NhaCungCapBUS(new KhoNhaCungCapGiaLap()).GoiYMa() == "N00002",
+            "Shared code suggestion preserves supplier prefix and width");
+    }
+
     private static void KiemTraTuChoiBoLoc(Action action, string message)
     {
         try { action(); }

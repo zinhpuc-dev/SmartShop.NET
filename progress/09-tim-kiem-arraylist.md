@@ -17,6 +17,15 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 
 ## Cập nhật hiện tại — 17/11/2026
 
+Đưa cache ArrayList, tìm mã, tìm đa trường, TaiLai và GoiYMa vào DanhMucBUS<TDto,TForm> để ba BUS danh mục dùng chung. Các bước Them/Sua/Xoa vẫn viết rõ trong từng BUS, gọi lại các helper/cache được cấp quyền protected.
+
+- Tìm kiếm tiếp tục duyệt danh sách BUS, kiểm tra bộ lọc nâng cao trước khi đọc/lọc và không gọi DAO khi gõ hoặc tra mã. Mỗi instance có snapshot riêng; TaiLai chỉ làm mới phiên tương ứng.
+- GoiYMa lập HashSet mã đã dùng một lần để tìm mã trống đầu tiên; giữ nguyên tiền tố/độ dài riêng KH/NV/NCC.
+- Bổ sung 6 smoke checks về khoảng trống mã, số lần đọc, cache riêng từng instance, tải lại và định dạng mã NV/NCC. Toàn bộ 129 smoke checks và 57 MySQL checks đạt; build solution 0 lỗi/0 cảnh báo.
+- Tài liệu ôn bảo vệ và báo cáo III đã cập nhật theo lớp cơ sở dùng chung. Còn ảnh riêng, nghiệm thu tương tác và review cuối.
+
+## Mốc trước — 17/11/2026
+
 Đã soạn docs/HUONG_DAN_BAO_VE_TRIET.md: kịch bản trình bày 10 phút, luồng GUI–BUS–DAO–DTO, ví dụ foreach tìm mã trên danh sách BUS, tải cache/TaiLai, cập nhật cache sau ghi thành công và khác biệt static desktop với phiên web. Bổ sung mục tìm kiếm ArrayList vào bản nháp docs/bao-cao/III-triet.md.
 
 - 54 checks MySQL tích hợp bổ sung xác nhận cache giữ nguyên khi lỗi UNIQUE/FK, phiên thua thêm trùng mã không thêm cache, tải lại giúp thấy dữ liệu mới và loại hồ sơ bị phiên khác xóa.
@@ -71,6 +80,7 @@ Tìm kiếm chạy trên ArrayList, code nằm ở BUS
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Gom cache/tìm kiếm/gợi ý mã vào DanhMucBUS, tối ưu HashSet; bổ sung kiểm tra cache riêng từng instance và định dạng mã | Codex | Build 0 lỗi/0 cảnh báo; 129 smoke/57 MySQL checks đạt, DB thử đã dọn. Còn nghiệm thu UI/ảnh và các phạm vi chưa kiểm chứng |
 | 17/11/2026 | Triết | Soạn tài liệu ôn bảo vệ 10 phút và mục báo cáo ArrayList; bổ sung bằng chứng cache qua MySQL thật | Codex | Có tài liệu và ví dụ foreach; 123 smoke/54 MySQL checks đạt. Chưa thay việc tự luyện giải thích hoặc nghiệm thu UI/ảnh |
 | 17/11/2026 | Triết | Tra cứu mã bằng vòng lặp trên ArrayList, không gọi DAO đọc từng mã; kiểm tra cache/tải lại | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 10/11/2026 | Triết | Chuyển tìm kiếm cơ bản của bốn danh mục Admin sang ArrayList tại BUS, nối tìm sản phẩm từ GUI vào BUS và thêm kiểm tra cache/tìm kiếm | Codex | Đang làm, 3/6 mục. Build đạt, 40 checks qua với repository giả lập. Local develop, chưa commit/push |

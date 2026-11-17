@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using SmartShop.DTO.Contracts;
 
 namespace SmartShop.DTO;
 
-public sealed record KhachHangDTO(string Code, string Name, string Phone, string Email, string Address);
+public sealed record KhachHangDTO(string Code, string Name, string Phone, string Email, string Address) : IHoSoLienHe;
 
 public sealed class DuLieuKhachHang
 {

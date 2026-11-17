@@ -1,10 +1,5 @@
 namespace SmartShop.DTO.Contracts;
 
-public interface INhanVienDAO
+public interface INhanVienDAO : IDanhMucDAO<NhanVienDTO>
 {
-    IReadOnlyList<NhanVienDTO> DocDanhSach();
-    NhanVienDTO? DocTheoMa(string code);
-    NhanVienDTO Them(NhanVienDTO employee);
-    NhanVienDTO Sua(NhanVienDTO employee);
-    void Xoa(string code);
 }
