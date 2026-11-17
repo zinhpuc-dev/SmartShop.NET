@@ -2,20 +2,32 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 10/11/2026
+**Cập nhật lần cuối:** 17/11/2026
 
 | Mục | Nội dung |
 |---|---|
 | Phối hợp | Phúc (khung BUS) |
 | Yêu cầu / Use Case | YC2, UC06 |
 | Mức ưu tiên | 1 |
-| Nhánh Git | `develop` (local, chưa commit/push) |
+| Nhánh Git | `develop` |
 | Mục báo cáo | III (Triết) |
 | Ảnh form | `docs/images/09-tim-kiem-arraylist/` |
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
 
-## Cập nhật hiện tại — 10/11/2026
+## Cập nhật hiện tại — 17/11/2026
+
+Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. LayTheoMa của ba BUS khách hàng, nhân viên, nhà cung cấp nay duyệt ArrayList đã nạp bằng vòng lặp, bỏ khoảng trắng đầu/cuối mã và so sánh không phân biệt hoa/thường. Không gọi DAO.DocTheoMa khi tra cứu mã; báo không tìm thấy tại BUS nếu mã vắng. TimKiem tiếp tục chạy trên danh sách BUS cho bốn danh mục.
+
+### Phạm vi kiểm chứng đợt này
+
+- Build solution: 0 lỗi, 0 cảnh báo; 123 checks tự động đạt. Bổ sung 14 checks về tra cứu mã/cache/không gọi DAO đọc từng mã và 5 checks cấu hình kết nối chung; các checks nghiệp vụ dùng DAO giả lập.
+- Kiểm tra chỉ đọc MySQL thật qua MyConnection: kết nối utf8mb4, đọc được 10 khách hàng, 10 nhân viên và 10 nhà cung cấp qua ba DAO đã chỉnh. Không ghi dữ liệu hoặc sửa schema.
+- Cache theo phiên: thay đổi từ phiên khác chỉ hiện sau khi tải lại; không coi dữ liệu trong ArrayList là bản đọc CSDL mới nhất.
+- Đã sửa mô tả cũ trong nháp docs/bao-cao/III-triet.md để khớp code và cách áp dụng mẫu cho web/mobile. Chưa coi đây là báo cáo cuối đã nghiệm thu.
+- Còn nghiệm thu tương tác trình duyệt, CRUD/khóa ngoại/đồng thời trên MySQL và ảnh mới. Không đánh dấu toàn bộ chức năng hoàn tất.
+
+## Mốc trước — 10/11/2026
 
 Đã triển khai tìm kiếm cơ bản trên ArrayList tại BUS cho bốn danh mục Admin gồm Sản phẩm, Khách hàng, Nhân viên và Nhà cung cấp. Trạng thái Đang làm, hoàn thành 3/6 mục trong checklist chính.
 
@@ -51,6 +63,7 @@ Tìm kiếm chạy trên ArrayList, code nằm ở BUS
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Tra cứu mã bằng vòng lặp trên ArrayList, không gọi DAO đọc từng mã; kiểm tra cache/tải lại | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 10/11/2026 | Triết | Chuyển tìm kiếm cơ bản của bốn danh mục Admin sang ArrayList tại BUS, nối tìm sản phẩm từ GUI vào BUS và thêm kiểm tra cache/tìm kiếm | Codex | Đang làm, 3/6 mục. Build đạt, 40 checks qua với repository giả lập. Local develop, chưa commit/push |
 | 08/11/2026 | Codex (hỗ trợ nhóm) | Đồng bộ trạng thái Admin MySQL và bằng chứng kiểm tra | Codex | Chưa kiểm thử ghi, migration chưa chạy |
 

@@ -29,8 +29,15 @@ public sealed class NhanVienBUS : INhanVienBUS
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public NhanVienDTO LayTheoMa(string code) => repository.DocTheoMa((code ?? string.Empty).Trim())
-        ?? throw new InvalidOperationException("Không tìm thấy nhân viên.");
+    public NhanVienDTO LayTheoMa(string code)
+    {
+        var ma = (code ?? string.Empty).Trim();
+        foreach (var value in LayDanhSachNhanVien())
+        {
+            if (value.Code.Equals(ma, StringComparison.OrdinalIgnoreCase)) return value;
+        }
+        throw new InvalidOperationException("Không tìm thấy nhân viên.");
+    }
 
     public string GoiYMa()
     {

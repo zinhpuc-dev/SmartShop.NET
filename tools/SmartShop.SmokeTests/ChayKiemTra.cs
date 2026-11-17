@@ -68,6 +68,7 @@ KiemTraTimKiemDanhMuc.ChayTimKiemNangCao();
 KiemTraTimKiemDanhMuc.ChayKiemTraRangBuoc();
 KiemTraKyThongKe.Chay();
 await KiemTraKhungQuanTri.Chay();
+KiemTraKetNoi.Chay();
 Console.WriteLine("All smoke checks passed.");
 
 sealed class KhoDuLieuTuChoi : ICuaHangDAO

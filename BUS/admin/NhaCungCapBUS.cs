@@ -30,8 +30,15 @@ public sealed class NhaCungCapBUS : INhaCungCapBUS
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public NhaCungCapDTO LayTheoMa(string code) => repository.DocTheoMa((code ?? string.Empty).Trim())
-        ?? throw new InvalidOperationException("Không tìm thấy nhà cung cấp.");
+    public NhaCungCapDTO LayTheoMa(string code)
+    {
+        var ma = (code ?? string.Empty).Trim();
+        foreach (var value in LayDanhSachNhaCungCap())
+        {
+            if (value.Code.Equals(ma, StringComparison.OrdinalIgnoreCase)) return value;
+        }
+        throw new InvalidOperationException("Không tìm thấy nhà cung cấp.");
+    }
 
     public string GoiYMa()
     {

@@ -6,20 +6,17 @@ namespace SmartShop.DAO;
 
 public sealed class NhanVienDAO : INhanVienDAO
 {
-    private readonly string connectionString;
+    private readonly MyConnection ketNoi;
 
     public NhanVienDAO(string connectionString)
     {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new ArgumentException("Chuỗi kết nối không được để trống.", nameof(connectionString));
-        this.connectionString = connectionString;
+        ketNoi = new MyConnection(connectionString);
     }
 
     public IReadOnlyList<NhanVienDTO> DocDanhSach()
     {
         List<NhanVienDTO> employees = [];
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         using MySqlCommand command = new("SELECT MaNV, TenNV, ChucVu, SDT, Email FROM NHAN_VIEN ORDER BY MaNV", connection);
         using MySqlDataReader reader = command.ExecuteReader();
         while (reader.Read()) employees.Add(DocNhanVien(reader));
@@ -28,8 +25,7 @@ public sealed class NhanVienDAO : INhanVienDAO
 
     public NhanVienDTO? DocTheoMa(string code)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         using MySqlCommand command = new("SELECT MaNV, TenNV, ChucVu, SDT, Email FROM NHAN_VIEN WHERE MaNV=@MaNV", connection);
         command.Parameters.AddWithValue("@MaNV", code);
         using MySqlDataReader reader = command.ExecuteReader();
@@ -38,8 +34,7 @@ public sealed class NhanVienDAO : INhanVienDAO
 
     public NhanVienDTO Them(NhanVienDTO employee)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         const string query = "INSERT INTO NHAN_VIEN (MaNV, TenNV, ChucVu, SDT, Email) VALUES (@MaNV, @TenNV, @ChucVu, @SDT, @Email)";
         using MySqlCommand command = new(query, connection);
         ThemThamSo(command, employee);
@@ -53,8 +48,7 @@ public sealed class NhanVienDAO : INhanVienDAO
 
     public NhanVienDTO Sua(NhanVienDTO employee)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         const string query = "UPDATE NHAN_VIEN SET TenNV=@TenNV, ChucVu=@ChucVu, SDT=@SDT, Email=@Email WHERE MaNV=@MaNV";
         using MySqlCommand command = new(query, connection);
         ThemThamSo(command, employee);
@@ -71,8 +65,7 @@ public sealed class NhanVienDAO : INhanVienDAO
 
     public void Xoa(string code)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         using MySqlCommand command = new("DELETE FROM NHAN_VIEN WHERE MaNV=@MaNV", connection);
         command.Parameters.AddWithValue("@MaNV", code);
         try

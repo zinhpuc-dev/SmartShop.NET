@@ -14,9 +14,12 @@ internal static class KiemTraTimKiemDanhMuc
     {
         var customerData = new KhoKhachHangGiaLap();
         var customers = new KhachHangBUS(customerData);
+        KiemTra(customers.LayTheoMa(" kh000001 ").Name == "Nguyễn An", "Customer code lookup loads BUS list and normalizes code");
         KiemTra(customers.TimKiem("  nguyen an ").Single().Code == "KH000001", "Customer accentless search");
         customers.TimKiem("090"); customers.TimKiem(""); customers.GoiYMa();
         KiemTra(customerData.Reads == 1, "Customer search loads once");
+        KiemTraTuChoiGhi(() => customers.LayTheoMa("KH999999"), "Missing customer code rejected from BUS list");
+        KiemTra(customerData.Reads == 1 && customerData.PointReads == 0, "Customer code lookup never queries DAO by code");
         var added = customers.Them(new DuLieuKhachHang
         {
             Code = "KH000002", Name = "Trần Bình", Phone = "0900000002", Address = "123 Đường Demo"
@@ -36,31 +39,44 @@ internal static class KiemTraTimKiemDanhMuc
         KiemTra(customers.TimKiem("le chi").Count == 0, "Customer delete updates cache");
         customers.TaiLai(); customers.TimKiem(""); customers.TimKiem("");
         KiemTra(customerData.Reads == 2, "Explicit reload reads once");
+        KiemTra(customerData.PointReads == 0, "Customer edit and delete use BUS code lookup");
 
         var employeeData = new KhoNhanVienGiaLap();
         var employees = new NhanVienBUS(employeeData);
+        KiemTra(employees.LayTheoMa(" nv000001 ").Name == "Nguyễn Minh", "Employee code lookup loads BUS list and normalizes code");
         KiemTra(employees.TimKiem("quan ly").Single().Code == "NV000001", "Employee searches position without accents");
         employees.TimKiem("minh"); employees.TimKiem("");
         KiemTra(employeeData.Reads == 1, "Employee search loads once");
+        KiemTraTuChoiGhi(() => employees.LayTheoMa("NV999999"), "Missing employee code rejected from BUS list");
+        KiemTra(employeeData.Reads == 1 && employeeData.PointReads == 0, "Employee code lookup never queries DAO by code");
         var employeeDraft = DuLieuNhanVien.TuDuLieu(employeeData.Row);
         employeeDraft.Name = "Đỗ Hà";
         employees.Sua(employeeDraft.Code, employeeDraft);
         KiemTra(employees.TimKiem("do ha").Count == 1, "Employee edit updates cache");
         employees.Xoa(employeeDraft.Code);
         KiemTra(employees.TimKiem("").Count == 0, "Employee delete updates cache");
+        KiemTra(employeeData.PointReads == 0, "Employee edit and delete use BUS code lookup");
 
         var supplierData = new KhoNhaCungCapGiaLap();
         var suppliers = new NhaCungCapBUS(supplierData);
+        KiemTra(suppliers.LayTheoMa(" n00001 ").Name == "Ánh Dương", "Supplier code lookup loads BUS list and normalizes code");
         KiemTra(suppliers.TimKiem("anh duong").Single().Code == "N00001", "Supplier accentless search");
         suppliers.TimKiem(""); suppliers.TimKiem("example");
         KiemTra(supplierData.Reads == 1, "Supplier search loads once");
+        KiemTraTuChoiGhi(() => suppliers.LayTheoMa("N99999"), "Missing supplier code rejected from BUS list");
+        KiemTra(supplierData.Reads == 1 && supplierData.PointReads == 0, "Supplier code lookup never queries DAO by code");
         supplierData.Row = supplierData.Row with { Name = "Tên đổi bởi phiên khác" };
+        KiemTra(suppliers.LayTheoMa("N00001").Name == "Ánh Dương", "Supplier lookup keeps loaded snapshot until explicit reload");
+        suppliers.TaiLai();
+        KiemTra(suppliers.LayTheoMa("N00001").Name == "Tên đổi bởi phiên khác" && supplierData.Reads == 2,
+            "Supplier explicit reload updates code lookup snapshot");
         var supplierDraft = DuLieuNhaCungCap.TuDuLieu(supplierData.Row);
         supplierDraft.Name = "Đông Nam";
         suppliers.Sua(supplierDraft.Code, supplierDraft);
-        KiemTra(suppliers.TimKiem("dong nam").Count == 1, "Supplier replaces cache by code after external edit");
+        KiemTra(suppliers.TimKiem("dong nam").Count == 1, "Supplier update replaces cached record by code");
         suppliers.Xoa(supplierDraft.Code);
         KiemTra(suppliers.TimKiem("").Count == 0, "Supplier delete updates cache");
+        KiemTra(supplierData.PointReads == 0, "Supplier edit and delete use BUS code lookup");
 
         var productData = new KhoSanPhamGiaLap();
         var products = new SanPhamBUS(productData);
@@ -211,9 +227,10 @@ internal static class KiemTraTimKiemDanhMuc
     {
         private readonly List<KhachHangDTO> rows = [new("KH000001", "Nguyễn An", "0900000001", "", "123 Đường Demo")];
         public int Reads { get; private set; }
+        public int PointReads { get; private set; }
         public bool FailWrites { get; set; }
         public IReadOnlyList<KhachHangDTO> DocDanhSach() { Reads++; return rows.ToArray(); }
-        public KhachHangDTO? DocTheoMa(string code) => rows.SingleOrDefault(row => row.Code == code);
+        public KhachHangDTO? DocTheoMa(string code) { PointReads++; return rows.SingleOrDefault(row => row.Code == code); }
         public KhachHangDTO Them(KhachHangDTO value) { KiemTraQuyenGhi(); rows.Add(value); return value; }
         public KhachHangDTO Sua(KhachHangDTO value)
         {
@@ -233,8 +250,9 @@ internal static class KiemTraTimKiemDanhMuc
         public NhanVienDTO Row = new("NV000001", "Nguyễn Minh", "Quản lý", "", "");
         private bool deleted;
         public int Reads { get; private set; }
+        public int PointReads { get; private set; }
         public IReadOnlyList<NhanVienDTO> DocDanhSach() { Reads++; return deleted ? [] : [Row]; }
-        public NhanVienDTO? DocTheoMa(string code) => deleted ? null : Row;
+        public NhanVienDTO? DocTheoMa(string code) { PointReads++; return deleted ? null : Row; }
         public NhanVienDTO Them(NhanVienDTO value) => throw new NotSupportedException();
         public NhanVienDTO Sua(NhanVienDTO value) => Row = value;
         public void Xoa(string code) => deleted = true;
@@ -245,8 +263,9 @@ internal static class KiemTraTimKiemDanhMuc
         public NhaCungCapDTO Row = new("N00001", "Ánh Dương", "", "demo@example.com", "");
         private bool deleted;
         public int Reads { get; private set; }
+        public int PointReads { get; private set; }
         public IReadOnlyList<NhaCungCapDTO> DocDanhSach() { Reads++; return deleted ? [] : [Row]; }
-        public NhaCungCapDTO? DocTheoMa(string code) => deleted ? null : Row;
+        public NhaCungCapDTO? DocTheoMa(string code) { PointReads++; return deleted ? null : Row; }
         public NhaCungCapDTO Them(NhaCungCapDTO value) => throw new NotSupportedException();
         public NhaCungCapDTO Sua(NhaCungCapDTO value) => Row = value;
         public void Xoa(string code) => deleted = true;

@@ -2,7 +2,7 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 12/11/2026
+**Cập nhật lần cuối:** 17/11/2026
 
 | Mục | Nội dung |
 |---|---|
@@ -15,7 +15,19 @@
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
 
-## Cập nhật hiện tại — 12/11/2026
+## Cập nhật hiện tại — 17/11/2026
+
+Đối chiếu mẫu c-3-layer, giữ Blazor web/mobile và sườn GUI/BUS/DAO/DTO. NhaCungCapBUS/NhaCungCapDAO dùng MyConnection chung ở DAO để tạo/mở kết nối; using giải phóng sau mỗi thao tác. LayTheoMa duyệt ArrayList tại BUS, không đọc DAO theo từng mã. Chỉ cập nhật cache sau khi DAO ghi thành công; TaiLai làm danh sách được nạp lại ở lần đọc tiếp theo.
+
+### Phạm vi kiểm chứng đợt này
+
+- Build solution: 0 lỗi, 0 cảnh báo; 123 checks tự động đạt. Bổ sung 14 checks về tra cứu mã/cache/không gọi DAO đọc từng mã và 5 checks cấu hình kết nối chung; các checks nghiệp vụ dùng DAO giả lập.
+- Kiểm tra chỉ đọc MySQL thật qua MyConnection: kết nối utf8mb4, đọc được 10 khách hàng, 10 nhân viên và 10 nhà cung cấp qua ba DAO đã chỉnh. Không ghi dữ liệu hoặc sửa schema.
+- Cache theo phiên: thay đổi từ phiên khác chỉ hiện sau khi tải lại; không coi dữ liệu trong ArrayList là bản đọc CSDL mới nhất.
+- Đã sửa mô tả cũ trong nháp docs/bao-cao/III-triet.md để khớp code và cách áp dụng mẫu cho web/mobile. Chưa coi đây là báo cáo cuối đã nghiệm thu.
+- Còn nghiệm thu tương tác trình duyệt, CRUD/khóa ngoại/đồng thời trên MySQL và ảnh mới. Không đánh dấu toàn bộ chức năng hoàn tất.
+
+## Mốc trước — 12/11/2026
 
 NhaCungCapBUS → INhaCungCapDAO/NhaCungCapDAO → NHA_CUNG_CAP. Đã gắn OChonNhaCungCap và TimChonNhaCungCap vào form tạo phiếu nhập tại `/admin/inventory`, thay dropdown nhà cung cấp.
 
@@ -54,6 +66,7 @@ Thêm, sửa, xóa, tìm được; không trùng mã
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Đối chiếu mẫu 3 lớp: NhaCungCapBUS/NhaCungCapDAO, kết nối MyConnection chung, tra cứu mã tại ArrayList BUS; đồng bộ nháp báo cáo | Codex | Build 0 lỗi/0 cảnh báo, 123 checks đạt; MySQL chỉ đọc 10 KH/10 NV/10 NCC. Chưa nghiệm thu ghi hoặc tương tác UI; giữ web/mobile |
 | 12/11/2026 | Triết | Gắn popup tìm/chọn nhà cung cấp vào phiếu nhập; khóa nút khi tải lỗi, hiển thị thông tin chỉ đọc và bổ sung xử lý lỗi chọn | Codex | Build 0 lỗi/0 cảnh báo, 78 checks hiện có đạt. Chưa nghiệm thu UI/ghi MySQL; chưa có ảnh mới |
 | 04/11/2026 | Triết | Triển khai bản demo phần 07 với CRUD, tìm kiếm trên ArrayList, kiểm tra dữ liệu và popup chọn nhà cung cấp | Codex | Đang làm, 2/6 mục. Popup đã có trong Admin, chờ gắn vào phiếu nhập |
 

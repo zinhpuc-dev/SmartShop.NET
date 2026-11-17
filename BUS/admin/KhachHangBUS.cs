@@ -29,8 +29,15 @@ public sealed class KhachHangBUS : IKhachHangBUS
             .OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public KhachHangDTO LayTheoMa(string code) => repository.DocTheoMa((code ?? string.Empty).Trim())
-        ?? throw new InvalidOperationException("Không tìm thấy khách hàng.");
+    public KhachHangDTO LayTheoMa(string code)
+    {
+        var ma = (code ?? string.Empty).Trim();
+        foreach (var value in LayDanhSachKhachHang())
+        {
+            if (value.Code.Equals(ma, StringComparison.OrdinalIgnoreCase)) return value;
+        }
+        throw new InvalidOperationException("Không tìm thấy khách hàng.");
+    }
 
     public string GoiYMa()
     {

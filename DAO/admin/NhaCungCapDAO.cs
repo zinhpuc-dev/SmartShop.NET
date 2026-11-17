@@ -6,20 +6,17 @@ namespace SmartShop.DAO;
 
 public sealed class NhaCungCapDAO : INhaCungCapDAO
 {
-    private readonly string connectionString;
+    private readonly MyConnection ketNoi;
 
     public NhaCungCapDAO(string connectionString)
     {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new ArgumentException("Chuỗi kết nối không được để trống.", nameof(connectionString));
-        this.connectionString = connectionString;
+        ketNoi = new MyConnection(connectionString);
     }
 
     public IReadOnlyList<NhaCungCapDTO> DocDanhSach()
     {
         List<NhaCungCapDTO> suppliers = [];
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         using MySqlCommand command = new("SELECT MaNCC, TenNCC, DiaChi, Email, SDT FROM NHA_CUNG_CAP ORDER BY MaNCC", connection);
         using MySqlDataReader reader = command.ExecuteReader();
         while (reader.Read()) suppliers.Add(DocNhaCungCap(reader));
@@ -28,8 +25,7 @@ public sealed class NhaCungCapDAO : INhaCungCapDAO
 
     public NhaCungCapDTO? DocTheoMa(string code)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         using MySqlCommand command = new("SELECT MaNCC, TenNCC, DiaChi, Email, SDT FROM NHA_CUNG_CAP WHERE MaNCC=@MaNCC", connection);
         command.Parameters.AddWithValue("@MaNCC", code);
         using MySqlDataReader reader = command.ExecuteReader();
@@ -38,8 +34,7 @@ public sealed class NhaCungCapDAO : INhaCungCapDAO
 
     public NhaCungCapDTO Them(NhaCungCapDTO supplier)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         const string query = "INSERT INTO NHA_CUNG_CAP (MaNCC, TenNCC, DiaChi, Email, SDT) VALUES (@MaNCC, @TenNCC, @DiaChi, @Email, @SDT)";
         using MySqlCommand command = new(query, connection);
         ThemThamSo(command, supplier);
@@ -53,8 +48,7 @@ public sealed class NhaCungCapDAO : INhaCungCapDAO
 
     public NhaCungCapDTO Sua(NhaCungCapDTO supplier)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         const string query = "UPDATE NHA_CUNG_CAP SET TenNCC=@TenNCC, DiaChi=@DiaChi, Email=@Email, SDT=@SDT WHERE MaNCC=@MaNCC";
         using MySqlCommand command = new(query, connection);
         ThemThamSo(command, supplier);
@@ -66,8 +60,7 @@ public sealed class NhaCungCapDAO : INhaCungCapDAO
 
     public void Xoa(string code)
     {
-        using MySqlConnection connection = new(connectionString);
-        connection.Open();
+        using MySqlConnection connection = ketNoi.MoKetNoi();
         using MySqlCommand command = new("DELETE FROM NHA_CUNG_CAP WHERE MaNCC=@MaNCC", connection);
         command.Parameters.AddWithValue("@MaNCC", code);
         try
