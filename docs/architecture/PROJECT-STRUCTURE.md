@@ -1,20 +1,32 @@
-# Cấu trúc nền tảng chung
+# Cấu trúc nhánh OOAD
+
+Nhánh này có hai tầng thư mục với mục đích khác nhau:
+
+- Các thư mục ở gốc (`Database/`, `docs/`, `src/SmartShop.UI/`) là nền tảng dùng chung của repository.
+- `S4_Nhom05/` là gói chương trình và tài liệu dành riêng cho bài nộp OOAD.
 
 ```text
 SmartShop.NET/
-├── src/
-│   ├── SmartShop.UI/       # Giao diện chung; chia theo khu vực quản trị/người dùng
-│   └── SmartShop.Shared/   # Thành phần dùng chung giữa giao diện và backend, nếu cần
 ├── Database/
-│   ├── scripts/            # Script tạo/cập nhật cơ sở dữ liệu và dữ liệu mẫu
-│   └── diagrams/           # Sơ đồ cơ sở dữ liệu dùng chung
+│   ├── scripts/                 # SQL dùng chung
+│   └── diagrams/                # Sơ đồ cơ sở dữ liệu dùng chung
 ├── docs/
-│   ├── architecture/       # Quy ước kiến trúc và chiến lược nhánh
-│   └── requirements/       # Yêu cầu sản phẩm dùng chung
-├── tests/                  # Kiểm thử dùng chung
-├── tools/                  # Công cụ hỗ trợ dự án
-├── .github/                # Cấu hình cộng tác trên GitHub
-└── README.md               # Giới thiệu ngắn về dự án
+│   ├── architecture/            # Tài liệu kiến trúc, nhánh và cấu trúc
+│   └── requirements/            # Yêu cầu chung
+├── src/SmartShop.UI/            # Khung giao diện dùng chung
+└── S4_Nhom05/                   # Gói nộp OOAD
+    ├── BaoCao/                  # Báo cáo DOCX/PDF
+    └── ChuongTrinh/
+        ├── Database/            # SQL đi kèm gói nộp
+        └── SourceCode/
+            ├── src/
+            │   ├── SmartShop.Presentation/   # Boundary: màn hình và tương tác
+            │   ├── SmartShop.Application/    # Control: điều phối ca sử dụng
+            │   ├── SmartShop.Domain/         # Entity, quy tắc và khái niệm nghiệp vụ
+            │   └── SmartShop.Infrastructure/ # Lưu trữ và tích hợp bên ngoài
+            └── tests/            # Kiểm thử cho từng tầng
 ```
 
-Các dự án .NET (`.sln`/`.slnx`, `.csproj`) sẽ được thêm khi thống nhất framework giao diện và phiên bản .NET. Chỉ đưa code vào `SmartShop.Shared` khi cả hai nhánh cần cùng một hợp đồng hoặc thành phần; không dùng thư mục này để ép hai backend theo cùng một kiến trúc.
+`Database/src` không thuộc cấu trúc này; mã C# không đặt trong thư mục cơ sở dữ liệu. `SmartShop.Shared` cũng đã được bỏ vì hiện chưa có thành phần dùng chung nào cần thư viện riêng. Tệp `.gitkeep` chỉ giữ lại thư mục rỗng để Git hiển thị; có thể xóa khi thư mục đã có tệp thật.
+
+Các tệp `.sln`, `.csproj`, SQL và báo cáo chưa được tạo vì hiện chưa có nội dung tương ứng. README trong `SourceCode/` mô tả vai trò các tầng OOAD.
