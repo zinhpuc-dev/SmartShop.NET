@@ -1,8 +1,8 @@
-# Database
-SQL Server. Cột tiếng Việt dùng nvarchar.
+# Cơ sở dữ liệu
 
-- `scripts/01_schema.sql`: tạo bảng (NhanVien, KhachHang, NhaCungCap, SanPham, DonVi, HoaDon, CTHD, PhieuNhap, CTPN, ThamSo, TaiKhoan)
-- `scripts/02_sample_data.sql`: dữ liệu mẫu đủ 4 quý
-- `erd/`: ảnh ERD cho báo cáo mục II
+Thư mục này dành cho cấu trúc dữ liệu dùng chung của SmartShop.NET.
 
-Người phụ trách: Vinh. Đổi tên bảng, cột phải báo cả nhóm.
+- `scripts/`: script khởi tạo, cập nhật và dữ liệu mẫu.
+- `diagrams/`: sơ đồ cơ sở dữ liệu.
+
+Các nhánh môn học dùng cùng nền dữ liệu trừ khi yêu cầu môn học có quy định khác. Khi đổi tên bảng hoặc cột, cập nhật script và sơ đồ liên quan trong cùng thay đổi.
