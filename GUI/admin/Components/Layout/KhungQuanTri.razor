@@ -1,0 +1,69 @@
+@inherits TrangCoSo
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView Policy="@DangNhapQuanTri.Policy" Context="phien">
+<Authorized>
+<header class="admin-header">
+    <a class="brand" href="/admin"><span class="brand-icon">S</span>Smart<span>Shop</span><small>ADMINISTRATION</small></a>
+    <span class="admin-identity">Đang đăng nhập <strong>@phien.User.Identity?.Name</strong></span>
+    <form method="post" action="/admin/sign-out" data-enhance="false">
+        <AntiforgeryToken /><button type="submit" class="secondary">Đăng xuất</button>
+    </form>
+    <a class="secondary" href="/">Xem cửa hàng ↗</a>
+</header>
+<div class="shell admin-shell">
+    <aside>
+        <div class="nav-caption">QUẢN TRỊ CỬA HÀNG</div>
+        <button class="nav-item @(page == "admin" ? "active" : "")" @onclick='() => DieuHuong("admin")'><span>◫</span>Tổng quan</button>
+        <button class="nav-item @(page == "admin/products" ? "active" : "")" @onclick='() => DieuHuong("admin/products")'><span>□</span>Sản phẩm</button>
+        <button class="nav-item @(page == "admin/orders" ? "active" : "")" @onclick='() => DieuHuong("admin/orders")'><span>≡</span>Đơn hàng</button>
+        <button class="nav-item @(page == "admin/customers" ? "active" : "")" @onclick='() => DieuHuong("admin/customers")'><span>♙</span>Khách hàng</button>
+        <button class="nav-item @(page == "admin/employees" ? "active" : "")" @onclick='() => DieuHuong("admin/employees")'><span>♟</span>Nhân viên</button>
+        <button class="nav-item @(page == "admin/suppliers" ? "active" : "")" @onclick='() => DieuHuong("admin/suppliers")'><span>▦</span>Nhà cung cấp</button>
+        <button class="nav-item @(page == "admin/inventory" ? "active" : "")" @onclick='() => DieuHuong("admin/inventory")'><span>▤</span>Kho & nhập hàng</button>
+        <button class="nav-item @(page == "admin/promotions" ? "active" : "")" @onclick='() => DieuHuong("admin/promotions")'><span>%</span>Khuyến mại</button>
+        <div class="sidebar-bottom">
+            <div class="help-card"><strong>SmartShop Admin</strong><p>Quản lý dữ liệu cửa hàng trong không gian riêng.</p></div>
+            <button class="nav-item" @onclick='() => DieuHuong("home")'><span>↗</span>Xem cửa hàng</button>
+        </div>
+    </aside>
+    <main>
+        <div class="breadcrumbs">Quản trị <span>/</span> @SectionName</div>
+        @ChildContent
+        <footer><span class="brand-small">S <b>SmartShop Admin</b></span><small>Quản lý cửa hàng</small></footer>
+    </main>
+</div>
+<nav class="mobile-nav admin-mobile-nav" aria-label="Menu quản trị">
+    <button class="@(page == "admin" ? "active" : "")" @onclick='() => DieuHuong("admin")'>◫<span>Tổng quan</span></button>
+    <button class="@(page == "admin/products" ? "active" : "")" @onclick='() => DieuHuong("admin/products")'>□<span>Sản phẩm</span></button>
+    <button class="@(page == "admin/orders" ? "active" : "")" @onclick='() => DieuHuong("admin/orders")'>≡<span>Đơn hàng</span></button>
+    <button class="@(page == "admin/customers" ? "active" : "")" @onclick='() => DieuHuong("admin/customers")'>♙<span>Khách hàng</span></button>
+    <button class="@(page == "admin/employees" ? "active" : "")" @onclick='() => DieuHuong("admin/employees")'>♟<span>Nhân viên</span></button>
+    <button class="@(page == "admin/suppliers" ? "active" : "")" @onclick='() => DieuHuong("admin/suppliers")'>▦<span>Nhà cung cấp</span></button>
+    <button class="@(page == "admin/inventory" ? "active" : "")" @onclick='() => DieuHuong("admin/inventory")'>▤<span>Kho</span></button>
+    <button class="@(page == "admin/promotions" ? "active" : "")" @onclick='() => DieuHuong("admin/promotions")'>%<span>Khuyến mại</span></button>
+    <button @onclick='() => DieuHuong("home")'>↗<span>Cửa hàng</span></button>
+</nav>
+<CacHopThoaiCuaHang />
+</Authorized>
+<NotAuthorized>
+    <main class="panel admin-session-ended">
+        <h1>Cần đăng nhập quản trị</h1>
+        <p>Phiên đăng nhập đã hết hạn hoặc tài khoản không có quyền quản trị.</p>
+        <a class="primary" href="/admin/login">Đăng nhập lại</a>
+        <a class="secondary" href="/">Về cửa hàng</a>
+    </main>
+</NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string SectionName => page switch
+    {
+        "admin" => "Tổng quan",
+        "admin/products" => "Sản phẩm",
+        "admin/orders" => "Đơn hàng",
+        _ => PageName
+    };
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

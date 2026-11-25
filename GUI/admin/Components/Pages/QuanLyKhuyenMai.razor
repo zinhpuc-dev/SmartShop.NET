@@ -1,0 +1,110 @@
+@attribute [Authorize(Policy = DangNhapQuanTri.Policy)]
+@page "/admin/promotions"
+@layout SmartShop.Admin.Components.Layout.BoCucQuanTri
+@inject KhuyenMaiBUS KhuyenMaiBUS
+@inject ILogger<QuanLyKhuyenMai> Logger
+
+<PageTitle>Khuyến mại và voucher — SmartShop</PageTitle>
+<div class="section-heading customer-heading"><div><div class="eyebrow red">SMARTSHOP / KHUYẾN MẠI</div><h1>Khuyến mại và voucher</h1><p class="subtitle">Quản lý chương trình khuyến mại và mã voucher.</p></div></div>
+@if (!string.IsNullOrEmpty(message)){<div class="customer-feedback @(failed ? "error" : "")" role="status">@message</div>}
+@if (loading) { <p role="status">Đang tải chương trình khuyến mại và voucher...</p> }
+else if (!loaded) { <div class="customer-feedback error" role="alert">@loadError <button type="button" @onclick="TaiDuLieu">Thử lại</button></div> }
+<section class="panel">
+    <h2>@(editingPromotion ? "Sửa chương trình" : "Tạo chương trình")</h2>
+    <div class="form-grid">
+        <label>Mã chương trình<input @bind="promotion.Code" maxlength="8" disabled="@editingPromotion" /></label>
+        <label>Tên<input @bind="promotion.Name" maxlength="200" /></label>
+        <label>Loại<input @bind="promotion.Type" maxlength="20" /></label>
+        <label>Hình thức giảm<select @bind="promotion.DiscountForm"><option>Phần trăm</option><option>Số tiền</option></select></label>
+        <label>Giá trị giảm<input type="number" min="0.01" step="0.01" @bind="promotion.DiscountValue" /></label>
+        <label>Đơn tối thiểu<input type="number" min="0" step="0.01" @bind="promotion.MinimumOrderValue" /></label>
+        <label>Bắt đầu<input type="datetime-local" @bind="promotion.StartsAt" /></label>
+        <label>Kết thúc<input type="datetime-local" @bind="promotion.EndsAt" /></label>
+        <label>Trạng thái<select @bind="promotion.IsActive"><option value="true">Hoạt động</option><option value="false">Tạm dừng</option></select></label>
+        <label>Mô tả<textarea @bind="promotion.Description" maxlength="500"></textarea></label>
+        <button type="button" @onclick="LuuKhuyenMai" disabled="@(!loaded)">Lưu chương trình</button>
+        @if (editingPromotion){<button type="button" @onclick="DatLaiKhuyenMai">Hủy</button>}
+    </div>
+    @if (loaded) { <BangDuLieu TItem="KhuyenMaiDTO" Items="promotions" Label="Danh sách khuyến mại" ColumnCount="7" EmptyText="Chưa có chương trình khuyến mại.">
+        <Header><th scope="col">Mã / tên</th><th scope="col">Mức giảm</th><th scope="col">Thời gian</th><th scope="col">Trạng thái</th><th scope="col">Sản phẩm</th><th scope="col">Voucher</th><th scope="col">Sửa</th></Header>
+        <RowTemplate Context="row"><td>@row.Code — @row.Name</td><td>@row.DiscountValue (@row.DiscountForm)</td><td>@row.StartsAt.ToString("yyyy-MM-dd") — @row.EndsAt.ToString("yyyy-MM-dd")</td><td>@(row.IsActive ? "Hoạt động" : "Tạm dừng")</td><td>@row.ProductCount</td><td>@row.VoucherCount</td><td><button type="button" @onclick="() => SuaKhuyenMai(row)">Sửa</button></td></RowTemplate>
+    </BangDuLieu> }
+</section>
+<section class="panel">
+    <h2>@(editingVoucher ? "Sửa voucher" : "Tạo voucher")</h2>
+    <div class="form-grid">
+        <label>Mã voucher<input @bind="voucher.Code" maxlength="8" disabled="@editingVoucher" /></label>
+        <label>Chương trình<select @bind="voucher.PromotionCode"><option value="">Chọn chương trình</option>@foreach(var row in promotions){<option value="@row.Code">@row.Code — @row.Name</option>}</select></label>
+        <label>Mã áp dụng<input @bind="voucher.VoucherCode" maxlength="50" /></label>
+        <label>Giảm %<input type="number" min="0" max="100" step="0.01" @bind="voucher.PercentOff" /></label>
+        <label>Giảm tiền<input type="number" min="0" step="0.01" @bind="voucher.AmountOff" /></label>
+        <label>Đơn tối thiểu<input type="number" min="0" step="0.01" @bind="voucher.MinimumOrderValue" /></label>
+        <label>Số lượng<input type="number" min="1" @bind="voucher.Quantity" /></label>
+        <label>Bắt đầu<input type="datetime-local" @bind="voucher.StartsAt" /></label>
+        <label>Kết thúc<input type="datetime-local" @bind="voucher.EndsAt" /></label>
+        <label>Trạng thái<select @bind="voucher.IsActive"><option value="true">Hoạt động</option><option value="false">Tạm dừng</option></select></label>
+        <button type="button" @onclick="LuuMaGiamGia" disabled="@(!loaded)">Lưu voucher</button>
+        @if (editingVoucher){<button type="button" @onclick="DatLaiMaGiamGia">Hủy</button>}
+    </div>
+    @if (loaded) { <BangDuLieu TItem="MaGiamGiaDTO" Items="vouchers" Label="Danh sách voucher" ColumnCount="7" EmptyText="Chưa có voucher.">
+        <Header><th scope="col">Mã / áp dụng</th><th scope="col">Chương trình</th><th scope="col">Mức giảm</th><th scope="col">Tối thiểu</th><th scope="col">Đã dùng / số lượng</th><th scope="col">Thời gian</th><th scope="col">Sửa</th></Header>
+        <RowTemplate Context="row"><td>@row.Code / @row.VoucherCode</td><td>@row.PromotionCode — @row.PromotionName</td><td>@(row.PercentOff > 0 ? $"{row.PercentOff}%" : DinhDangTienTe.DinhDang(row.AmountOff))</td><td>@DinhDangTienTe.DinhDang(row.MinimumOrderValue)</td><td>@row.Used / @row.Quantity</td><td>@row.StartsAt.ToString("yyyy-MM-dd") — @row.EndsAt.ToString("yyyy-MM-dd")</td><td><button type="button" @onclick="() => SuaMaGiamGia(row)">Sửa</button></td></RowTemplate>
+    </BangDuLieu> }
+</section>
+
+@code {
+    private IReadOnlyList<KhuyenMaiDTO> promotions = [];
+    private IReadOnlyList<MaGiamGiaDTO> vouchers = [];
+    private DuLieuKhuyenMai promotion = new();
+    private DuLieuMaGiamGia voucher = new();
+    private bool editingPromotion, editingVoucher, failed, loading = true, loaded;
+    private string message = "", loadError = "";
+
+    protected override void OnInitialized() => TaiDuLieu();
+    private void TaiDuLieu()
+    {
+        loading = true;
+        loaded = false;
+        try { promotions = KhuyenMaiBUS.DocKhuyenMai(); vouchers = KhuyenMaiBUS.DocMaGiamGia(); loadError = ""; loaded = true; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load Admin promotions and vouchers.");
+            promotions = [];
+            vouchers = [];
+            loadError = "Không thể tải chương trình khuyến mại và voucher. Vui lòng thử lại.";
+        }
+        finally { loading = false; }
+    }
+
+    private void LuuKhuyenMai()
+    {
+        try { KhuyenMaiBUS.LuuKhuyenMai(promotion, editingPromotion); message = "Đã lưu chương trình."; failed = false; DatLaiKhuyenMai(); TaiDuLieu(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
+        catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin promotion."); message = "Không thể lưu chương trình khuyến mại. Vui lòng thử lại."; failed = true; }
+    }
+
+    private void SuaKhuyenMai(KhuyenMaiDTO row)
+    {
+        promotion = new DuLieuKhuyenMai { Code = row.Code, Name = row.Name, Description = row.Description, Type = row.Type, DiscountForm = row.DiscountForm, DiscountValue = row.DiscountValue, MinimumOrderValue = row.MinimumOrderValue, StartsAt = row.StartsAt, EndsAt = row.EndsAt, IsActive = row.IsActive };
+        editingPromotion = true;
+    }
+
+    private void DatLaiKhuyenMai() { promotion = new DuLieuKhuyenMai(); editingPromotion = false; }
+
+    private void LuuMaGiamGia()
+    {
+        try { KhuyenMaiBUS.LuuMaGiamGia(voucher, editingVoucher); message = "Đã lưu voucher."; failed = false; DatLaiMaGiamGia(); TaiDuLieu(); }
+        catch (ArgumentException ex) { message = ex.Message; failed = true; }
+        catch (InvalidOperationException ex) { message = ex.Message; failed = true; }
+        catch (Exception ex) { Logger.LogError(ex, "Failed to save Admin voucher."); message = "Không thể lưu voucher. Vui lòng thử lại."; failed = true; }
+    }
+
+    private void SuaMaGiamGia(MaGiamGiaDTO row)
+    {
+        voucher = new DuLieuMaGiamGia { Code = row.Code, PromotionCode = row.PromotionCode, VoucherCode = row.VoucherCode, PercentOff = row.PercentOff, AmountOff = row.AmountOff, MinimumOrderValue = row.MinimumOrderValue, Quantity = row.Quantity, StartsAt = row.StartsAt, EndsAt = row.EndsAt, IsActive = row.IsActive };
+        editingVoucher = true;
+    }
+
+    private void DatLaiMaGiamGia() { voucher = new DuLieuMaGiamGia(); editingVoucher = false; }
+}

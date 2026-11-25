@@ -1,0 +1,115 @@
+<details class="advanced-search">
+    <summary>Tìm kiếm nâng cao @if (AppliedGroups > 0) { <span>· @AppliedGroups nhóm đang áp dụng</span> }</summary>
+    <p>Các điều kiện trong một nhóm phải đồng thời đúng (AND). Chỉ cần một nhóm đúng (OR). Chọn NOT để đảo kết quả của một điều kiện.</p>
+    @foreach (var group in groups)
+    {
+        var groupIndex = groups.IndexOf(group) + 1;
+        <fieldset @key="group">
+            <legend>Nhóm @groupIndex @(groupIndex > 1 ? "— OR (hoặc)" : "")</legend>
+            @foreach (var condition in group)
+            {
+                var position = $"{groupIndex}.{group.IndexOf(condition) + 1}";
+                <div class="condition" @key="condition">
+                    <label class="negation"><input type="checkbox" @bind="condition.Negate" aria-label="NOT điều kiện @position" /> NOT</label>
+                    <label>Trường
+                        <select value="@condition.Field" @onchange="args => DoiTruong(condition, args.Value?.ToString())" aria-label="Trường điều kiện @position">
+                            @foreach (var field in Fields) { <option value="@field.Key">@field.Label</option> }
+                        </select>
+                    </label>
+                    <label>So sánh
+                        <select @bind="condition.Operator" aria-label="So sánh điều kiện @position">
+                            @foreach (var operation in CacPhepSoSanh(condition)) { <option value="@operation">@TenPhepSoSanh(operation)</option> }
+                        </select>
+                    </label>
+                    <label>Giá trị
+                        <input @bind="condition.Value" maxlength="500" inputmode="@(LaTruongSo(condition) ? "decimal" : "text")" aria-label="Giá trị điều kiện @position" />
+                    </label>
+                    <button type="button" class="secondary" aria-label="Xóa điều kiện @position" disabled="@(group.Count == 1)" @onclick="() => group.Remove(condition)">Xóa</button>
+                </div>
+            }
+            <div class="group-actions">
+                <button type="button" class="text-button" disabled="@(group.Count >= 8)" @onclick="() => group.Add(TaoDieuKien())">+ Điều kiện AND</button>
+                <button type="button" class="text-button" disabled="@(groups.Count == 1)" @onclick="() => groups.Remove(group)">Xóa nhóm @groupIndex</button>
+            </div>
+        </fieldset>
+    }
+    <p class="number-hint">Số thập phân dùng dấu phẩy hoặc dấu chấm, không nhập dấu phân cách hàng nghìn. Để trống giá trị khi tìm trường văn bản rỗng.</p>
+    @if (!string.IsNullOrEmpty(Error)) { <p class="filter-error" role="alert">@Error</p> }
+    <div class="filter-actions">
+        <button type="button" class="secondary" disabled="@(groups.Count >= 8)" @onclick="ThemNhom">+ Nhóm OR</button>
+        <button type="button" class="primary" @onclick="ApDung">Áp dụng bộ lọc</button>
+        <button type="button" class="text-button" @onclick="XoaBoLoc">Bỏ bộ lọc nâng cao</button>
+    </div>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TruongTimKiem> Fields { get; set; } = [];
+    [Parameter] public EventCallback<BoLocDanhMuc?> OnApply { get; set; }
+    [Parameter] public string Error { get; set; } = "";
+    private readonly List<List<DuLieuDieuKien>> groups = [];
+    [Parameter] public BoLocDanhMuc? AppliedFilter { get; set; }
+    private int AppliedGroups => AppliedFilter?.Groups.Count ?? 0;
+
+    protected override void OnInitialized()
+    {
+        if (AppliedFilter is null || AppliedFilter.Groups.Count == 0) { ThemNhom(); return; }
+        foreach (var group in AppliedFilter.Groups)
+            groups.Add(group.Conditions.Select(condition => new DuLieuDieuKien
+            {
+                Field = condition.Field, Operator = condition.Operator,
+                Value = condition.Value, Negate = condition.Negate
+            }).ToList());
+    }
+
+    private DuLieuDieuKien TaoDieuKien() => new() { Field = Fields[0].Key,
+        Operator = Fields[0].Type == KieuTruongTimKiem.So ? PhepSoSanh.Bang : PhepSoSanh.Chua };
+
+    private void ThemNhom() => groups.Add([TaoDieuKien()]);
+
+    private bool LaTruongSo(DuLieuDieuKien condition) => Fields.Single(field => field.Key == condition.Field).Type == KieuTruongTimKiem.So;
+
+    private void DoiTruong(DuLieuDieuKien condition, string? key)
+    {
+        condition.Field = key ?? Fields[0].Key;
+        condition.Operator = LaTruongSo(condition) ? PhepSoSanh.Bang : PhepSoSanh.Chua;
+    }
+
+    private IEnumerable<PhepSoSanh> CacPhepSoSanh(DuLieuDieuKien condition) => LaTruongSo(condition)
+        ? [PhepSoSanh.Bang, PhepSoSanh.Khac, PhepSoSanh.LonHon,
+            PhepSoSanh.LonHonHoacBang, PhepSoSanh.NhoHon, PhepSoSanh.NhoHonHoacBang]
+        : [PhepSoSanh.Chua, PhepSoSanh.Bang, PhepSoSanh.Khac];
+
+    private static string TenPhepSoSanh(PhepSoSanh operation) => operation switch
+    {
+        PhepSoSanh.Chua => "Chứa",
+        PhepSoSanh.Bang => "=",
+        PhepSoSanh.Khac => "<>",
+        PhepSoSanh.LonHon => ">",
+        PhepSoSanh.LonHonHoacBang => ">=",
+        PhepSoSanh.NhoHon => "<",
+        PhepSoSanh.NhoHonHoacBang => "<=",
+        _ => ""
+    };
+
+    private async Task ApDung()
+    {
+        var filter = new BoLocDanhMuc(groups.Select(group => new NhomDieuKien(group.Select(condition =>
+            new DieuKienTimKiem(condition.Field, condition.Operator, condition.Value, condition.Negate)).ToArray())).ToArray());
+        await OnApply.InvokeAsync(filter);
+    }
+
+    private async Task XoaBoLoc()
+    {
+        await OnApply.InvokeAsync(null);
+        groups.Clear();
+        ThemNhom();
+    }
+
+    private sealed class DuLieuDieuKien
+    {
+        public string Field { get; set; } = "";
+        public PhepSoSanh Operator { get; set; }
+        public string Value { get; set; } = "";
+        public bool Negate { get; set; }
+    }
+}

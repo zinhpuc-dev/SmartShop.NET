@@ -2,18 +2,25 @@
 
 **Người phụ trách:** Triết  
 **Trạng thái:** Đang làm
-**Cập nhật lần cuối:** 10/11/2026
+**Cập nhật lần cuối:** 17/11/2026
 
 | Mục | Nội dung |
 |---|---|
 | Phối hợp | Phúc (review BUS) |
 | Yêu cầu / Use Case | YC8 |
 | Mức ưu tiên | 1 |
-| Nhánh Git | `develop` (local, chưa commit/push) |
+| Nhánh Git | `develop` |
 | Mục báo cáo | III (Triết) |
 | Ảnh form | `docs/images/10-tim-kiem-nang-cao/` |
 
 Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, Bị chặn.
+
+## Cập nhật hiện tại — 17/11/2026
+
+Đã bổ sung mục Tìm kiếm nâng cao trong docs/bao-cao/III-triet.md theo các phần giới thiệu, giao diện, công thức, đầu vào, đầu ra và xử lý. Tài liệu docs/HUONG_DAN_BAO_VE_TRIET.md có ví dụ nhóm AND/OR, NOT, so sánh số/văn bản và giới hạn biểu thức.
+
+- Không đổi code hoặc mở rộng biểu thức tìm kiếm trong đợt này. 123 smoke checks hiện có, bao gồm kiểm tra tìm kiếm nâng cao, vẫn đạt.
+- Đã có bản nháp nội dung báo cáo; còn Phúc review BUS, review báo cáo cuối và đối chiếu yêu cầu giảng viên. Không tự đánh dấu phần review của thành viên khác.
 
 ## Việc cần làm
 
@@ -23,7 +30,7 @@ Trạng thái dùng một trong: Chưa làm, Đang làm, Chờ review, Xong, B�
 - [x] Giao diện nhập điều kiện
 - [ ] Phúc review BUS
 - [x] Đã có ảnh form trong `docs/images/10-tim-kiem-nang-cao/`
-- [ ] Đã viết phần báo cáo tương ứng (III (Triết))
+- [x] Đã viết phần báo cáo tương ứng (bản nháp III-triet.md đã có nội dung; còn review, ảnh mới và chốt bản cuối)
 
 ### Phạm vi đã thực hiện
 
@@ -45,6 +52,7 @@ Tìm kiếm nâng cao dùng được đủ and, or, not và các phép so sánh
 
 | Ngày | Người | Đã làm | Công cụ AI | Ghi chú |
 |---|---|---|---|---|
+| 17/11/2026 | Triết | Bổ sung nội dung báo cáo tìm kiếm nâng cao và ví dụ AND/OR/NOT trong tài liệu bảo vệ | Codex | Không đổi chức năng tìm kiếm; 123 smoke checks đạt. Còn Phúc review BUS và chốt báo cáo cuối |
 | 10/11/2026 | Triết | Triển khai bộ lọc AND/OR/NOT và các phép so sánh tại BUS, component nhập điều kiện dùng chung cho bốn danh mục; thử MySQL, desktop/mobile và lưu ảnh | Codex | Đang làm, 5/7 mục. Build đạt, 78 checks toàn bộ qua. Chờ Phúc review BUS và báo cáo III; local develop, chưa commit/push |
 
 ## Vướng mắc

@@ -1,0 +1,18 @@
+<div class="filters">
+    <ThanhChonMuc Items="Categories" Value="@Category" ValueChanged="CategoryChanged" />
+    <select aria-label="Sắp xếp sản phẩm" value="@Sort"
+            @onchange="XuLySapXep">
+        <option value="popular">Nổi bật nhất</option>
+        <option value="low">Giá tăng dần</option>
+        <option value="high">Giá giảm dần</option>
+    </select>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<string> Categories { get; set; } = [];
+    [Parameter] public string Category { get; set; } = "Tất cả";
+    [Parameter] public EventCallback<string> CategoryChanged { get; set; }
+    [Parameter] public string Sort { get; set; } = "popular";
+    [Parameter] public EventCallback<string> SortChanged { get; set; }
+    private Task XuLySapXep(ChangeEventArgs args) => SortChanged.InvokeAsync(args.Value?.ToString() ?? "popular");
+}
