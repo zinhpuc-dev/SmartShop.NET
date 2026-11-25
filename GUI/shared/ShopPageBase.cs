@@ -23,7 +23,7 @@ public abstract class ShopPageBase : ComponentBase, IDisposable
         "success" => "Đặt hàng thành công", "admin" => "Quản trị", "admin/customers" => "Khách hàng", "admin/employees" => "Nhân viên", "admin/suppliers" => "Nhà cung cấp", "admin/inventory" => "Kho & nhập hàng", "admin/promotions" => "Khuyến mại & voucher", "orders" => "Đơn hàng",
         "account" => "Tài khoản", "favorites" => "Yêu thích", "support" => "Hỗ trợ", _ => "Sản phẩm"
     };
-    protected static readonly string[] categories = ["Tất cả", "Điện thoại", "Laptop", "Máy tính bảng", "Phụ kiện"];
+    protected string[] categories => ["Tất cả", .. Shop.Products.Select(p => p.Category).Distinct().Order()];
     protected string query { get => Ui.Query; set { Ui.Query = value; Ui.Notify(); } }
     protected string category { get => Ui.Category; set { Ui.Category = value; Ui.Notify(); } }
     protected string sort { get => Ui.Sort; set { Ui.Sort = value; Ui.Notify(); } }

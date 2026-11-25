@@ -15,7 +15,7 @@ static string GetSmartShopConnectionString(IServiceProvider services)
 
 var builder = WebApplication.CreateBuilder(args);
 // The composition root selects storage; pages and BUS depend only on contracts.
-builder.Services.AddScoped<IShopRepository, DemoShopDao>();
+builder.Services.AddScoped<IShopRepository>(services => new MySqlShopDAO(GetSmartShopConnectionString(services)));
 builder.Services.AddScoped<IShopService, ShopState>();
 builder.Services.AddScoped<ICustomerRepository>(services => new CustomerDAO(GetSmartShopConnectionString(services)));
 builder.Services.AddScoped<ICustomerBUS, CustomerBUS>();

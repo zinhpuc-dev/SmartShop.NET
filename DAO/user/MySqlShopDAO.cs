@@ -7,7 +7,11 @@ namespace SmartShop.DAO;
 
 public sealed class MySqlShopDAO(string connectionString) : IShopRepository
 {
-    public IReadOnlyList<Product> GetProducts()
+    private IReadOnlyList<Product>? catalog;
+
+    public IReadOnlyList<Product> GetProducts() => catalog ??= ReadProducts();
+
+    private IReadOnlyList<Product> ReadProducts()
     {
         List<Product> products = [];
         using MySqlConnection connection = new(connectionString);
@@ -23,7 +27,7 @@ public sealed class MySqlShopDAO(string connectionString) : IShopRepository
             string code = reader.GetString("MaSP").Trim();
             string categoryCode = reader.GetString("MaLoai").Trim();
             string description = reader.IsDBNull(reader.GetOrdinal("MoTa")) ? string.Empty : reader.GetString("MoTa");
-            products.Add(new Product(id++, reader.GetString("TenSP"), "Sản phẩm", "silver",
+            products.Add(new Product(id++, reader.GetString("TenSP"), categoryCode, "silver",
                 reader.GetDecimal("GiaBan"), reader.GetDecimal("GiaNiemYet"), reader.GetInt32("Stock"), description)
             {
                 Code = code,
@@ -92,6 +96,13 @@ public sealed class MySqlShopDAO(string connectionString) : IShopRepository
             string customerCode = FindOrCreateCustomer(connection, transaction, order);
             foreach (OrderLine line in order.Items)
             {
+                using (MySqlCommand product = new("SELECT GiaBan FROM SAN_PHAM WHERE MaSP=@Product AND TrangThai=1 FOR UPDATE", connection, transaction))
+                {
+                    product.Parameters.AddWithValue("@Product", line.Product.Code);
+                    if (product.ExecuteScalar() is not decimal price || price != line.Product.Price)
+                        throw new InvalidOperationException("Sản phẩm đã đổi giá hoặc ngừng bán. Vui lòng mở lại cửa hàng và kiểm tra giỏ hàng.");
+                }
+
                 using MySqlCommand stock = new("SELECT COALESCE(SUM(SoLuongTon),0) FROM TON_KHO WHERE MaSP=@Product FOR UPDATE", connection, transaction);
                 stock.Parameters.AddWithValue("@Product", line.Product.Code);
                 int available = Convert.ToInt32(stock.ExecuteScalar());
@@ -124,6 +135,10 @@ public sealed class MySqlShopDAO(string connectionString) : IShopRepository
 
             transaction.Commit();
             return order with { Code = orderCode, Status = "Đang xử lý", CustomerCode = customerCode };
+        }
+        catch (MySqlException ex)
+        {
+            throw new InvalidOperationException("Không thể lưu đơn hàng. Vui lòng thử lại.", ex);
         }
         catch
         {

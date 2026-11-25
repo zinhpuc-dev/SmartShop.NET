@@ -11,7 +11,7 @@ public sealed class ShopState : IShopService
     private readonly IShopRepository dao;
     private readonly Dictionary<int, int> cart = [];
     private readonly IReadOnlyDictionary<int, int> cartView;
-    private string customerPhone = "";
+    private readonly Dictionary<string, string> placedOrders = [];
 
     public ShopState(IShopRepository repository)
     {
@@ -21,7 +21,8 @@ public sealed class ShopState : IShopService
     }
 
     public IReadOnlyList<Product> Products => dao.GetProducts();
-    public IReadOnlyList<Order> Orders => string.IsNullOrWhiteSpace(customerPhone) ? [] : dao.GetOrders(customerPhone);
+    public IReadOnlyList<Order> Orders => placedOrders.Values.Distinct().SelectMany(dao.GetOrders)
+        .Where(order => placedOrders.ContainsKey(order.Code)).OrderByDescending(order => order.Created).ToArray();
     public IReadOnlyDictionary<int, int> Cart => cartView;
     public int Count => cart.Values.Sum();
     public decimal Total => cart.Sum(x => FindProduct(x.Key).Price * x.Value);
@@ -32,6 +33,7 @@ public sealed class ShopState : IShopService
         var products = dao.LoadProductArray().Cast<Product>().Where(p =>
             (category == "Tất cả" || p.Category == category)
             && (p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || p.Code.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || p.Category.Contains(query, StringComparison.OrdinalIgnoreCase))
             && (favorites is null || favorites.Contains(p.Id)));
         return sort switch
@@ -83,7 +85,7 @@ public sealed class ShopState : IShopService
             name.Trim(), phone, address.Trim(), DateTime.Now, lines,
             lines.Sum(x => x.Product.Price * x.Quantity));
         order = dao.CommitOrder(order);
-        customerPhone = phone.Trim();
+        placedOrders[order.Code] = phone.Trim();
         cart.Clear();
         return order;
     }
